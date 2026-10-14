@@ -17,6 +17,7 @@ import 'package:mobile_frontend/features/home/presentation/pages/home_page.dart'
 import 'package:mobile_frontend/features/home/presentation/pages/daily_log_step_one_page.dart';
 import 'package:mobile_frontend/features/home/presentation/pages/daily_log_step_two_page.dart';
 import 'package:mobile_frontend/features/home/presentation/pages/daily_log_summary_page.dart';
+import 'package:mobile_frontend/features/home/presentation/pages/daily_history_page.dart';
 
 void main() {
   testWidgets('renders the GERDHero landing page', (tester) async {
@@ -185,6 +186,45 @@ void main() {
       findsOneWidget,
     );
     expect(find.text('2 Dipilih'), findsOneWidget);
+  });
+
+  testWidgets('opens complete history from the home summary link', (
+    tester,
+  ) async {
+    await tester.pumpWidget(const MaterialApp(home: HomePage()));
+
+    await tester.ensureVisible(find.text('Lihat riwayat lengkap'));
+    await tester.tap(find.text('Lihat riwayat lengkap'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(RiwayatLengkapPage), findsOneWidget);
+    expect(find.text('Riwayat Lengkap'), findsOneWidget);
+  });
+
+  testWidgets('renders history entries and navigates between weeks', (
+    tester,
+  ) async {
+    await tester.pumpWidget(const MaterialApp(home: RiwayatLengkapPage()));
+
+    expect(find.text('6 – 12 Okt 2026'), findsOneWidget);
+    expect(find.text('Minggu, 12 Okt'), findsOneWidget);
+    expect(find.text('39%'), findsOneWidget);
+    expect(find.text('Heartburn'), findsOneWidget);
+    await tester.scrollUntilVisible(
+      find.text('Belum ada catatan harian'),
+      300,
+      scrollable: find.byType(Scrollable).last,
+    );
+    expect(find.text('Belum ada catatan harian'), findsOneWidget);
+    expect(find.text('+ Isi Susulan'), findsOneWidget);
+
+    await tester.tap(find.byIcon(Icons.chevron_left));
+    await tester.pump();
+    expect(find.text('29 Sep – 5 Okt 2026'), findsOneWidget);
+
+    await tester.tap(find.byIcon(Icons.chevron_right));
+    await tester.pump();
+    expect(find.text('6 – 12 Okt 2026'), findsOneWidget);
   });
 
   testWidgets('hides and restores symptom list from no-symptom toggle', (
