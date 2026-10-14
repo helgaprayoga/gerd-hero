@@ -1,8 +1,13 @@
 part of 'daily_log_step_two_view.dart';
 
 class _FrequencyCard extends StatelessWidget {
-  const _FrequencyCard({required this.count, required this.onChanged});
+  const _FrequencyCard({
+    required this.count,
+    required this.dateLabel,
+    required this.onChanged,
+  });
   final int count;
+  final String dateLabel;
   final ValueChanged<int> onChanged;
 
   @override
@@ -10,10 +15,10 @@ class _FrequencyCard extends StatelessWidget {
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const _SectionTitle(
+        _SectionTitle(
           icon: Icons.repeat,
           title: 'Frekuensi makan',
-          subtitle: 'Jumlah waktu makan berat hari ini',
+          subtitle: 'Jumlah waktu makan berat $dateLabel',
         ),
         const SizedBox(height: 14),
         Row(
@@ -50,7 +55,7 @@ class _FrequencyCard extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         Text(
-          'Pilih jumlah makan berat yang kamu lakukan hari ini.',
+          'Pilih jumlah makan berat yang kamu lakukan $dateLabel.',
           style: Theme.of(context).textTheme.bodySmall,
         ),
       ],

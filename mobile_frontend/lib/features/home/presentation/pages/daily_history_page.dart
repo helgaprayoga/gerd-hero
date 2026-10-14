@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/navigation/slide_page_route.dart';
 import '../models/daily_history_entry.dart';
 import '../widgets/history_day_card.dart';
 import '../widgets/history_empty_card.dart';
 import '../widgets/history_week_selector.dart';
+import 'daily_log_step_one_page.dart';
 
 class RiwayatLengkapPage extends StatefulWidget {
   const RiwayatLengkapPage({super.key});
@@ -96,11 +98,26 @@ class _RiwayatLengkapPageState extends State<RiwayatLengkapPage> {
                       ? HistoryEmptyCard(
                           day: _entries[index].day,
                           date: _entries[index].date,
+                          onFill: () => Navigator.of(context).push(
+                            SlidePageRoute<void>(
+                              builder: (_) => DailyLogStepOnePage(
+                                dateLabel: _entries[index].date,
+                              ),
+                              begin: const Offset(1, 0),
+                            ),
+                          ),
                         )
                       : HistoryDayCard(entry: _entries[index]))
-                : const HistoryEmptyCard(
+                : HistoryEmptyCard(
                     day: 'Belum ada data',
                     date: 'minggu ini',
+                    onFill: () => Navigator.of(context).push(
+                      SlidePageRoute<void>(
+                        builder: (_) =>
+                            const DailyLogStepOnePage(dateLabel: 'tanggal ini'),
+                        begin: const Offset(1, 0),
+                      ),
+                    ),
                   ),
           ),
         ),

@@ -3,6 +3,7 @@ part of 'daily_log_step_two_view.dart';
 class _MedicineCard extends StatelessWidget {
   const _MedicineCard({
     required this.tookMedicine,
+    required this.dateLabel,
     required this.medicines,
     required this.showForm,
     required this.medicineController,
@@ -14,6 +15,7 @@ class _MedicineCard extends StatelessWidget {
     required this.onRemoveMedicine,
   });
   final bool tookMedicine;
+  final String dateLabel;
   final List<String> medicines;
   final bool showForm;
   final TextEditingController medicineController;
@@ -37,9 +39,9 @@ class _MedicineCard extends StatelessWidget {
         const SizedBox(height: 14),
         Row(
           children: [
-            const Expanded(
+            Expanded(
               child: Text(
-                'Apakah hari ini kamu minum obat lambung?',
+                'Apakah $dateLabel kamu minum obat lambung?',
                 style: TextStyle(
                   color: AppColors.onSurface,
                   fontSize: 12,

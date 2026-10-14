@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/widgets/app_feedback.dart';
 import '../models/daily_history_entry.dart';
 import '../widgets/history_detail_actions.dart';
 import '../widgets/history_detail_confirmation_sheets.dart';
@@ -75,8 +76,10 @@ class _DailyHistoryDetailPageState extends State<DailyHistoryDetailPage> {
     );
     if (saved == true && mounted) {
       setState(() => _hasChanges = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Perubahan catatan berhasil disimpan')),
+      showAppFeedback(
+        context,
+        title: 'Catatan tersimpan',
+        message: 'Perubahan catatan harian berhasil diperbarui.',
       );
     }
   }
