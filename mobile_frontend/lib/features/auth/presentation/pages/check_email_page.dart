@@ -1,9 +1,8 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
-
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/services/auth_service.dart';
 import '../../../../core/widgets/app_feedback.dart';
 import '../widgets/auth_header.dart';
 import '../widgets/auth_privacy_note.dart';
@@ -29,7 +28,7 @@ class CheckEmailPage extends StatefulWidget {
 }
 
 class _CheckEmailPageState extends State<CheckEmailPage> {
-  static const _initialSeconds = 45;
+  static const _initialSeconds = 60;
   Timer? _timer;
   int _secondsLeft = _initialSeconds;
   bool _isResending = false;
@@ -72,17 +71,23 @@ class _CheckEmailPageState extends State<CheckEmailPage> {
     if (_isResending || _secondsLeft != 0) return;
 
     if (widget.isPasswordReset) {
-      _startCountdown();
-      _showMessage('Email pengaturan ulang telah dikirim ulang.');
+      setState(() => _isResending = true);
+      try {
+        await AuthService.instance.requestPasswordReset(widget.email);
+        if (!mounted) return;
+        _startCountdown();
+        _showMessage('Email pengaturan ulang telah dikirim ulang.');
+      } catch (error) {
+        if (mounted) _showMessage(authErrorMessage(error, isLogin: false));
+      } finally {
+        if (mounted) setState(() => _isResending = false);
+      }
       return;
     }
 
     setState(() => _isResending = true);
     try {
-      await Supabase.instance.client.auth.resend(
-        type: OtpType.signup,
-        email: widget.email,
-      );
+      await AuthService.instance.resendVerification(widget.email);
       if (!mounted) return;
       _startCountdown();
       _showMessage('Email verifikasi telah dikirim ulang.');

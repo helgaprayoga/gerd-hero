@@ -25,6 +25,8 @@ Migration Supabase tersedia di:
 ```text
 migrations/001_gerdhero_schema.sql
 migrations/002_gerdhero_additions.sql
+migrations/003_onboarding_status.sql
+migrations/004_remove_other_gender.sql
 ```
 
 Jalankan file tersebut secara berurutan melalui Supabase SQL Editor. Migration

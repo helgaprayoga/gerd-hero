@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../../core/services/api_service.dart';
+import '../../../../core/services/auth_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/app_feedback.dart';
 import '../models/profile_data.dart';
@@ -192,7 +193,7 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
     if (isLoggingOut) return;
     setState(() => isLoggingOut = true);
     try {
-      await Supabase.instance.client.auth.signOut(scope: SignOutScope.local);
+      await AuthService.instance.signOut();
     } on AuthException catch (error) {
       if (mounted) _showError(error.message);
     } catch (_) {
@@ -227,7 +228,7 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
 
   double _profileCompleteness() {
     var completed = 0;
-    const total = 11;
+    const total = 12;
     if (nicknameController.text.trim().isNotEmpty) completed++;
     if (birthDate != null) completed++;
     if (gender != null) completed++;

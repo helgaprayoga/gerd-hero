@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../models/home_dashboard_data.dart';
 
 class HomeDailyChart extends StatelessWidget {
-  const HomeDailyChart({super.key});
+  const HomeDailyChart({required this.latestGerdq, super.key});
+
+  final HomeGerdqData? latestGerdq;
 
   @override
   Widget build(BuildContext context) => Container(
@@ -13,7 +16,7 @@ class HomeDailyChart extends StatelessWidget {
       color: Colors.white,
       borderRadius: BorderRadius.circular(20),
     ),
-    child: const Column(
+    child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
@@ -35,7 +38,9 @@ class HomeDailyChart extends StatelessWidget {
             child: Row(
               children: [
                 Text(
-                  '7 / 18',
+                  latestGerdq == null
+                      ? '-- / 18'
+                      : '${latestGerdq!.score} / 18',
                   style: TextStyle(
                     color: AppColors.primary,
                     fontSize: 24,
@@ -45,7 +50,8 @@ class HomeDailyChart extends StatelessWidget {
                 SizedBox(width: 14),
                 Expanded(
                   child: Text(
-                    'Kemungkinan tidak menderita GERD\nSkor terkontrol dengan baik.',
+                    latestGerdq?.evaluation ??
+                        'Belum ada hasil GERD-Q\nIsi kuesioner untuk melihat hasil.',
                     style: TextStyle(
                       color: AppColors.onSurfaceVariant,
                       fontSize: 12,

@@ -29,6 +29,11 @@ String authErrorMessage(Object error, {required bool isLogin}) {
     if (code == 'email_address_invalid' || message.contains('invalid email')) {
       return 'Format email tidak valid.';
     }
+    if (code == 'user_cancelled' ||
+        code == 'oauth_canceled' ||
+        message.contains('cancel')) {
+      return 'Login Google dibatalkan.';
+    }
   }
 
   if (error is AuthRetryableFetchException ||

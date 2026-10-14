@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/services/auth_service.dart';
 import '../../../../core/widgets/app_feedback.dart';
 import '../models/auth_mode.dart';
 import '../utils/auth_error_message.dart';
@@ -77,7 +78,7 @@ class _LoginPageState extends State<LoginPage> {
     setState(() => _isSubmitting = true);
     try {
       if (isRegister) {
-        final response = await Supabase.instance.client.auth.signUp(
+        final response = await AuthService.instance.register(
           email: email,
           password: password,
         );
@@ -92,10 +93,7 @@ class _LoginPageState extends State<LoginPage> {
         }
         // Jika session langsung tersedia, app.dart menangani ProfileGatePage.
       } else {
-        await Supabase.instance.client.auth.signInWithPassword(
-          email: email,
-          password: password,
-        );
+        await AuthService.instance.login(email: email, password: password);
         // Navigasi ditangani oleh auth listener agar email dan OAuth konsisten.
       }
     } on AuthException catch (error) {
@@ -122,10 +120,7 @@ class _LoginPageState extends State<LoginPage> {
 
   Future<void> _signInWithGoogle() async {
     try {
-      await Supabase.instance.client.auth.signInWithOAuth(
-        OAuthProvider.google,
-        redirectTo: 'io.supabase.gerdhero://login-callback',
-      );
+      await AuthService.instance.signInWithGoogle();
     } catch (error) {
       _showMessage(authErrorMessage(error, isLogin: true));
     }

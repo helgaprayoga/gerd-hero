@@ -8,6 +8,8 @@ class ProfileData {
     this.height,
     this.weight,
     this.bmi,
+    this.streakDays = 0,
+    this.lastLogDate,
     this.smoking,
     this.alcohol,
     this.workPattern,
@@ -24,6 +26,8 @@ class ProfileData {
   final double? height;
   final double? weight;
   final double? bmi;
+  final int streakDays;
+  final DateTime? lastLogDate;
   final String? smoking;
   final String? alcohol;
   final String? workPattern;
@@ -32,8 +36,10 @@ class ProfileData {
   final List<ProfileMedicine> routineMeds;
 
   bool get hasBasicProfile =>
-      (nickname?.trim().isNotEmpty ?? false) ||
-      (name?.trim().isNotEmpty ?? false);
+      ((nickname?.trim().isNotEmpty ?? false) ||
+          (name?.trim().isNotEmpty ?? false)) &&
+      birthDate != null &&
+      (gender == 'male' || gender == 'female');
 
   String get displayName {
     final value = nickname?.trim();
@@ -55,7 +61,7 @@ class ProfileData {
 
   double get completion {
     var completed = 0;
-    const total = 11;
+    const total = 12;
     if ((nickname?.trim().isNotEmpty ?? false) ||
         (name?.trim().isNotEmpty ?? false)) {
       completed++;
@@ -87,6 +93,8 @@ class ProfileData {
       height: _asDouble(json['height']),
       weight: _asDouble(json['weight']),
       bmi: _asDouble(json['bmi']),
+      streakDays: (json['streak_days'] as num?)?.toInt() ?? 0,
+      lastLogDate: _asDate(json['last_log_date']),
       smoking: _asString(extended['smoking']),
       alcohol: _asString(extended['alcohol']),
       workPattern: _asString(extended['work_pattern']),

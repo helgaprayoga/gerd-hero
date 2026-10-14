@@ -10,9 +10,9 @@ class DailyLogStepOnePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) => DailyLogStepOneView(
     dateLabel: dateLabel,
-    onNext: () => Navigator.of(context).push(
+    onNext: (draft) => Navigator.of(context).push(
       MaterialPageRoute<void>(
-        builder: (_) => DailyLogStepTwoPage(dateLabel: dateLabel),
+        builder: (_) => DailyLogStepTwoPage(dateLabel: dateLabel, draft: draft),
       ),
     ),
   );

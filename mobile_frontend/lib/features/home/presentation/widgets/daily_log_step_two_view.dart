@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../models/daily_log_draft.dart';
 
 part 'daily_log_step_two_step_two_header.dart';
 part 'daily_log_step_two_progress_segment.dart';
@@ -27,15 +28,17 @@ part 'daily_log_step_two_bottom_actions.dart';
 
 class DailyLogStepTwoView extends StatefulWidget {
   const DailyLogStepTwoView({
+    this.draft,
     this.dateLabel = 'hari ini',
     this.initialSameAsYesterday = true,
     this.onContinue,
     super.key,
   });
 
+  final DailyLogDraft? draft;
   final bool initialSameAsYesterday;
   final String dateLabel;
-  final VoidCallback? onContinue;
+  final ValueChanged<DailyLogDraft>? onContinue;
 
   @override
   State<DailyLogStepTwoView> createState() => _DailyLogStepTwoViewState();
@@ -43,6 +46,7 @@ class DailyLogStepTwoView extends StatefulWidget {
 
 class _DailyLogStepTwoViewState extends State<DailyLogStepTwoView> {
   late bool _sameAsYesterday;
+  late DailyLogDraft _draft;
   int _mealCount = 3;
   int _stressLevel = 3;
   bool _tookMedicine = true;
@@ -65,6 +69,7 @@ class _DailyLogStepTwoViewState extends State<DailyLogStepTwoView> {
   void initState() {
     super.initState();
     _sameAsYesterday = widget.initialSameAsYesterday;
+    _draft = widget.draft ?? DailyLogDraft();
   }
 
   @override
@@ -119,6 +124,40 @@ class _DailyLogStepTwoViewState extends State<DailyLogStepTwoView> {
         }
       });
     }
+  }
+
+  void _continue() {
+    const triggerNames = {
+      'Makanan pedas': 'Pedas',
+      'Makanan berlemak / gorengan': 'Berlemak/gorengan',
+      'Makanan asam (sitrus/tomat/cuka)': 'Asam',
+      'Minuman berkafein (kopi/teh)': 'Berkafein',
+      'Makanan / minuman bersoda': 'Bersoda',
+    };
+    _draft
+      ..mealFrequency = _mealCount
+      ..mealTimes = List<String>.from(_mealTimes)
+      ..stressLevel = _stressLevel
+      ..sleepTime = _formatTime(_sleepTime)
+      ..wakeTime = _formatTime(_wakeTime)
+      ..tookMedication = _tookMedicine
+      ..triggers = {
+        for (final entry in triggerNames.entries)
+          entry.value: _foods[entry.key] ?? false,
+      }
+      ..medications = _tookMedicine
+          ? [
+              for (final medicine in _medicines)
+                () {
+                  final parts = medicine.split('|');
+                  return {
+                    'name': parts.first,
+                    'schedule': parts.length > 1 ? parts[1] : '',
+                  };
+                }(),
+            ]
+          : [];
+    widget.onContinue?.call(_draft);
   }
 
   @override
@@ -197,7 +236,7 @@ class _DailyLogStepTwoViewState extends State<DailyLogStepTwoView> {
           ),
           _BottomActions(
             onBack: () => Navigator.of(context).pop(),
-            onContinue: widget.onContinue ?? () {},
+            onContinue: _continue,
           ),
         ],
       ),

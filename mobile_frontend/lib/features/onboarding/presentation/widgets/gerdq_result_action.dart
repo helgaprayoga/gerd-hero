@@ -5,7 +5,7 @@ import '../../../../core/theme/app_colors.dart';
 class GerdQResultAction extends StatelessWidget {
   const GerdQResultAction({required this.onPressed, super.key});
 
-  final VoidCallback onPressed;
+  final VoidCallback? onPressed;
 
   @override
   Widget build(BuildContext context) => SizedBox(
@@ -18,12 +18,23 @@ class GerdQResultAction extends StatelessWidget {
         foregroundColor: Colors.white,
         shape: const StadiumBorder(),
       ),
-      child: const Row(
+      child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text('Ke Beranda'),
-          SizedBox(width: 8),
-          Icon(Icons.home_outlined, size: 18),
+          if (onPressed == null)
+            const SizedBox(
+              width: 20,
+              height: 20,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: Colors.white,
+              ),
+            )
+          else ...[
+            const Text('Ke Beranda'),
+            const SizedBox(width: 8),
+            const Icon(Icons.home_outlined, size: 18),
+          ],
         ],
       ),
     ),
