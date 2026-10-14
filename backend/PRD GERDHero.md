@@ -128,12 +128,12 @@
 2. **Home / Beranda (B1–B4):** Tampilan utama dengan sapaan, tombol "Isi Log Harian", kartu skor GERD-Q terakhir beserta status evaluasi berkala, riwayat level GERD 7 hari dalam format bar chart mingguan, dan tombol "Lihat riwayat lengkap" yang membuka halaman riwayat per hari per minggu (dengan detail harian).
 
 3. **Log Harian — Sesi 3 Slide (C1–C5, C7):**
-   - **Slide 1 — Gejala:** 10 gejala yang bisa dicentang (Heartburn, Regurgitasi, Nyeri dada, Kesulitan menelan, Kembung & gas, Suara serak, Keringat dingin, Kram perut, Ketidaknyamanan tenggorokan, Gejala sementara), opsi "Tidak ada gejala", dan deskripsi opsional (maks. 250 karakter).
+   - **Slide 1 — Gejala:** 9 gejala yang bisa dicentang (Heartburn, Regurgitasi, Nyeri dada, Kesulitan menelan, Kembung & gas, Suara serak, Keringat dingin, Kram perut, Ketidaknyamanan tenggorokan), opsi "Tidak ada gejala", dan deskripsi opsional (maks. 250 karakter).
    - **Slide 2 — Pemicu & Kebiasaan:** 5 pertanyaan ya/tidak (pedas, berlemak/gorengan, asam, berkafein, bersoda), frekuensi makan, jam makan per waktu makan (dengan konfirmasi sekali ketuk "sama persis" jika frekuensi sama dengan kemarin ±1 jam), tingkat stres (1–5 dengan emoji), jam tidur & bangun (durasi tidur otomatis), dan konsumsi obat (ya/tidak, jenis obat, frekuensi).
    - **Slide 3 — Ringkasan Hari Ini:** Level GERD (indeks persentase), perbandingan dengan hari kemarin, pemicu berpotensi terkait (analisis AI dengan label "Dianalisis AI"), kebiasaan yang mendukung gejala, data diri pendukung (usia, BMI), dan **kalimat tetap keselamatan** ("Gejala seperti nyeri dada atau sesak napas dapat berkaitan dengan kondisi lain...").
 
 4. **Logika & AI (D1–D7):**
-   - **Level GERD Harian (D1):** Dihitung dari penjumlahan bobot gejala menggunakan metode *Certainty Factor*. Bobot: Heartburn 0.6, Regurgitasi 0.7, Nyeri dada 0.8, Sulit menelan 0.6, Kembung & gas 0.4, Suara serak 0.2, Keringat dingin 0.4, Kram perut 0.3, Ketidaknyamanan tenggorokan 0.4, Gejala sementara 0.7.
+   - **Level GERD Harian (D1):** Dihitung dari penjumlahan bobot gejala menggunakan metode *Certainty Factor*. Bobot: Heartburn 0.6, Regurgitasi 0.7, Nyeri dada 0.8, Sulit menelan 0.6, Kembung & gas 0.4, Suara serak 0.2, Keringat dingin 0.4, Kram perut 0.3, Ketidaknyamanan tenggorokan 0.4.
    - **Konsistensi frekuensi makan (D2):** Perbandingan hari ini vs kemarin (0/1). Hari pertama = "belum tersedia".
    - **Konsistensi jam makan (D3):** Toleransi ±60 menit per makan ke-k.
    - **Jeda makan-tidur (D4):** Makan terakhir kemarin ke jam tidur semalam, patokan 2–3 jam.
@@ -186,7 +186,7 @@
    - B2: Kartu Skor GERD-Q terakhir
    - B3: Riwayat level GERD 7 hari + tombol "Lihat riwayat lengkap"
    - B4: Riwayat Lengkap (kartu harian per minggu) dan Detail Harian
-   - C1: Slide 1 — 10 gejala, opsi "Tidak ada gejala", deskripsi opsional
+   - C1: Slide 1 — 9 gejala, opsi "Tidak ada gejala", deskripsi opsional
    - C2: Slide 2 — 5 pertanyaan ya/tidak pemicu makanan/minuman
    - C3: Slide 2 — Frekuensi makan, jam makan, konfirmasi sekali ketuk
    - C4: Slide 2 — Stres 1–5, jam tidur/bangun, konsumsi obat
@@ -208,13 +208,13 @@
 
 - **Should Have (Sangat Penting — dikerjakan bila Must aman):**
    - A5: Lupa kata sandi (3 layar)
-   - A8: GERD-Q berkala dengan pengingat
-   - B5: Maskot 4 keadaan + chip streak
-   - B6: Profil lengkap (kebiasaan, riwayat penyakit, obat rutin)
+   - A8: GERD-Q berkala otomatis setiap 7 hari dengan notifikasi pengingat — memastikan pengguna mengevaluasi kondisi secara periodik
+   - B5: Maskot Gerdie dengan 4 keadaan ekspresif (Tenang, Bergejala, Baru Mulai, Lama Tidak Log) berdasarkan kondisi kesehatan lambung pengguna + chip streak hari berturut-turut
+   - B6: Profil lengkap: kebiasaan (merokok, alkohol, pola kerja, kopi), riwayat penyakit, obat rutin — memperkaya konteks analitik
    - B7: Sapaan nama di Home
    - C6: Draf tersimpan lokal
    - D6: Penalaran AI (pemicu, ringkasan, rekomendasi habit)
-   - E6: Tingkat Perhatian Komplikasi
+   - E6: Tingkat Perhatian Komplikasi — indikator pemantauan berbasis faktor persisten untuk deteksi dini risiko komplikasi
    - E7: Peringatan tren
 
 - **Could Have (Opsional — pasca-hackathon):**
@@ -231,15 +231,19 @@
 
 ### **Future Enhancements**
 
-- **Rencana Pengembangan Mendatang:**
-   - GERD-Q berkala otomatis setiap 7 hari dengan notifikasi pengingat.
-   - Maskot Gerdie dengan 4 keadaan ekspresif (tenang, bergejala, baru mulai, lama tidak log) berdasarkan kondisi kesehatan lambung pengguna.
-   - Profil lengkap: kebiasaan (merokok, alkohol, pola kerja, kopi), riwayat penyakit, obat rutin.
-   - Tingkat Perhatian Komplikasi sebagai indikator pemantauan berbasis faktor persisten.
-   - Peringatan tren otomatis bila gejala naik berturut-turut.
-   - Integrasi dengan platform kesehatan digital nasional.
+- **Peta Jalan Visi Produk:** Evolusi dari alat pemantauan mandiri menjadi *companion app* untuk manajemen GERD komprehensif yang terintegrasi dengan ekosistem kesehatan digital.
 
-- **Peta Jalan Visi Produk:** Evolusi dari alat pemantauan mandiri menjadi *companion app* untuk manajemen GERD komprehensif yang terintegrasi dengan ekosistem kesehatan digital, termasuk koneksi ke rekam medis elektronik dan konsultasi telemedicine.
+- **Rencana Pasca-Hackathon (Prioritas Berikutnya):**
+   - Notifikasi push untuk pengingat log harian (Could Have yang ditunda).
+   - Integrasi wearable — sinkronisasi data tidur dari smartwatch/health platform.
+   - Multi-bahasa (Inggris) untuk jangkauan pengguna yang lebih luas.
+   - Mode gelap (*dark mode*) untuk kenyamanan pengguna malam.
+
+- **Visi Jangka Panjang:**
+   - Koneksi ke rekam medis elektronik (RME/EMR) untuk integrasi dengan ekosistem kesehatan digital.
+   - Modul konsultasi telemedicine bersama dokter gastroenterologi.
+   - Gamifikasi berbasis *reward* (badge, milestone, leaderboard).
+   - Analitik populasi (agregat anonim) untuk riset GERD di Indonesia.
 
 ---
 
