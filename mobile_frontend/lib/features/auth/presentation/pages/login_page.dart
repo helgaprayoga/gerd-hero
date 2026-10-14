@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/app_feedback.dart';
@@ -75,6 +76,18 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
+  // ── Fungsi Login Google ──────────────────────────────────────────
+  Future<void> _signInWithGoogle() async {
+    try {
+      await Supabase.instance.client.auth.signInWithOAuth(
+        OAuthProvider.google,
+        redirectTo: 'io.supabase.gerdhero://login-callback',
+      );
+    } catch (e) {
+      _showMessage('Gagal login dengan Google: $e');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final isRegister = _mode == AuthMode.register;
@@ -131,9 +144,7 @@ class _LoginPageState extends State<LoginPage> {
                               !_confirmPasswordVisible,
                         ),
                         onSubmit: _submit,
-                        onGoogle: () => _showMessage(
-                          'Membuka autentikasi aman dengan Google.',
-                        ),
+                        onGoogle: _signInWithGoogle, // 👈 Tersambung ke Google
                       )
                     else
                       AuthFormCard(
@@ -162,9 +173,7 @@ class _LoginPageState extends State<LoginPage> {
                             ),
                           );
                         },
-                        onGoogle: () => _showMessage(
-                          'Membuka autentikasi aman dengan Google.',
-                        ),
+                        onGoogle: _signInWithGoogle, // 👈 Tersambung ke Google
                       ),
                     const SizedBox(height: 20),
                     const AuthPrivacyNote(),
