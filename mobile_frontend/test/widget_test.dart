@@ -63,7 +63,7 @@ void main() {
     expect(find.text('Konfirmasi kata sandi'), findsOneWidget);
   });
 
-  testWidgets('continues to profile onboarding after valid login', (
+  testWidgets('does not bypass authentication before a session exists', (
     tester,
   ) async {
     await tester.pumpWidget(const MaterialApp(home: LoginPage()));
@@ -74,8 +74,8 @@ void main() {
     await tester.tap(find.widgetWithText(FilledButton, 'Masuk'));
     await tester.pumpAndSettle();
 
-    expect(find.byType(ProfilePage), findsOneWidget);
-    expect(find.text('Data Profil'), findsOneWidget);
+    expect(find.byType(LoginPage), findsOneWidget);
+    expect(find.byType(ProfilePage), findsNothing);
   });
 
   testWidgets('shows validation messages only after invalid input', (
@@ -98,7 +98,7 @@ void main() {
     expect(find.text('Kata sandi tidak cocok'), findsOneWidget);
   });
 
-  testWidgets('continues from profile to GERD-Q preparation', (tester) async {
+  testWidgets('requires a name before saving the profile', (tester) async {
     await tester.pumpWidget(const MaterialApp(home: ProfilePage()));
 
     await tester.scrollUntilVisible(
@@ -109,9 +109,8 @@ void main() {
     await tester.tap(find.text('Lanjut'));
     await tester.pumpAndSettle();
 
-    expect(find.byType(GerdQIntroPage), findsOneWidget);
-    expect(find.text('Kuesioner GERD-Q'), findsOneWidget);
-    expect(find.text('Kenali kondisi awalmu'), findsOneWidget);
+    expect(find.text('Nama panggilan wajib diisi.'), findsOneWidget);
+    expect(find.byType(GerdQIntroPage), findsNothing);
   });
 
   testWidgets('starts GERD-Q first question from preparation', (tester) async {

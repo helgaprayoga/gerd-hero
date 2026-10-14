@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/services/api_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../auth/presentation/widgets/auth_privacy_note.dart';
 import '../../../home/presentation/pages/home_page.dart';
@@ -22,6 +23,7 @@ class _ProfilePageState extends State<ProfilePage> {
   final _weightController = TextEditingController();
   DateTime? _birthDate;
   String _gender = 'Laki-laki';
+  bool _isLoading = false;
 
   @override
   void initState() {
@@ -40,6 +42,56 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   void _refresh() => setState(() {});
+
+  /// Validasi form, simpan profil ke backend, lalu lanjut ke GERD-Q.
+  Future<void> _saveProfile() async {
+    if (_nameController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Nama panggilan wajib diisi.')),
+      );
+      return;
+    }
+    if (_birthDate == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Tanggal lahir wajib diisi.')),
+      );
+      return;
+    }
+
+    setState(() => _isLoading = true);
+    try {
+      final height = double.tryParse(_heightController.text);
+      final weight = double.tryParse(_weightController.text);
+
+      await ApiService.instance.put('/api/profile', {
+        'nickname': _nameController.text.trim(),
+        'birth_date': _birthDate!.toIso8601String().substring(0, 10),
+        'gender': _gender == 'Laki-laki' ? 'male' : 'female',
+        if (height != null && height > 0) 'height': height,
+        if (weight != null && weight > 0) 'weight': weight,
+      });
+
+      if (mounted) {
+        Navigator.of(
+          context,
+        ).push(MaterialPageRoute<void>(builder: (_) => const GerdQIntroPage()));
+      }
+    } on ApiException catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(error.message)));
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Tidak dapat terhubung ke server.')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
 
   Future<void> _selectBirthDate() async {
     final picked = await showDatePicker(
@@ -92,24 +144,29 @@ class _ProfilePageState extends State<ProfilePage> {
                       width: double.infinity,
                       height: 48,
                       child: FilledButton(
-                        onPressed: () => Navigator.of(context).push(
-                          MaterialPageRoute<void>(
-                            builder: (_) => const GerdQIntroPage(),
-                          ),
-                        ),
+                        onPressed: _isLoading ? null : _saveProfile,
                         style: FilledButton.styleFrom(
                           backgroundColor: AppColors.primaryContainer,
                           foregroundColor: Colors.white,
                           shape: const StadiumBorder(),
                         ),
-                        child: const Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text('Lanjut'),
-                            SizedBox(width: 8),
-                            Icon(Icons.arrow_forward, size: 18),
-                          ],
-                        ),
+                        child: _isLoading
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
+                              )
+                            : const Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text('Lanjut'),
+                                  SizedBox(width: 8),
+                                  Icon(Icons.arrow_forward, size: 18),
+                                ],
+                              ),
                       ),
                     ),
                     const SizedBox(height: 24),

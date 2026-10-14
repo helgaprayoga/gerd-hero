@@ -3,19 +3,26 @@ import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
 
 class HomeHeader extends StatelessWidget {
-  const HomeHeader({this.onProfileTap, super.key});
+  const HomeHeader({
+    required this.nickname,
+    required this.avatarLabel,
+    this.onProfileTap,
+    super.key,
+  });
 
+  final String nickname;
+  final String avatarLabel;
   final VoidCallback? onProfileTap;
 
   @override
   Widget build(BuildContext context) => Row(
     mainAxisAlignment: MainAxisAlignment.spaceBetween,
     children: [
-      const Column(
+      Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Halo, Dion',
+            'Halo, $nickname',
             style: TextStyle(
               color: AppColors.onSurface,
               fontSize: 22,
@@ -40,8 +47,8 @@ class HomeHeader extends StatelessWidget {
             color: AppColors.primary,
             shape: BoxShape.circle,
           ),
-          child: const Text(
-            'DN',
+          child: Text(
+            avatarLabel,
             style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
           ),
         ),

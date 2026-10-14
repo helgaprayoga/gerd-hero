@@ -5,9 +5,14 @@ import 'home_card_icon.dart';
 import 'home_card_shell.dart';
 
 class HomeProfileCard extends StatelessWidget {
-  const HomeProfileCard({required this.onPressed, super.key});
+  const HomeProfileCard({
+    required this.onPressed,
+    required this.completion,
+    super.key,
+  });
 
   final VoidCallback onPressed;
+  final double completion;
 
   @override
   Widget build(BuildContext context) => HomeCardShell(
@@ -39,16 +44,19 @@ class HomeProfileCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 14),
-              const Row(
+              Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text('Status Pengisian Data', style: _SmallTextStyle()),
-                  Text('40% Selesai', style: _SmallAccentStyle()),
+                  const Text('Status Pengisian Data', style: _SmallTextStyle()),
+                  Text(
+                    '${(completion * 100).round()}% Selesai',
+                    style: const _SmallAccentStyle(),
+                  ),
                 ],
               ),
               const SizedBox(height: 6),
-              const LinearProgressIndicator(
-                value: 0.4,
+              LinearProgressIndicator(
+                value: completion,
                 minHeight: 8,
                 borderRadius: BorderRadius.all(Radius.circular(999)),
                 backgroundColor: AppColors.secondaryContainer,

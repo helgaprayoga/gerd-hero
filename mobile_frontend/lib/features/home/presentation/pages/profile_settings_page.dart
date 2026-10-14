@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/services/api_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/app_feedback.dart';
+import '../models/profile_data.dart';
 
 class ProfileSettingsPage extends StatefulWidget {
   const ProfileSettingsPage({super.key});
@@ -11,36 +13,239 @@ class ProfileSettingsPage extends StatefulWidget {
 }
 
 class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
-  String smoking = 'Tidak';
-  String alcohol = 'Tidak';
-  String activity = 'Reguler (09.00 - 17.00)';
-  String gender = 'Laki-laki';
-  String name = 'Dion Pratama';
-  String nickname = 'Dion';
-  String email = 'dion.pratama@email.com';
-  String birthDate = '14 Agustus 1996';
-  String height = '170';
-  String weight = '67.5';
-  int coffeeCups = 1;
+  final nameController = TextEditingController();
+  final nicknameController = TextEditingController();
+  final emailController = TextEditingController();
+  final birthDateController = TextEditingController();
+  final heightController = TextEditingController();
+  final weightController = TextEditingController();
+
+  DateTime? birthDate;
+  String? gender;
+  String? smoking;
+  String? alcohol;
+  String? workPattern;
+  bool? coffee;
+  bool isLoading = true;
+  bool isSaving = false;
+  String? loadError;
+  double? bmi;
   bool isAddingCondition = false;
   bool isAddingMedicine = false;
   final conditionController = TextEditingController();
   final medicineNameController = TextEditingController();
   final medicineScheduleController = TextEditingController();
-  final selectedConditions = <String>{'Riwayat GERD', 'Gastritis / Maag'};
+  final selectedConditions = <String>{};
   final customConditions = <String>[];
-  final medicines = <_MedicineData>[
-    _MedicineData('Omeprazole 20mg', '1x sehari (Pagi sebelum makan)'),
-    _MedicineData('Antasida Doen', 'Saat gejala kambuh (PRN)'),
-  ];
+  final medicines = <_MedicineData>[];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadProfile();
+  }
 
   @override
   void dispose() {
+    nameController.dispose();
+    nicknameController.dispose();
+    emailController.dispose();
+    birthDateController.dispose();
+    heightController.dispose();
+    weightController.dispose();
     conditionController.dispose();
     medicineNameController.dispose();
     medicineScheduleController.dispose();
     super.dispose();
   }
+
+  Future<void> _loadProfile() async {
+    try {
+      final response = await ApiService.instance.get('/api/profile');
+      final rawData = response['data'];
+      if (rawData is! Map) {
+        throw const FormatException('Data profil tidak valid.');
+      }
+      _applyProfile(ProfileData.fromJson(Map<String, dynamic>.from(rawData)));
+    } on ApiException catch (error) {
+      if (mounted) setState(() => loadError = error.message);
+    } catch (_) {
+      if (mounted) {
+        setState(() => loadError = 'Tidak dapat memuat profil dari server.');
+      }
+    } finally {
+      if (mounted) setState(() => isLoading = false);
+    }
+  }
+
+  void _applyProfile(ProfileData profile) {
+    nameController.text = profile.name ?? '';
+    nicknameController.text = profile.nickname ?? '';
+    emailController.text = profile.email ?? '';
+    heightController.text = _formatNumber(profile.height);
+    weightController.text = _formatNumber(profile.weight);
+    birthDate = profile.birthDate;
+    birthDateController.text = _formatDate(profile.birthDate);
+    gender = profile.gender == 'male' || profile.gender == 'female'
+        ? profile.gender
+        : null;
+    smoking = profile.smoking;
+    alcohol = profile.alcohol;
+    workPattern = profile.workPattern;
+    coffee = profile.coffee;
+    bmi = profile.bmi;
+    selectedConditions
+      ..clear()
+      ..addAll(profile.medicalHistory);
+    customConditions
+      ..clear()
+      ..addAll(profile.medicalHistory.where(_isCustomCondition));
+    medicines
+      ..clear()
+      ..addAll(
+        profile.routineMeds.map(
+          (medicine) => _MedicineData(medicine.name, medicine.schedule),
+        ),
+      );
+  }
+
+  Future<void> _selectBirthDate() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: birthDate ?? DateTime(2000),
+      firstDate: DateTime(1920),
+      lastDate: DateTime.now(),
+    );
+    if (picked != null) {
+      setState(() {
+        birthDate = picked;
+        birthDateController.text = _formatDate(picked);
+      });
+    }
+  }
+
+  Future<void> _saveProfile() async {
+    final nickname = nicknameController.text.trim();
+    if (nickname.isEmpty) {
+      _showError('Nama panggilan wajib diisi.');
+      return;
+    }
+
+    final height = double.tryParse(heightController.text.replaceAll(',', '.'));
+    final weight = double.tryParse(weightController.text.replaceAll(',', '.'));
+    if (height != null && height <= 0) {
+      _showError('Tinggi badan harus lebih besar dari 0.');
+      return;
+    }
+    if (weight != null && weight <= 0) {
+      _showError('Berat badan harus lebih besar dari 0.');
+      return;
+    }
+
+    setState(() => isSaving = true);
+    try {
+      await ApiService.instance.put('/api/profile', {
+        'name': nameController.text.trim(),
+        'nickname': nickname,
+        if (birthDate != null)
+          'birth_date': birthDate!.toIso8601String().substring(0, 10),
+        if (gender != null) 'gender': gender,
+        'height': ?height,
+        'weight': ?weight,
+        'extended': {
+          'smoking': smoking,
+          'alcohol': alcohol,
+          'work_pattern': workPattern,
+          'coffee': coffee,
+          'medical_history': selectedConditions.toList(),
+          'routine_meds': medicines
+              .where((medicine) => medicine.name.trim().isNotEmpty)
+              .map(
+                (medicine) => {
+                  'name': medicine.name.trim(),
+                  'schedule': medicine.schedule.trim(),
+                },
+              )
+              .toList(),
+        },
+      });
+
+      if (mounted) {
+        await showAppFeedback(
+          context,
+          title: 'Profil tersimpan',
+          message: 'Perubahan profil kamu sudah diperbarui.',
+        );
+      }
+    } on ApiException catch (error) {
+      if (mounted) _showError(error.message);
+    } catch (_) {
+      if (mounted) _showError('Tidak dapat terhubung ke server.');
+    } finally {
+      if (mounted) setState(() => isSaving = false);
+    }
+  }
+
+  void _showError(String message) {
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  bool _isCustomCondition(String condition) => !const {
+    'Riwayat GERD',
+    'Gastritis / Maag',
+    'Hipertensi',
+    'Diabetes',
+    'Asma',
+  }.contains(condition);
+
+  double? _currentBmi() {
+    final height = double.tryParse(heightController.text.replaceAll(',', '.'));
+    final weight = double.tryParse(weightController.text.replaceAll(',', '.'));
+    if (height == null || weight == null || height <= 0 || weight <= 0) {
+      return bmi;
+    }
+    return weight / ((height / 100) * (height / 100));
+  }
+
+  double _profileCompleteness() {
+    var completed = 0;
+    const total = 11;
+    if (nicknameController.text.trim().isNotEmpty) completed++;
+    if (birthDate != null) completed++;
+    if (gender != null) completed++;
+    if (double.tryParse(heightController.text.replaceAll(',', '.')) != null) {
+      completed++;
+    }
+    if (double.tryParse(weightController.text.replaceAll(',', '.')) != null) {
+      completed++;
+    }
+    if (smoking != null) completed++;
+    if (alcohol != null) completed++;
+    if (workPattern != null) completed++;
+    if (coffee != null) completed++;
+    if (selectedConditions.isNotEmpty) completed++;
+    if (medicines.isNotEmpty) completed++;
+    return completed / total;
+  }
+
+  String _formatDate(DateTime? date) => date == null
+      ? ''
+      : '${date.day.toString().padLeft(2, '0')}/'
+            '${date.month.toString().padLeft(2, '0')}/${date.year}';
+
+  String _formatNumber(double? value) => value == null
+      ? ''
+      : value == value.roundToDouble()
+      ? value.toInt().toString()
+      : value.toString();
+
+  String _genderLabel(String? value) => switch (value) {
+    'male' => 'Laki-laki',
+    'female' => 'Perempuan',
+    _ => 'Belum diisi',
+  };
 
   @override
   Widget build(BuildContext context) => Scaffold(
@@ -63,13 +268,18 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
       child: Padding(
         padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
         child: FilledButton.icon(
-          onPressed: () => showAppFeedback(
-            context,
-            title: 'Profil tersimpan',
-            message: 'Perubahan profil kamu sudah diperbarui.',
-          ),
+          onPressed: isSaving ? null : _saveProfile,
           icon: const Icon(Icons.check, size: 18),
-          label: const Text('Simpan Perubahan'),
+          label: isSaving
+              ? const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: Colors.white,
+                  ),
+                )
+              : const Text('Simpan Perubahan'),
           style: FilledButton.styleFrom(
             minimumSize: const Size.fromHeight(48),
             shape: const StadiumBorder(),
@@ -77,263 +287,315 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
         ),
       ),
     ),
-    body: ListView(
-      padding: const EdgeInsets.fromLTRB(20, 8, 20, 28),
-      children: [
-        const _ProfileSummaryCard(),
-        const SizedBox(height: 20),
-        _ProfileSection(
-          icon: Icons.person_outline,
-          title: 'Data Dasar',
-          children: [
-            _ProfileField(
-              label: 'Nama Lengkap',
-              value: name,
-              onChanged: (value) => setState(() => name = value),
-            ),
-            _ProfileField(
-              label: 'Nama Panggilan',
-              value: nickname,
-              onChanged: (value) => setState(() => nickname = value),
-              helper:
-                  'Nama panggilan yang ditampilkan Gerdie saat menyapamu di Beranda.',
-            ),
-            _ProfileField(
-              label: 'Email',
-              value: email,
-              onChanged: (value) => setState(() => email = value),
-              trailing: _VerifiedBadge(),
-            ),
-            _ProfileField(
-              label: 'Tanggal Lahir',
-              value: birthDate,
-              onChanged: (value) => setState(() => birthDate = value),
-              trailing: Icon(
-                Icons.calendar_today_outlined,
-                size: 18,
-                color: AppColors.secondary,
+    body: isLoading
+        ? const Center(child: CircularProgressIndicator())
+        : loadError != null
+        ? Center(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.cloud_off, size: 40),
+                  const SizedBox(height: 12),
+                  Text(loadError!, textAlign: TextAlign.center),
+                  const SizedBox(height: 16),
+                  OutlinedButton(
+                    onPressed: () {
+                      setState(() {
+                        isLoading = true;
+                        loadError = null;
+                      });
+                      _loadProfile();
+                    },
+                    child: const Text('Coba Lagi'),
+                  ),
+                ],
               ),
             ),
-            const Text('Jenis Kelamin', style: _labelStyle),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                Expanded(
-                  child: _ChoiceButton(
-                    label: 'Laki-laki',
-                    selected: gender == 'Laki-laki',
-                    onTap: () => setState(() => gender = 'Laki-laki'),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: _ChoiceButton(
-                    label: 'Perempuan',
-                    selected: gender == 'Perempuan',
-                    onTap: () => setState(() => gender = 'Perempuan'),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: _ProfileField(
-                    label: 'Tinggi Badan',
-                    value: height,
-                    onChanged: (value) => setState(() => height = value),
-                    suffix: 'cm',
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _ProfileField(
-                    label: 'Berat Badan',
-                    value: weight,
-                    onChanged: (value) => setState(() => weight = value),
-                    suffix: 'kg',
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            _BmiCard(height: height, weight: weight),
-          ],
-        ),
-        const SizedBox(height: 16),
-        _ProfileSection(
-          icon: Icons.self_improvement_outlined,
-          title: 'Kebiasaan Hidup',
-          children: [
-            _SegmentField(
-              label: 'Kebiasaan Merokok',
-              value: smoking,
-              options: const ['Tidak', 'Kadang', 'Rutin'],
-              onChanged: (value) => setState(() => smoking = value),
-            ),
-            _SegmentField(
-              label: 'Konsumsi Alkohol',
-              value: alcohol,
-              options: const ['Tidak', 'Kadang', 'Rutin'],
-              onChanged: (value) => setState(() => alcohol = value),
-            ),
-            _SegmentField(
-              label: 'Pola Aktivitas Harian',
-              value: activity,
-              options: const ['Reguler (09.00 - 17.00)', 'Shift / Malam'],
-              onChanged: (value) => setState(() => activity = value),
-            ),
-            _CoffeeCard(
-              cups: coffeeCups,
-              onMinus: () => setState(
-                () => coffeeCups = coffeeCups > 0 ? coffeeCups - 1 : 0,
+          )
+        : ListView(
+            padding: const EdgeInsets.fromLTRB(20, 8, 20, 28),
+            children: [
+              _ProfileSummaryCard(
+                nickname: nicknameController.text,
+                email: emailController.text,
+                birthDate: birthDate,
+                gender: _genderLabel(gender),
+                bmi: _currentBmi(),
+                completeness: _profileCompleteness(),
               ),
-              onPlus: () => setState(() => coffeeCups++),
-            ),
-          ],
-        ),
-        const SizedBox(height: 16),
-        _ProfileSection(
-          icon: Icons.medical_information_outlined,
-          title: 'Riwayat Kesehatan',
-          children: [
-            const Text(
-              'Pilih kondisi kesehatan atau riwayat medis lambung & metabolik:',
-              style: TextStyle(
-                color: AppColors.secondary,
-                fontSize: 12,
-                height: 1.5,
+              const SizedBox(height: 20),
+              _ProfileSection(
+                icon: Icons.person_outline,
+                title: 'Data Dasar',
+                children: [
+                  _ProfileField(
+                    label: 'Nama Lengkap',
+                    controller: nameController,
+                    onChanged: (_) => setState(() {}),
+                  ),
+                  _ProfileField(
+                    label: 'Nama Panggilan',
+                    controller: nicknameController,
+                    onChanged: (_) => setState(() {}),
+                    helper:
+                        'Nama panggilan yang ditampilkan Gerdie saat menyapamu di Beranda.',
+                  ),
+                  _ProfileField(
+                    label: 'Email',
+                    controller: emailController,
+                    readOnly: true,
+                    trailing: const _VerifiedBadge(),
+                  ),
+                  _ProfileField(
+                    label: 'Tanggal Lahir',
+                    controller: birthDateController,
+                    readOnly: true,
+                    onTap: _selectBirthDate,
+                    trailing: const Icon(
+                      Icons.calendar_today_outlined,
+                      size: 18,
+                      color: AppColors.secondary,
+                    ),
+                  ),
+                  const Text('Jenis Kelamin', style: _labelStyle),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _ChoiceButton(
+                          label: 'Laki-laki',
+                          selected: gender == 'male',
+                          onTap: () => setState(() => gender = 'male'),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: _ChoiceButton(
+                          label: 'Perempuan',
+                          selected: gender == 'female',
+                          onTap: () => setState(() => gender = 'female'),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _ProfileField(
+                          label: 'Tinggi Badan',
+                          controller: heightController,
+                          onChanged: (_) => setState(() {}),
+                          suffix: 'cm',
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: _ProfileField(
+                          label: 'Berat Badan',
+                          controller: weightController,
+                          onChanged: (_) => setState(() {}),
+                          suffix: 'kg',
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  _BmiCard(
+                    height: heightController.text,
+                    weight: weightController.text,
+                  ),
+                ],
               ),
-            ),
-            const SizedBox(height: 12),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                for (final condition in [
-                  'Riwayat GERD',
-                  'Gastritis / Maag',
-                  'Hipertensi',
-                  'Diabetes',
-                  'Asma',
-                  ...customConditions,
-                ])
-                  _ConditionChip(
-                    label: condition,
-                    selected: selectedConditions.contains(condition),
-                    onTap: () => setState(() {
-                      if (selectedConditions.contains(condition)) {
-                        selectedConditions.remove(condition);
-                      } else {
-                        selectedConditions.add(condition);
-                      }
+              const SizedBox(height: 16),
+              _ProfileSection(
+                icon: Icons.self_improvement_outlined,
+                title: 'Kebiasaan Hidup',
+                children: [
+                  _SegmentField(
+                    label: 'Kebiasaan Merokok',
+                    value: smoking,
+                    options: const ['Tidak', 'Kadang', 'Rutin'],
+                    onChanged: (value) => setState(() => smoking = value),
+                  ),
+                  _SegmentField(
+                    label: 'Konsumsi Alkohol',
+                    value: alcohol,
+                    options: const ['Tidak', 'Kadang', 'Rutin'],
+                    onChanged: (value) => setState(() => alcohol = value),
+                  ),
+                  _SegmentField(
+                    label: 'Pola Aktivitas Harian',
+                    value: workPattern,
+                    options: const ['Reguler (09.00 - 17.00)', 'Shift / Malam'],
+                    onChanged: (value) => setState(() => workPattern = value),
+                  ),
+                  _SegmentField(
+                    label: 'Konsumsi Kopi',
+                    value: coffee == null
+                        ? null
+                        : coffee!
+                        ? 'Ya'
+                        : 'Tidak',
+                    options: const ['Tidak', 'Ya'],
+                    onChanged: (value) => setState(() {
+                      coffee = value == 'Ya';
                     }),
                   ),
-              ],
-            ),
-            const SizedBox(height: 4),
-            OutlinedButton.icon(
-              onPressed: () =>
-                  setState(() => isAddingCondition = !isAddingCondition),
-              icon: Icon(isAddingCondition ? Icons.close : Icons.add, size: 18),
-              label: Text(
-                isAddingCondition ? 'Batal Tambah Kondisi' : 'Tambah Kondisi',
+                ],
               ),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: AppColors.primary,
-                side: const BorderSide(color: AppColors.primaryContainer),
-                shape: const StadiumBorder(),
+              const SizedBox(height: 16),
+              _ProfileSection(
+                icon: Icons.medical_information_outlined,
+                title: 'Riwayat Kesehatan',
+                children: [
+                  const Text(
+                    'Pilih kondisi kesehatan atau riwayat medis lambung & metabolik:',
+                    style: TextStyle(
+                      color: AppColors.secondary,
+                      fontSize: 12,
+                      height: 1.5,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      for (final condition in [
+                        'Riwayat GERD',
+                        'Gastritis / Maag',
+                        'Hipertensi',
+                        'Diabetes',
+                        'Asma',
+                        ...customConditions,
+                      ])
+                        _ConditionChip(
+                          label: condition,
+                          selected: selectedConditions.contains(condition),
+                          onTap: () => setState(() {
+                            if (selectedConditions.contains(condition)) {
+                              selectedConditions.remove(condition);
+                            } else {
+                              selectedConditions.add(condition);
+                            }
+                          }),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  OutlinedButton.icon(
+                    onPressed: () =>
+                        setState(() => isAddingCondition = !isAddingCondition),
+                    icon: Icon(
+                      isAddingCondition ? Icons.close : Icons.add,
+                      size: 18,
+                    ),
+                    label: Text(
+                      isAddingCondition
+                          ? 'Batal Tambah Kondisi'
+                          : 'Tambah Kondisi',
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppColors.primary,
+                      side: const BorderSide(color: AppColors.primaryContainer),
+                      shape: const StadiumBorder(),
+                    ),
+                  ),
+                  if (isAddingCondition) ...[
+                    const SizedBox(height: 12),
+                    _InlineAddCard(
+                      label: 'Nama kondisi',
+                      controller: conditionController,
+                      actionLabel: 'Tambah',
+                      onCancel: () => setState(() => isAddingCondition = false),
+                      onAdd: () {
+                        final value = conditionController.text.trim();
+                        if (value.isEmpty) return;
+                        setState(() {
+                          customConditions.add(value);
+                          selectedConditions.add(value);
+                          conditionController.clear();
+                          isAddingCondition = false;
+                        });
+                      },
+                    ),
+                  ],
+                ],
               ),
-            ),
-            if (isAddingCondition) ...[
-              const SizedBox(height: 12),
-              _InlineAddCard(
-                label: 'Nama kondisi',
-                controller: conditionController,
-                actionLabel: 'Tambah',
-                onCancel: () => setState(() => isAddingCondition = false),
-                onAdd: () {
-                  final value = conditionController.text.trim();
-                  if (value.isEmpty) return;
-                  setState(() {
-                    customConditions.add(value);
-                    selectedConditions.add(value);
-                    conditionController.clear();
-                    isAddingCondition = false;
-                  });
-                },
+              const SizedBox(height: 16),
+              _ProfileSection(
+                icon: Icons.medication_outlined,
+                title: 'Obat Rutin',
+                children: [
+                  for (var index = 0; index < medicines.length; index++) ...[
+                    _MedicineCard(
+                      medicine: medicines[index],
+                      onChanged: () => setState(() {}),
+                      onDelete: () => setState(() => medicines.removeAt(index)),
+                    ),
+                    if (index < medicines.length - 1) const SizedBox(height: 8),
+                  ],
+                  const SizedBox(height: 12),
+                  OutlinedButton.icon(
+                    onPressed: () =>
+                        setState(() => isAddingMedicine = !isAddingMedicine),
+                    icon: const Icon(Icons.add, size: 18),
+                    label: Text(
+                      isAddingMedicine
+                          ? 'Batal Tambah Obat'
+                          : 'Tambah Obat Rutin Baru',
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      minimumSize: const Size.fromHeight(44),
+                      foregroundColor: AppColors.primary,
+                      side: const BorderSide(color: AppColors.primaryContainer),
+                      shape: const StadiumBorder(),
+                    ),
+                  ),
+                  if (isAddingMedicine) ...[
+                    const SizedBox(height: 12),
+                    _InlineAddMedicineCard(
+                      nameController: medicineNameController,
+                      scheduleController: medicineScheduleController,
+                      onCancel: () => setState(() => isAddingMedicine = false),
+                      onAdd: () {
+                        final name = medicineNameController.text.trim();
+                        final schedule = medicineScheduleController.text.trim();
+                        if (name.isEmpty || schedule.isEmpty) return;
+                        setState(() {
+                          medicines.add(_MedicineData(name, schedule));
+                          medicineNameController.clear();
+                          medicineScheduleController.clear();
+                          isAddingMedicine = false;
+                        });
+                      },
+                    ),
+                  ],
+                ],
+              ),
+              const SizedBox(height: 20),
+              Center(
+                child: TextButton.icon(
+                  onPressed: () {},
+                  icon: const Icon(
+                    Icons.logout,
+                    color: AppColors.error,
+                    size: 18,
+                  ),
+                  label: const Text(
+                    'Keluar dari Akun',
+                    style: TextStyle(
+                      color: AppColors.error,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
               ),
             ],
-          ],
-        ),
-        const SizedBox(height: 16),
-        _ProfileSection(
-          icon: Icons.medication_outlined,
-          title: 'Obat Rutin',
-          children: [
-            for (var index = 0; index < medicines.length; index++) ...[
-              _MedicineCard(
-                medicine: medicines[index],
-                onChanged: () => setState(() {}),
-                onDelete: () => setState(() => medicines.removeAt(index)),
-              ),
-              if (index < medicines.length - 1) const SizedBox(height: 8),
-            ],
-            const SizedBox(height: 12),
-            OutlinedButton.icon(
-              onPressed: () =>
-                  setState(() => isAddingMedicine = !isAddingMedicine),
-              icon: const Icon(Icons.add, size: 18),
-              label: Text(
-                isAddingMedicine
-                    ? 'Batal Tambah Obat'
-                    : 'Tambah Obat Rutin Baru',
-              ),
-              style: OutlinedButton.styleFrom(
-                minimumSize: const Size.fromHeight(44),
-                foregroundColor: AppColors.primary,
-                side: const BorderSide(color: AppColors.primaryContainer),
-                shape: const StadiumBorder(),
-              ),
-            ),
-            if (isAddingMedicine) ...[
-              const SizedBox(height: 12),
-              _InlineAddMedicineCard(
-                nameController: medicineNameController,
-                scheduleController: medicineScheduleController,
-                onCancel: () => setState(() => isAddingMedicine = false),
-                onAdd: () {
-                  final name = medicineNameController.text.trim();
-                  final schedule = medicineScheduleController.text.trim();
-                  if (name.isEmpty || schedule.isEmpty) return;
-                  setState(() {
-                    medicines.add(_MedicineData(name, schedule));
-                    medicineNameController.clear();
-                    medicineScheduleController.clear();
-                    isAddingMedicine = false;
-                  });
-                },
-              ),
-            ],
-          ],
-        ),
-        const SizedBox(height: 20),
-        Center(
-          child: TextButton.icon(
-            onPressed: () {},
-            icon: const Icon(Icons.logout, color: AppColors.error, size: 18),
-            label: const Text(
-              'Keluar dari Akun',
-              style: TextStyle(
-                color: AppColors.error,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
           ),
-        ),
-      ],
-    ),
   );
 }
 
@@ -344,7 +606,22 @@ const _labelStyle = TextStyle(
 );
 
 class _ProfileSummaryCard extends StatelessWidget {
-  const _ProfileSummaryCard();
+  const _ProfileSummaryCard({
+    required this.nickname,
+    required this.email,
+    required this.birthDate,
+    required this.gender,
+    required this.bmi,
+    required this.completeness,
+  });
+
+  final String nickname;
+  final String email;
+  final DateTime? birthDate;
+  final String gender;
+  final double? bmi;
+  final double completeness;
+
   @override
   Widget build(BuildContext context) => Container(
     padding: const EdgeInsets.all(20),
@@ -356,11 +633,13 @@ class _ProfileSummaryCard extends StatelessWidget {
           children: [
             Stack(
               children: [
-                const CircleAvatar(
+                CircleAvatar(
                   radius: 32,
                   backgroundColor: AppColors.surfaceContainerLow,
                   child: Text(
-                    'D',
+                    nickname.trim().isEmpty
+                        ? '?'
+                        : nickname.trim().substring(0, 1).toUpperCase(),
                     style: TextStyle(
                       color: AppColors.primary,
                       fontSize: 20,
@@ -383,27 +662,34 @@ class _ProfileSummaryCard extends StatelessWidget {
               ],
             ),
             const SizedBox(width: 16),
-            const Expanded(
+            Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Dion',
+                    nickname.trim().isEmpty ? 'Belum diisi' : nickname,
                     style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
                   ),
-                  SizedBox(height: 2),
+                  const SizedBox(height: 2),
                   Text(
-                    'dion.pratama@email.com',
-                    style: TextStyle(color: AppColors.secondary, fontSize: 12),
+                    email.trim().isEmpty ? 'Email belum tersedia' : email,
+                    style: const TextStyle(
+                      color: AppColors.secondary,
+                      fontSize: 12,
+                    ),
                   ),
-                  SizedBox(height: 10),
+                  const SizedBox(height: 10),
                   Wrap(
                     spacing: 6,
                     runSpacing: 6,
                     children: [
-                      _SummaryPill(label: '28 tahun'),
-                      _SummaryPill(label: 'BMI 23.4 (Ideal)'),
-                      _SummaryPill(label: 'Pria'),
+                      _SummaryPill(label: _ageLabel(birthDate)),
+                      _SummaryPill(
+                        label: bmi == null
+                            ? 'BMI belum tersedia'
+                            : 'BMI ${bmi!.toStringAsFixed(1)}',
+                      ),
+                      _SummaryPill(label: gender),
                     ],
                   ),
                 ],
@@ -432,8 +718,8 @@ class _ProfileSummaryCard extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    '85%',
-                    style: TextStyle(
+                    '${(completeness * 100).round()}%',
+                    style: const TextStyle(
                       color: AppColors.primary,
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
@@ -444,12 +730,12 @@ class _ProfileSummaryCard extends StatelessWidget {
               const SizedBox(height: 8),
               ClipRRect(
                 borderRadius: BorderRadius.circular(99),
-                child: const SizedBox(
+                child: SizedBox(
                   height: 8,
                   child: LinearProgressIndicator(
-                    value: .85,
+                    value: completeness,
                     backgroundColor: AppColors.secondaryContainer,
-                    valueColor: AlwaysStoppedAnimation(
+                    valueColor: const AlwaysStoppedAnimation(
                       AppColors.primaryContainer,
                     ),
                   ),
@@ -461,6 +747,20 @@ class _ProfileSummaryCard extends StatelessWidget {
       ],
     ),
   );
+
+  static int _age(DateTime? date) {
+    if (date == null) return 0;
+    final now = DateTime.now();
+    var age = now.year - date.year;
+    if (now.month < date.month ||
+        (now.month == date.month && now.day < date.day)) {
+      age--;
+    }
+    return age;
+  }
+
+  static String _ageLabel(DateTime? date) =>
+      date == null ? 'Usia belum diisi' : '${_age(date)} tahun';
 }
 
 class _ProfileSection extends StatelessWidget {
@@ -514,17 +814,21 @@ const _cardDecoration = BoxDecoration(
 class _ProfileField extends StatelessWidget {
   const _ProfileField({
     required this.label,
-    required this.value,
+    required this.controller,
     this.helper,
     this.trailing,
     this.suffix,
+    this.readOnly = false,
+    this.onTap,
     this.onChanged,
   });
   final String label;
-  final String value;
+  final TextEditingController controller;
   final String? helper;
   final Widget? trailing;
   final String? suffix;
+  final bool readOnly;
+  final VoidCallback? onTap;
   final ValueChanged<String>? onChanged;
   @override
   Widget build(BuildContext context) => Column(
@@ -543,7 +847,9 @@ class _ProfileField extends StatelessWidget {
           children: [
             Expanded(
               child: TextFormField(
-                initialValue: value,
+                controller: controller,
+                readOnly: readOnly,
+                onTap: onTap,
                 onChanged: onChanged,
                 keyboardType: suffix == null
                     ? TextInputType.text
@@ -647,8 +953,21 @@ class _BmiCard extends StatelessWidget {
   final String weight;
   @override
   Widget build(BuildContext context) {
-    final heightValue = double.tryParse(height.replaceAll(',', '.')) ?? 170;
-    final weightValue = double.tryParse(weight.replaceAll(',', '.')) ?? 67.5;
+    final heightValue = double.tryParse(height.replaceAll(',', '.'));
+    final weightValue = double.tryParse(weight.replaceAll(',', '.'));
+    if (heightValue == null || weightValue == null || heightValue <= 0) {
+      return Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: AppColors.surfaceContainerLow,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: const Text(
+          'Isi tinggi dan berat badan untuk melihat BMI.',
+          style: TextStyle(color: AppColors.secondary, fontSize: 12),
+        ),
+      );
+    }
     final bmi = weightValue / ((heightValue / 100) * (heightValue / 100));
     final category = bmi < 18.5
         ? 'Kurang'
@@ -739,7 +1058,7 @@ class _SegmentField extends StatelessWidget {
     required this.onChanged,
   });
   final String label;
-  final String value;
+  final String? value;
   final List<String> options;
   final ValueChanged<String> onChanged;
   @override
@@ -1029,82 +1348,5 @@ class _AddActions extends StatelessWidget {
         child: Text(label),
       ),
     ],
-  );
-}
-
-class _CoffeeCard extends StatelessWidget {
-  const _CoffeeCard({
-    required this.cups,
-    required this.onMinus,
-    required this.onPlus,
-  });
-  final int cups;
-  final VoidCallback onMinus;
-  final VoidCallback onPlus;
-  @override
-  Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.all(14),
-    decoration: BoxDecoration(
-      color: AppColors.surfaceContainerLow,
-      borderRadius: BorderRadius.circular(12),
-    ),
-    child: Row(
-      children: [
-        CircleAvatar(
-          radius: 18,
-          backgroundColor: Colors.white,
-          child: Icon(
-            Icons.local_cafe_outlined,
-            color: AppColors.primary,
-            size: 20,
-          ),
-        ),
-        SizedBox(width: 10),
-        Expanded(
-          child: Text(
-            'Konsumsi Kopi',
-            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
-          ),
-        ),
-        Container(
-          padding: const EdgeInsets.all(4),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(99),
-          ),
-          child: Row(
-            children: [
-              IconButton(
-                onPressed: onMinus,
-                icon: const Icon(Icons.remove, size: 16),
-                constraints: const BoxConstraints.tightFor(
-                  width: 28,
-                  height: 28,
-                ),
-                padding: EdgeInsets.zero,
-                color: AppColors.secondary,
-              ),
-              Text(
-                '$cups cangkir / hari',
-                style: const TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              IconButton(
-                onPressed: onPlus,
-                icon: const Icon(Icons.add, size: 16),
-                constraints: const BoxConstraints.tightFor(
-                  width: 28,
-                  height: 28,
-                ),
-                padding: EdgeInsets.zero,
-                color: AppColors.primary,
-              ),
-            ],
-          ),
-        ),
-      ],
-    ),
   );
 }
