@@ -3,7 +3,18 @@ import 'package:flutter/material.dart';
 import 'home_nav_item.dart';
 
 class HomeBottomNav extends StatelessWidget {
-  const HomeBottomNav({super.key});
+  const HomeBottomNav({
+    this.active = 'Beranda',
+    this.onHome,
+    this.onAnalytics,
+    this.onReports,
+    super.key,
+  });
+
+  final String active;
+  final VoidCallback? onHome;
+  final VoidCallback? onAnalytics;
+  final VoidCallback? onReports;
 
   @override
   Widget build(BuildContext context) => Container(
@@ -18,12 +29,27 @@ class HomeBottomNav extends StatelessWidget {
         ),
       ],
     ),
-    child: const Row(
+    child: Row(
       mainAxisAlignment: MainAxisAlignment.spaceAround,
       children: [
-        HomeNavItem(icon: Icons.home_outlined, label: 'Beranda', active: true),
-        HomeNavItem(icon: Icons.insights_outlined, label: 'Analitik'),
-        HomeNavItem(icon: Icons.description_outlined, label: 'Laporan'),
+        HomeNavItem(
+          icon: Icons.home_outlined,
+          label: 'Beranda',
+          active: active == 'Beranda',
+          onTap: onHome,
+        ),
+        HomeNavItem(
+          icon: Icons.insights_outlined,
+          label: 'Analitik',
+          active: active == 'Analitik',
+          onTap: onAnalytics,
+        ),
+        HomeNavItem(
+          icon: Icons.description_outlined,
+          label: 'Laporan',
+          active: active == 'Laporan',
+          onTap: onReports,
+        ),
       ],
     ),
   );
