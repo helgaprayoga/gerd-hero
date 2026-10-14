@@ -9,6 +9,7 @@ from routes.gerdq import gerdq_bp
 from routes.logs import logs_bp
 from routes.analytics import analytics_bp
 from routes.report import report_bp
+from routes.onboarding import onboarding_bp
 
 
 def create_app():
@@ -27,6 +28,7 @@ def create_app():
     app.register_blueprint(logs_bp,      url_prefix="/api")
     app.register_blueprint(analytics_bp, url_prefix="/api")
     app.register_blueprint(report_bp,    url_prefix="/api/report")
+    app.register_blueprint(onboarding_bp, url_prefix="/api")
 
     @app.get("/health")
     def health():

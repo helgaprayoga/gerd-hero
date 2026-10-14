@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../models/daily_log_draft.dart';
 import 'daily_log_step_two_view.dart';
 
 part 'daily_log_step_one_step_progress.dart';
@@ -16,7 +17,7 @@ class DailyLogStepOneView extends StatefulWidget {
   });
 
   final String dateLabel;
-  final VoidCallback? onNext;
+  final ValueChanged<DailyLogDraft>? onNext;
 
   @override
   State<DailyLogStepOneView> createState() => _DailyLogStepOneViewState();
@@ -225,12 +226,27 @@ class _DailyLogStepOneViewState extends State<DailyLogStepOneView> {
                     height: 48,
                     child: FilledButton(
                       onPressed: () {
+                        final draft = DailyLogDraft();
+                        draft.noSymptoms = _noSymptoms;
+                        draft.symptomDescription = _noteController.text.trim();
+                        const symptomNames = {
+                          'heartburn': 'Heartburn',
+                          'regurgitasi': 'Regurgitasi',
+                          'nyeri': 'Nyeri dada',
+                          'menelan': 'Kesulitan menelan',
+                          'kembung': 'Kembung & gas',
+                          'serak': 'Suara serak',
+                        };
+                        draft.symptoms = _selectedSymptoms
+                            .map((id) => symptomNames[id])
+                            .whereType<String>()
+                            .toList();
                         if (widget.onNext != null) {
-                          widget.onNext!();
+                          widget.onNext!(draft);
                         } else {
                           Navigator.of(context).push(
                             MaterialPageRoute<void>(
-                              builder: (_) => const DailyLogStepTwoView(),
+                              builder: (_) => DailyLogStepTwoView(draft: draft),
                             ),
                           );
                         }

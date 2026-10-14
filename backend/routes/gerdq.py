@@ -22,7 +22,7 @@ def submit_gerdq():
         return json_error("answers harus berisi tepat 6 angka dengan nilai 0 sampai 3.")
 
     score, evaluation = hitung_skor_gerdq(answers)
-    db_result = "likely_gerd" if score > 7 else "no_gerd"
+    db_result = "likely_gerd" if score >= 8 else "no_gerd"
     payload = {
         "user_id": g.user_id,
         "score": score,

@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
 
 class HomeStreakBadge extends StatelessWidget {
-  const HomeStreakBadge({super.key});
+  const HomeStreakBadge({required this.streakDays, super.key});
+
+  final int streakDays;
 
   @override
   Widget build(BuildContext context) => Container(
@@ -13,13 +15,15 @@ class HomeStreakBadge extends StatelessWidget {
       borderRadius: BorderRadius.circular(999),
       border: Border.all(color: AppColors.primaryFixed.withValues(alpha: 0.7)),
     ),
-    child: const Row(
+    child: Row(
       mainAxisSize: MainAxisSize.min,
       children: [
         Icon(Icons.local_fire_department, color: AppColors.tertiary, size: 16),
         SizedBox(width: 6),
         Text(
-          '7 hari berturut-turut',
+          streakDays == 0
+              ? 'Mulai streak hari ini'
+              : '$streakDays hari berturut-turut',
           style: TextStyle(
             color: AppColors.onSurfaceVariant,
             fontSize: 12,

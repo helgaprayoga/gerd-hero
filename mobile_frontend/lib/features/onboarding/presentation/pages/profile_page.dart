@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/services/api_service.dart';
+import '../../../../core/services/onboarding_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../auth/presentation/widgets/auth_privacy_note.dart';
-import '../../../home/presentation/pages/home_page.dart';
+import '../../../home/presentation/models/profile_data.dart';
 import '../widgets/bmi_card.dart';
 import '../widgets/profile_form_card.dart';
 import '../widgets/profile_header.dart';
@@ -22,8 +23,9 @@ class _ProfilePageState extends State<ProfilePage> {
   final _heightController = TextEditingController();
   final _weightController = TextEditingController();
   DateTime? _birthDate;
-  String _gender = 'Laki-laki';
+  String? _gender;
   bool _isLoading = false;
+  bool _isLoadingProfile = true;
 
   @override
   void initState() {
@@ -31,6 +33,7 @@ class _ProfilePageState extends State<ProfilePage> {
     _nameController.addListener(_refresh);
     _heightController.addListener(_refresh);
     _weightController.addListener(_refresh);
+    _loadProfile();
   }
 
   @override
@@ -43,6 +46,52 @@ class _ProfilePageState extends State<ProfilePage> {
 
   void _refresh() => setState(() {});
 
+  Future<void> _loadProfile() async {
+    try {
+      final response = await ApiService.instance.get('/api/profile');
+      final rawData = response['data'];
+      if (rawData is Map && mounted) {
+        final profile = ProfileData.fromJson(
+          Map<String, dynamic>.from(rawData),
+        );
+        // Jangan menimpa input yang sedang diketik pengguna.
+        if (_nameController.text.isEmpty &&
+            _heightController.text.isEmpty &&
+            _weightController.text.isEmpty &&
+            _birthDate == null) {
+          _nameController.text = profile.nickname ?? '';
+          _heightController.text = _formatNumber(profile.height);
+          _weightController.text = _formatNumber(profile.weight);
+          _birthDate = profile.birthDate;
+          _gender = switch (profile.gender) {
+            'male' => 'Laki-laki',
+            'female' => 'Perempuan',
+            _ => null,
+          };
+        }
+      }
+    } catch (_) {
+      // Form tetap dapat diisi ketika profil belum tersedia atau server gagal.
+    } finally {
+      if (mounted) setState(() => _isLoadingProfile = false);
+    }
+  }
+
+  String _formatNumber(double? value) => value == null
+      ? ''
+      : value == value.roundToDouble()
+      ? value.toInt().toString()
+      : value.toString();
+
+  double? _parseMeasurement(String value) =>
+      double.tryParse(value.trim().replaceAll(',', '.'));
+
+  void _showValidationError(String message) {
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
+  }
+
   /// Validasi form, simpan profil ke backend, lalu lanjut ke GERD-Q.
   Future<void> _saveProfile() async {
     if (_nameController.text.trim().isEmpty) {
@@ -52,24 +101,36 @@ class _ProfilePageState extends State<ProfilePage> {
       return;
     }
     if (_birthDate == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Tanggal lahir wajib diisi.')),
-      );
+      _showValidationError('Tanggal lahir wajib diisi.');
+      return;
+    }
+    if (_gender == null) {
+      _showValidationError('Jenis kelamin wajib dipilih.');
+      return;
+    }
+
+    final height = _parseMeasurement(_heightController.text);
+    if (height == null || height <= 0) {
+      _showValidationError('Tinggi badan wajib diisi dengan angka yang valid.');
+      return;
+    }
+
+    final weight = _parseMeasurement(_weightController.text);
+    if (weight == null || weight <= 0) {
+      _showValidationError('Berat badan wajib diisi dengan angka yang valid.');
       return;
     }
 
     setState(() => _isLoading = true);
     try {
-      final height = double.tryParse(_heightController.text);
-      final weight = double.tryParse(_weightController.text);
-
       await ApiService.instance.put('/api/profile', {
         'nickname': _nameController.text.trim(),
         'birth_date': _birthDate!.toIso8601String().substring(0, 10),
         'gender': _gender == 'Laki-laki' ? 'male' : 'female',
-        if (height != null && height > 0) 'height': height,
-        if (weight != null && weight > 0) 'weight': weight,
+        'height': height,
+        'weight': weight,
       });
+      await OnboardingService.instance.setProfileStatus('completed');
 
       if (mounted) {
         Navigator.of(
@@ -93,6 +154,31 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
+  Future<void> _skipProfile() async {
+    try {
+      await OnboardingService.instance.setProfileStatus('skipped');
+      if (!mounted) return;
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute<void>(builder: (_) => const GerdQIntroPage()),
+        (route) => false,
+      );
+    } on ApiException catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(error.message)));
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Tidak dapat menyimpan status onboarding.'),
+          ),
+        );
+      }
+    }
+  }
+
   Future<void> _selectBirthDate() async {
     final picked = await showDatePicker(
       context: context,
@@ -105,19 +191,15 @@ class _ProfilePageState extends State<ProfilePage> {
 
   @override
   Widget build(BuildContext context) {
-    final height = double.tryParse(_heightController.text);
-    final weight = double.tryParse(_weightController.text);
+    final height = _parseMeasurement(_heightController.text);
+    final weight = _parseMeasurement(_weightController.text);
 
     return Scaffold(
       backgroundColor: AppColors.surface,
       body: Column(
         children: [
-          ProfileHeader(
-            onSkip: () => Navigator.of(context).pushAndRemoveUntil(
-              MaterialPageRoute<void>(builder: (_) => const HomePage()),
-              (route) => false,
-            ),
-          ),
+          ProfileHeader(onSkip: _skipProfile),
+          if (_isLoadingProfile) const LinearProgressIndicator(minHeight: 2),
           Expanded(
             child: SafeArea(
               top: false,

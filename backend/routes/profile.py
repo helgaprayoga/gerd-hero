@@ -70,8 +70,8 @@ def update_profile():
         return json_error(str(error))
 
     gender = body.get("gender")
-    if gender is not None and gender not in {"male", "female", "other"}:
-        return json_error("gender harus male, female, atau other.")
+    if gender is not None and gender not in {"male", "female"}:
+        return json_error("gender harus male atau female.")
 
     user_fields = ("email", "name", "nickname", "birth_date", "gender", "height", "weight")
     user_update = {key: body[key] for key in user_fields if key in body}
