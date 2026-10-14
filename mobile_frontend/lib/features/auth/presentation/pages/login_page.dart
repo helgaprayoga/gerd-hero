@@ -4,6 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/app_feedback.dart';
 import '../models/auth_mode.dart';
+import '../utils/auth_error_message.dart';
 import '../utils/auth_validators.dart';
 import '../widgets/auth_form_card.dart';
 import '../widgets/auth_greeting.dart';
@@ -11,6 +12,7 @@ import '../widgets/auth_header.dart';
 import '../widgets/auth_mode_switcher.dart';
 import '../widgets/auth_privacy_note.dart';
 import '../widgets/register_form_card.dart';
+import 'check_email_page.dart';
 import 'forgot_password_page.dart';
 
 class LoginPage extends StatefulWidget {
@@ -44,6 +46,7 @@ class _LoginPageState extends State<LoginPage> {
 
   Future<void> _submit() async {
     if (_isSubmitting) return;
+
     final isRegister = _mode == AuthMode.register;
     final hasError =
         !(_formKey.currentState?.validate() ?? false) ||
@@ -63,28 +66,46 @@ class _LoginPageState extends State<LoginPage> {
       return;
     }
 
+    final email =
+        (isRegister ? _registerEmailController.text : _emailController.text)
+            .trim()
+            .toLowerCase();
+    final password = isRegister
+        ? _registerPasswordController.text
+        : _passwordController.text;
+
     setState(() => _isSubmitting = true);
     try {
       if (isRegister) {
         final response = await Supabase.instance.client.auth.signUp(
-          email: _registerEmailController.text.trim(),
-          password: _registerPasswordController.text,
+          email: email,
+          password: password,
         );
-        if (response.session == null && mounted) {
-          _showMessage(
-            'Pendaftaran berhasil. Silakan cek email untuk verifikasi.',
+
+        if (!mounted) return;
+        if (response.session == null) {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute<void>(
+              builder: (_) => CheckEmailPage(email: email),
+            ),
           );
         }
+        // Jika session langsung tersedia, app.dart menangani ProfileGatePage.
       } else {
         await Supabase.instance.client.auth.signInWithPassword(
-          email: _emailController.text.trim(),
-          password: _passwordController.text,
+          email: email,
+          password: password,
         );
+        // Navigasi ditangani oleh auth listener agar email dan OAuth konsisten.
       }
     } on AuthException catch (error) {
-      if (mounted) _showMessage(error.message);
-    } catch (_) {
-      if (mounted) _showMessage('Tidak dapat terhubung ke server autentikasi.');
+      if (mounted) {
+        _showMessage(authErrorMessage(error, isLogin: !isRegister));
+      }
+    } catch (error) {
+      if (mounted) {
+        _showMessage(authErrorMessage(error, isLogin: !isRegister));
+      }
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
     }
@@ -99,15 +120,14 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  // ── Fungsi Login Google ──────────────────────────────────────────
   Future<void> _signInWithGoogle() async {
     try {
       await Supabase.instance.client.auth.signInWithOAuth(
         OAuthProvider.google,
         redirectTo: 'io.supabase.gerdhero://login-callback',
       );
-    } catch (e) {
-      _showMessage('Gagal login dengan Google: $e');
+    } catch (error) {
+      _showMessage(authErrorMessage(error, isLogin: true));
     }
   }
 
@@ -167,7 +187,8 @@ class _LoginPageState extends State<LoginPage> {
                               !_confirmPasswordVisible,
                         ),
                         onSubmit: _submit,
-                        onGoogle: _signInWithGoogle, // 👈 Tersambung ke Google
+                        isLoading: _isSubmitting,
+                        onGoogle: _signInWithGoogle,
                       )
                     else
                       AuthFormCard(
@@ -189,6 +210,7 @@ class _LoginPageState extends State<LoginPage> {
                               !_confirmPasswordVisible,
                         ),
                         onSubmit: _submit,
+                        isLoading: _isSubmitting,
                         onForgotPassword: () {
                           Navigator.of(context).push(
                             MaterialPageRoute<void>(
@@ -196,7 +218,7 @@ class _LoginPageState extends State<LoginPage> {
                             ),
                           );
                         },
-                        onGoogle: _signInWithGoogle, // 👈 Tersambung ke Google
+                        onGoogle: _signInWithGoogle,
                       ),
                     const SizedBox(height: 20),
                     const AuthPrivacyNote(),

@@ -9,16 +9,18 @@ class CheckEmailActions extends StatelessWidget {
     required this.onResend,
     required this.onBackToLogin,
     super.key,
+    this.isResending = false,
   });
 
   final int secondsLeft;
   final VoidCallback onOpenEmail;
   final VoidCallback onResend;
   final VoidCallback onBackToLogin;
+  final bool isResending;
 
   @override
   Widget build(BuildContext context) {
-    final canResend = secondsLeft == 0;
+    final canResend = secondsLeft == 0 && !isResending;
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -68,18 +70,24 @@ class CheckEmailActions extends StatelessWidget {
                     : AppColors.secondary,
                 shape: const StadiumBorder(),
               ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.mail, size: 18),
-                  const SizedBox(width: 8),
-                  Text(
-                    canResend
-                        ? 'Kirim Ulang Email Sekarang'
-                        : 'Kirim ulang dalam ${secondsLeft}s',
-                  ),
-                ],
-              ),
+              child: isResending
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.mail, size: 18),
+                        const SizedBox(width: 8),
+                        Text(
+                          canResend
+                              ? 'Kirim Ulang Email Sekarang'
+                              : 'Kirim ulang dalam ${secondsLeft}s',
+                        ),
+                      ],
+                    ),
             ),
           ),
           const SizedBox(height: 8),
