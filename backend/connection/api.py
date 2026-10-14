@@ -1,12 +1,13 @@
 from google import genai
-import os
-from dotenv import load_dotenv
 
-load_dotenv()
-client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
+from config import get_settings
+
+
+def _get_client():
+    return genai.Client(api_key=get_settings().gemini_api_key)
 
 def generate_text(prompt: str) -> str:
-    response = client.models.generate_content(
+    response = _get_client().models.generate_content(
         model="gemini-3.1-flash-lite",
         contents=prompt,
     )

@@ -1,13 +1,28 @@
-import os
 from supabase import create_client, Client
-from dotenv import load_dotenv
 
-load_dotenv()
+from config import get_settings
 
+settings = get_settings()
 supabase: Client = create_client(
-    os.environ.get("SUPABASE_URL"),
-    os.environ.get("SUPABASE_PUBLISHABLE_KEY")
-    # key gacor, bypass RLS
-    # os.environ.get("SUPABASE_SECRET_KEY")
+    settings.supabase_url,
+    settings.supabase_publishable_key,
 )
+
+
+def get_authenticated_client(access_token: str) -> Client:
+    """Create a custom-schema client carrying the user's Supabase JWT."""
+    if not access_token or not isinstance(access_token, str):
+        raise ValueError("access_token wajib diisi")
+
+    client = create_client(
+        settings.supabase_url,
+        settings.supabase_publishable_key,
+    )
+    client.postgrest.auth(access_token)
+    return client
+
+
+def get_table(client: Client, table_name: str):
+    """Return a table query targeting the PRD's custom schema."""
+    return client.schema("gerdhero").table(table_name)
 

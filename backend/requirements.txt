@@ -1,3 +1,6 @@
 Flask>=3.0,<4.0
 supabase
 python-dotenv
+google-genai
+requests
+flask-cors
