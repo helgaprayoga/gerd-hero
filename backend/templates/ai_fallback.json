@@ -1,0 +1,14 @@
+{
+  "analisis_pemicu_gejala": [
+    {
+      "pemicu": "Tidak terdeteksi",
+      "penjelasan_korelasi": "Analisis AI sementara tidak tersedia. Data Anda tetap tersimpan."
+    }
+  ],
+  "ringkasan_analisis": "Layanan analisis sedang tidak tersedia. Catatan harian Anda telah berhasil disimpan. Silakan cek kembali nanti untuk analisis pemicu.",
+  "rekomendasi": [
+    "Hindari makanan pedas dan berlemak.",
+    "Jaga jeda makan-tidur minimal 2 jam.",
+    "Kelola stres dengan teknik relaksasi."
+  ]
+}
