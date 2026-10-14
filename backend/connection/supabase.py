@@ -22,6 +22,16 @@ def get_authenticated_client(access_token: str) -> Client:
     return client
 
 
+def get_storage_admin_client() -> Client:
+    """Return a server-only client for private report Storage operations.
+
+    The secret key is never returned to a caller. It is used only by the
+    backend because Supabase Storage clients do not inherit the PostgREST JWT
+    header configured above.
+    """
+    return create_client(settings.supabase_url, settings.supabase_secret_key)
+
+
 def get_table(client: Client, table_name: str):
     """Return a table query targeting the PRD's custom schema."""
     return client.schema("gerdhero").table(table_name)

@@ -1,10 +1,5 @@
-import requests
+"""Legacy compatibility module.
 
-prompt = input("Masukkan prompt: ")
-
-result = requests.post(
-    "http://127.0.0.1:5000/generate",
-    json={"prompt": prompt},
-)
-
-print(result.json()["response"])
+Trigger analytics now belongs to :mod:`services.analytics_service`.
+This file intentionally contains no CLI or HTTP side effects.
+"""

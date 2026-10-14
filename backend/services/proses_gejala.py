@@ -21,10 +21,3 @@ def hitung_skor_gerd(inputs, weights):
             # Combined CF Formula: CF_combined = CF1 + CF2 * (1 - CF1)
             cf_total = cf_total + cf_gejala * (1 - cf_total)
     return cf_total
-
-# result = requests.post(
-#     "http://127.0.0.1:5000/generate",
-#     json={"prompt": "Explain GERD simply"},
-# )
-
-# print(result.json()["response"])

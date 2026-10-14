@@ -12,6 +12,7 @@ FLASK_DEBUG=True
 GEMINI_API_KEY=isi-api-key-gemini
 SUPABASE_URL=https://project.supabase.co
 SUPABASE_PUBLISHABLE_KEY=isi-publishable-key
+SUPABASE_SECRET_KEY=isi-secret-key-server
 CORS_ORIGINS=*
 ```
 
@@ -23,9 +24,12 @@ Migration Supabase tersedia di:
 
 ```text
 migrations/001_gerdhero_schema.sql
+migrations/002_gerdhero_additions.sql
 ```
 
-Jalankan file tersebut melalui Supabase SQL Editor. Migration mengasumsikan schema `gerdhero` sudah tersedia. Setelah itu, tambahkan `gerdhero` ke **Exposed schemas** pada Supabase Dashboard agar dapat diakses melalui PostgREST.
+Jalankan file tersebut secara berurutan melalui Supabase SQL Editor. Migration
+membuat schema `gerdhero` bila belum ada. Setelah itu, tambahkan `gerdhero` ke
+**Exposed schemas** pada Supabase Dashboard agar dapat diakses melalui PostgREST.
 
 Query untuk data pengguna harus dibuat dengan `get_authenticated_client(access_token)` dan `get_table(client, table_name)` dari `connection/supabase.py`. Cara ini meneruskan JWT pengguna dan memastikan policy RLS menggunakan `auth.uid()` yang benar.
 
@@ -54,11 +58,24 @@ API tersedia di `http://127.0.0.1:5000`.
 
 ## Endpoint
 
-- `POST /generate` - Mengirim prompt ke Gemini dan mengembalikan respons teks.
 - `GET /health` - Memeriksa status backend.
-- `POST /proses-gejala` - Menghitung skor Certainty Factor dari gejala yang dipilih.
-- `POST /proses-gerdq` - Menghitung skor dan hasil GERD-Q dari 6 jawaban bernilai 0-3.
-- `POST /proses-harian` - Menghitung indikator D2-D5 dari data log harian.
+- `POST /api/auth/register` - Registrasi email dan kata sandi.
+- `POST /api/auth/login` - Login pengguna.
+- `GET|PUT /api/profile` - Profil pengguna dan kalkulasi BMI.
+- `POST /api/gerdq` dan `GET /api/gerdq/latest` - GERD-Q.
+- `POST /api/logs`, `GET /api/logs`, `GET /api/logs/<date>` - Log harian.
+- `GET /api/analytics` - Tren, pemicu, faktor, dan rekomendasi.
+- `POST /api/report/generate` dan `GET /api/report/<id>/download` - Laporan PDF.
+
+Selain `/health`, endpoint privat menggunakan:
+
+```http
+Authorization: Bearer <supabase_access_token>
+```
+
+Sebelum menggunakan fitur laporan, buat bucket Storage Supabase bernama
+`reports`. File disimpan di path `<user_id>/<report_number>.pdf` menggunakan
+secret key server-side; secret key tidak boleh dikirim ke frontend.
 
 ## Kontrak API MVP berdasarkan PRD
 
@@ -79,7 +96,9 @@ Endpoint berikut adalah kontrak target untuk modul MVP. Endpoint yang belum memi
 | POST | `/api/report/generate` | Direncanakan | Membuat laporan PDF |
 | GET | `/api/report/<id>/download` | Direncanakan | Mengunduh laporan PDF |
 
-Endpoint foundation yang sudah aktif (`/health`, `/generate`, `/proses-gejala`, `/proses-gerdq`, dan `/proses-harian`) akan dipertahankan sebagai service logika dan health check selama endpoint MVP di atas dikembangkan.
+Handler endpoint sudah terhubung ke Supabase, service kalkulasi D1–D7 dan
+E1–E5, serta generator PDF. Pastikan migration sudah dijalankan dan schema
+`gerdhero` sudah ditambahkan ke **Exposed schemas**.
 
 Respons sukses `/proses-gerdq`:
 

@@ -17,6 +17,7 @@ class Settings:
     gemini_api_key: str
     supabase_url: str
     supabase_publishable_key: str
+    supabase_secret_key: str
     cors_origins: tuple[str, ...]
 
 
@@ -42,6 +43,7 @@ def get_settings() -> Settings:
         "GEMINI_API_KEY",
         "SUPABASE_URL",
         "SUPABASE_PUBLISHABLE_KEY",
+        "SUPABASE_SECRET_KEY",
     )
     missing = [name for name in required if not getenv(name)]
     if missing:
@@ -66,5 +68,6 @@ def get_settings() -> Settings:
         gemini_api_key=getenv("GEMINI_API_KEY", ""),
         supabase_url=supabase_url,
         supabase_publishable_key=getenv("SUPABASE_PUBLISHABLE_KEY", ""),
+        supabase_secret_key=getenv("SUPABASE_SECRET_KEY", ""),
         cors_origins=cors_origins,
     )
