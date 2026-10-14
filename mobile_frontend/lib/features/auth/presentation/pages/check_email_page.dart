@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/app_feedback.dart';
@@ -9,12 +10,19 @@ import '../widgets/auth_privacy_note.dart';
 import '../widgets/check_email_actions.dart';
 import '../widgets/check_email_hero.dart';
 import '../widgets/check_email_tips.dart';
+import '../utils/auth_error_message.dart';
+import 'login_page.dart';
 import 'new_password_page.dart';
 
 class CheckEmailPage extends StatefulWidget {
-  const CheckEmailPage({required this.email, super.key});
+  const CheckEmailPage({
+    required this.email,
+    this.isPasswordReset = false,
+    super.key,
+  });
 
   final String email;
+  final bool isPasswordReset;
 
   @override
   State<CheckEmailPage> createState() => _CheckEmailPageState();
@@ -24,6 +32,7 @@ class _CheckEmailPageState extends State<CheckEmailPage> {
   static const _initialSeconds = 45;
   Timer? _timer;
   int _secondsLeft = _initialSeconds;
+  bool _isResending = false;
 
   @override
   void initState() {
@@ -59,6 +68,33 @@ class _CheckEmailPageState extends State<CheckEmailPage> {
     );
   }
 
+  Future<void> _resendVerificationEmail() async {
+    if (_isResending || _secondsLeft != 0) return;
+
+    if (widget.isPasswordReset) {
+      _startCountdown();
+      _showMessage('Email pengaturan ulang telah dikirim ulang.');
+      return;
+    }
+
+    setState(() => _isResending = true);
+    try {
+      await Supabase.instance.client.auth.resend(
+        type: OtpType.signup,
+        email: widget.email,
+      );
+      if (!mounted) return;
+      _startCountdown();
+      _showMessage('Email verifikasi telah dikirim ulang.');
+    } catch (error) {
+      if (mounted) {
+        _showMessage(authErrorMessage(error, isLogin: false));
+      }
+    } finally {
+      if (mounted) setState(() => _isResending = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) => Scaffold(
     backgroundColor: AppColors.surface,
@@ -76,20 +112,24 @@ class _CheckEmailPageState extends State<CheckEmailPage> {
                   const SizedBox(height: 20),
                   CheckEmailActions(
                     secondsLeft: _secondsLeft,
-                    onOpenEmail: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute<void>(
-                          builder: (_) => const NewPasswordPage(),
+                    isResending: _isResending,
+                    onOpenEmail: widget.isPasswordReset
+                        ? () => Navigator.of(context).push(
+                            MaterialPageRoute<void>(
+                              builder: (_) => const NewPasswordPage(),
+                            ),
+                          )
+                        : () => _showMessage(
+                            'Silakan buka aplikasi email dan tekan tautan verifikasi dari Supabase.',
+                          ),
+                    onResend: _resendVerificationEmail,
+                    onBackToLogin: () =>
+                        Navigator.of(context).pushAndRemoveUntil(
+                          MaterialPageRoute<void>(
+                            builder: (_) => const LoginPage(),
+                          ),
+                          (route) => false,
                         ),
-                      );
-                    },
-                    onResend: () {
-                      _startCountdown();
-                      _showMessage('Email telah dikirim ulang.');
-                    },
-                    onBackToLogin: () => Navigator.of(
-                      context,
-                    ).popUntil((route) => route.isFirst),
                   ),
                   const SizedBox(height: 16),
                   const CheckEmailTips(),

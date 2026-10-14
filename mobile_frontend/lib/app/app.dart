@@ -39,6 +39,7 @@ class _GerdHeroAppState extends State<GerdHeroApp> {
               _routeAfterAuth();
             } else if (event == AuthChangeEvent.signedOut) {
               _isRoutingAfterAuth = false;
+              _routeAfterSignOut();
             }
           });
     } on AssertionError {
@@ -57,6 +58,16 @@ class _GerdHeroAppState extends State<GerdHeroApp> {
     _isRoutingAfterAuth = true;
     navigator.pushAndRemoveUntil(
       MaterialPageRoute<void>(builder: (_) => const ProfileGatePage()),
+      (route) => false,
+    );
+  }
+
+  void _routeAfterSignOut() {
+    final navigator = navigatorKey.currentState;
+    if (navigator == null) return;
+
+    navigator.pushAndRemoveUntil(
+      MaterialPageRoute<void>(builder: (_) => const LoginPage()),
       (route) => false,
     );
   }

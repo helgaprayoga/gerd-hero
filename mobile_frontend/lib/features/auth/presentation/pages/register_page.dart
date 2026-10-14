@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/app_feedback.dart';
@@ -9,6 +10,9 @@ import '../widgets/auth_privacy_note.dart';
 import '../widgets/register_form_card.dart';
 import '../models/auth_mode.dart';
 import '../utils/auth_validators.dart';
+import '../utils/auth_error_message.dart';
+import 'check_email_page.dart';
+import 'profile_gate_page.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -20,6 +24,7 @@ class RegisterPage extends StatefulWidget {
 class _RegisterPageState extends State<RegisterPage> {
   bool _passwordVisible = false;
   bool _confirmPasswordVisible = false;
+  bool _isSubmitting = false;
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -33,7 +38,7 @@ class _RegisterPageState extends State<RegisterPage> {
     super.dispose();
   }
 
-  void _submit() {
+  Future<void> _submit() async {
     final hasError =
         !(_formKey.currentState?.validate() ?? false) ||
         emailError(_emailController.text) != null ||
@@ -47,7 +52,35 @@ class _RegisterPageState extends State<RegisterPage> {
       setState(() {});
       return;
     }
-    _showMessage('Pendaftaran berhasil diproses.');
+    final email = _emailController.text.trim().toLowerCase();
+    setState(() => _isSubmitting = true);
+    try {
+      final response = await Supabase.instance.client.auth.signUp(
+        email: email,
+        password: _passwordController.text,
+      );
+
+      if (!mounted) return;
+      if (response.session == null) {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute<void>(builder: (_) => CheckEmailPage(email: email)),
+        );
+      } else {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute<void>(builder: (_) => const ProfileGatePage()),
+        );
+      }
+    } on AuthException catch (error) {
+      if (mounted) {
+        _showMessage(authErrorMessage(error, isLogin: false));
+      }
+    } catch (error) {
+      if (mounted) {
+        _showMessage(authErrorMessage(error, isLogin: false));
+      }
+    } finally {
+      if (mounted) setState(() => _isSubmitting = false);
+    }
   }
 
   void _showMessage(String message) {
@@ -107,6 +140,7 @@ class _RegisterPageState extends State<RegisterPage> {
                       () => _confirmPasswordVisible = !_confirmPasswordVisible,
                     ),
                     onSubmit: _submit,
+                    isLoading: _isSubmitting,
                     onGoogle: () =>
                         _showMessage('Membuka autentikasi aman dengan Google.'),
                   ),

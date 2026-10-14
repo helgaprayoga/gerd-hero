@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../../core/services/api_service.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -28,6 +29,7 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
   bool? coffee;
   bool isLoading = true;
   bool isSaving = false;
+  bool isLoggingOut = false;
   String? loadError;
   double? bmi;
   bool isAddingCondition = false;
@@ -183,6 +185,20 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
       if (mounted) _showError('Tidak dapat terhubung ke server.');
     } finally {
       if (mounted) setState(() => isSaving = false);
+    }
+  }
+
+  Future<void> _signOut() async {
+    if (isLoggingOut) return;
+    setState(() => isLoggingOut = true);
+    try {
+      await Supabase.instance.client.auth.signOut(scope: SignOutScope.local);
+    } on AuthException catch (error) {
+      if (mounted) _showError(error.message);
+    } catch (_) {
+      if (mounted) _showError('Tidak dapat keluar dari akun.');
+    } finally {
+      if (mounted) setState(() => isLoggingOut = false);
     }
   }
 
@@ -579,15 +595,21 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
               const SizedBox(height: 20),
               Center(
                 child: TextButton.icon(
-                  onPressed: () {},
-                  icon: const Icon(
-                    Icons.logout,
-                    color: AppColors.error,
-                    size: 18,
-                  ),
-                  label: const Text(
-                    'Keluar dari Akun',
-                    style: TextStyle(
+                  onPressed: isLoggingOut ? null : _signOut,
+                  icon: isLoggingOut
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(
+                          Icons.logout,
+                          color: AppColors.error,
+                          size: 18,
+                        ),
+                  label: Text(
+                    isLoggingOut ? 'Keluar...' : 'Keluar dari Akun',
+                    style: const TextStyle(
                       color: AppColors.error,
                       fontWeight: FontWeight.w600,
                     ),
