@@ -5,6 +5,7 @@ def hitung_skor_gerdq(jawaban):
     skor_negatif = [3, 2, 1, 0]
 
     total_skor = 0
+    evaluasi = ''
     for idx, nilai in enumerate(jawaban):
         # Membatasi nilai input agar tetap berada pada rentang opsi 0 sampai 3
         pilihan = min(max(nilai, 0), 3)
@@ -13,5 +14,9 @@ def hitung_skor_gerdq(jawaban):
             total_skor += skor_negatif[pilihan]
         else:              # Pertanyaan 1, 2, 5, & 6
             total_skor += skor_positif[pilihan]
+        if total_skor <= 7:
+            evaluasi = 'Kemungkinan tidak menderita GERD'
+        else:
+            evaluasi = 'Kemungkinan menderita GERD'
 
-    return total_skor
+    return total_skor, evaluasi
