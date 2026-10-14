@@ -4,10 +4,16 @@ import '../../../../core/theme/app_colors.dart';
 import 'history_status_badge.dart';
 
 class HistoryEmptyCard extends StatelessWidget {
-  const HistoryEmptyCard({required this.day, required this.date, super.key});
+  const HistoryEmptyCard({
+    required this.day,
+    required this.date,
+    this.onFill,
+    super.key,
+  });
 
   final String day;
   final String date;
+  final VoidCallback? onFill;
 
   @override
   Widget build(BuildContext context) => Container(
@@ -45,7 +51,11 @@ class HistoryEmptyCard extends StatelessWidget {
           style: TextStyle(color: AppColors.onSurfaceVariant, fontSize: 12),
         ),
         const SizedBox(height: 14),
-        OutlinedButton(onPressed: () {}, child: const Text('+ Isi Susulan')),
+        OutlinedButton.icon(
+          onPressed: onFill,
+          icon: const Icon(Icons.edit_note, size: 17),
+          label: const Text('+ Isi Susulan'),
+        ),
       ],
     ),
   );

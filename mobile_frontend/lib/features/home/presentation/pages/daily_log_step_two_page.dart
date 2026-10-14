@@ -4,8 +4,13 @@ import 'daily_log_summary_page.dart';
 import '../widgets/daily_log_step_two_view.dart';
 
 class DailyLogStepTwoPage extends StatelessWidget {
-  const DailyLogStepTwoPage({this.initialSameAsYesterday = true, super.key});
+  const DailyLogStepTwoPage({
+    this.dateLabel = 'hari ini',
+    this.initialSameAsYesterday = true,
+    super.key,
+  });
 
+  final String dateLabel;
   final bool initialSameAsYesterday;
 
   void _openSummary(BuildContext context) {
@@ -16,6 +21,7 @@ class DailyLogStepTwoPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => DailyLogStepTwoView(
+    dateLabel: dateLabel,
     initialSameAsYesterday: initialSameAsYesterday,
     onContinue: () => _openSummary(context),
   );

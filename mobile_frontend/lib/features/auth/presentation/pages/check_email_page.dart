@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/widgets/app_feedback.dart';
 import '../widgets/auth_header.dart';
 import '../widgets/auth_privacy_note.dart';
 import '../widgets/check_email_actions.dart';
@@ -50,9 +51,12 @@ class _CheckEmailPageState extends State<CheckEmailPage> {
   }
 
   void _showMessage(String message) {
-    ScaffoldMessenger.of(
+    showAppFeedback(
       context,
-    ).showSnackBar(SnackBar(content: Text(message)));
+      title: 'Informasi email',
+      message: message,
+      icon: Icons.mail_outline,
+    );
   }
 
   @override
