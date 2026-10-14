@@ -4,3 +4,5 @@ python-dotenv
 google-genai
 requests
 flask-cors
+reportlab>=4.0      # PDF generation (F2)
+# ATAU: fpdf2>=2.7  # alternatif lebih ringan
