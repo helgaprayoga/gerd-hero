@@ -18,6 +18,7 @@ class AuthFormCard extends StatelessWidget {
     required this.onForgotPassword,
     required this.onGoogle,
     super.key,
+    this.isLoading = false,
     this.emailController,
     this.passwordController,
     this.onEmailChanged,
@@ -35,6 +36,7 @@ class AuthFormCard extends StatelessWidget {
   final VoidCallback onSubmit;
   final VoidCallback onForgotPassword;
   final VoidCallback onGoogle;
+  final bool isLoading;
   final TextEditingController? emailController;
   final TextEditingController? passwordController;
   final ValueChanged<String>? onEmailChanged;
@@ -122,24 +124,33 @@ class AuthFormCard extends StatelessWidget {
           SizedBox(
             height: 48,
             child: FilledButton(
-              onPressed: onSubmit,
+              onPressed: isLoading ? null : onSubmit,
               style: FilledButton.styleFrom(
                 backgroundColor: AppColors.primaryContainer,
                 foregroundColor: Colors.white,
                 elevation: 2,
                 shape: const StadiumBorder(),
               ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(isRegister ? 'Daftar Sekarang' : 'Masuk'),
-                  const SizedBox(width: 8),
-                  Icon(
-                    isRegister ? Icons.check_circle : Icons.arrow_forward,
-                    size: 18,
-                  ),
-                ],
-              ),
+              child: isLoading
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(isRegister ? 'Daftar Sekarang' : 'Masuk'),
+                        const SizedBox(width: 8),
+                        Icon(
+                          isRegister ? Icons.check_circle : Icons.arrow_forward,
+                          size: 18,
+                        ),
+                      ],
+                    ),
             ),
           ),
           const SizedBox(height: 20),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/app_feedback.dart';
@@ -40,6 +41,21 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
     medicineNameController.dispose();
     medicineScheduleController.dispose();
     super.dispose();
+  }
+
+  Future<void> _signOut() async {
+    try {
+      await Supabase.instance.client.auth.signOut();
+    } catch (_) {
+      if (mounted) {
+        showAppFeedback(
+          context,
+          title: 'Gagal keluar',
+          message: 'Sesi belum dapat diakhiri. Silakan coba lagi.',
+          icon: Icons.info_outline,
+        );
+      }
+    }
   }
 
   @override
@@ -321,7 +337,7 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
         const SizedBox(height: 20),
         Center(
           child: TextButton.icon(
-            onPressed: () {},
+            onPressed: _signOut,
             icon: const Icon(Icons.logout, color: AppColors.error, size: 18),
             label: const Text(
               'Keluar dari Akun',

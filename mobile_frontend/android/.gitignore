@@ -1,14 +1,79 @@
-gradle-wrapper.jar
-/.gradle
-/captures/
-/gradlew
-/gradlew.bat
-/local.properties
-GeneratedPluginRegistrant.java
-.cxx/
+# ==========================================
+# Credentials & Environment Variables
+# ==========================================
+.env
+.env.*
+!.env.example
 
-# Remember to never publicly share your keystore.
-# See https://flutter.dev/to/reference-keystore
-key.properties
-**/*.keystore
-**/*.jks
+# ==========================================
+# Miscellaneous & OS
+# ==========================================
+*.class
+*.log
+*.pyc
+*.swp
+.DS_Store
+.atom/
+.build/
+.buildlog/
+.history
+.svn/
+.swiftpm/
+migrate_working_dir/
+
+# ==========================================
+# Python / Backend (Flask & Virtualenv)
+# ==========================================
+venv/
+.venv/
+env/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+instance/
+
+# ==========================================
+# IDEs & Editors
+# ==========================================
+*.iml
+*.ipr
+*.iws
+.idea/
+.vscode/
+
+# ==========================================
+# Flutter / Dart / Pub
+# ==========================================
+**/doc/api/
+**/ios/Flutter/.last_build_id
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.pub-cache/
+.pub/
+/build/
+/coverage/
+
+# Flutter Desktop & Generated Plugin Files
+**/flutter/ephemeral/
+**/flutter/generated_plugins.cmake
+**/flutter/generated_plugin_registrant.cc
+**/flutter/generated_plugin_registrant.h
+**/flutter/generated_plugins.h
+**/flutter/generated_plugins.cc
+
+# Symbolication & Obfuscation
+app.*.symbols
+app.*.map.json
+
+# Platform Build Artifacts (Android / iOS / Windows / Linux)
+/android/app/debug
+/android/app/profile
+/android/app/release
+/android/.gradle
+**/ios/Pods/
+**/ios/.symlinks/
+/windows/flutter/ephemeral/
+/linux/flutter/ephemeral/

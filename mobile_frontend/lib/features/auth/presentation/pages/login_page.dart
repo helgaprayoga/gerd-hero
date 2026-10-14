@@ -12,7 +12,8 @@ import '../widgets/auth_mode_switcher.dart';
 import '../widgets/auth_privacy_note.dart';
 import '../widgets/register_form_card.dart';
 import 'forgot_password_page.dart';
-import '../../../onboarding/presentation/pages/profile_page.dart';
+import 'check_email_page.dart';
+import '../utils/auth_error_message.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -25,6 +26,7 @@ class _LoginPageState extends State<LoginPage> {
   AuthMode _mode = AuthMode.login;
   bool _passwordVisible = false;
   bool _confirmPasswordVisible = false;
+  bool _isSubmitting = false;
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -42,7 +44,7 @@ class _LoginPageState extends State<LoginPage> {
     super.dispose();
   }
 
-  void _submit() {
+  Future<void> _submit() async {
     final isRegister = _mode == AuthMode.register;
     final hasError =
         !(_formKey.currentState?.validate() ?? false) ||
@@ -62,9 +64,51 @@ class _LoginPageState extends State<LoginPage> {
       return;
     }
 
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute<void>(builder: (_) => const ProfilePage()),
-    );
+    final email =
+        (isRegister ? _registerEmailController.text : _emailController.text)
+            .trim()
+            .toLowerCase();
+    final password = isRegister
+        ? _registerPasswordController.text
+        : _passwordController.text;
+
+    setState(() => _isSubmitting = true);
+    try {
+      if (isRegister) {
+        final response = await Supabase.instance.client.auth.signUp(
+          email: email,
+          password: password,
+        );
+
+        if (!mounted) return;
+        if (response.session == null) {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute<void>(
+              builder: (_) => CheckEmailPage(email: email),
+            ),
+          );
+        }
+        // Jika session langsung tersedia, auth listener pada app.dart
+        // menangani navigasi ke ProfilePage.
+      } else {
+        await Supabase.instance.client.auth.signInWithPassword(
+          email: email,
+          password: password,
+        );
+        // Navigasi ditangani oleh auth listener agar alur email dan OAuth
+        // tetap menggunakan satu sumber perubahan status autentikasi.
+      }
+    } on AuthException catch (error) {
+      if (mounted) {
+        _showMessage(authErrorMessage(error, isLogin: !isRegister));
+      }
+    } catch (error) {
+      if (mounted) {
+        _showMessage(authErrorMessage(error, isLogin: !isRegister));
+      }
+    } finally {
+      if (mounted) setState(() => _isSubmitting = false);
+    }
   }
 
   void _showMessage(String message) {
@@ -144,6 +188,7 @@ class _LoginPageState extends State<LoginPage> {
                               !_confirmPasswordVisible,
                         ),
                         onSubmit: _submit,
+                        isLoading: _isSubmitting,
                         onGoogle: _signInWithGoogle, // 👈 Tersambung ke Google
                       )
                     else
@@ -166,6 +211,7 @@ class _LoginPageState extends State<LoginPage> {
                               !_confirmPasswordVisible,
                         ),
                         onSubmit: _submit,
+                        isLoading: _isSubmitting,
                         onForgotPassword: () {
                           Navigator.of(context).push(
                             MaterialPageRoute<void>(
