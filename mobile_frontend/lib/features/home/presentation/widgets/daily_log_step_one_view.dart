@@ -9,8 +9,13 @@ part 'daily_log_step_one_symptom_card.dart';
 part 'daily_log_step_one_icon_tile.dart';
 
 class DailyLogStepOneView extends StatefulWidget {
-  const DailyLogStepOneView({this.onNext, super.key});
+  const DailyLogStepOneView({
+    this.dateLabel = 'hari ini',
+    this.onNext,
+    super.key,
+  });
 
+  final String dateLabel;
   final VoidCallback? onNext;
 
   @override
@@ -107,8 +112,8 @@ class _DailyLogStepOneViewState extends State<DailyLogStepOneView> {
                   const SizedBox(height: 8),
                   const _StepProgress(),
                   const SizedBox(height: 24),
-                  const Text(
-                    'Gejala apa yang kamu rasakan\nhari ini?',
+                  Text(
+                    'Gejala apa yang kamu rasakan\n${widget.dateLabel}?',
                     style: TextStyle(
                       color: AppColors.onSurface,
                       fontSize: 22,

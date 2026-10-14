@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/widgets/app_feedback.dart';
 import '../widgets/auth_greeting.dart';
 import '../widgets/auth_header.dart';
 import '../widgets/auth_mode_switcher.dart';
@@ -50,9 +51,12 @@ class _RegisterPageState extends State<RegisterPage> {
   }
 
   void _showMessage(String message) {
-    ScaffoldMessenger.of(
+    showAppFeedback(
       context,
-    ).showSnackBar(SnackBar(content: Text(message)));
+      title: 'Informasi pendaftaran',
+      message: message,
+      icon: Icons.info_outline,
+    );
   }
 
   @override
