@@ -16,6 +16,7 @@ class RegisterFormCard extends StatelessWidget {
     required this.onSubmit,
     required this.onGoogle,
     super.key,
+    this.isLoading = false,
     this.emailController,
     this.passwordController,
     this.confirmPasswordController,
@@ -34,6 +35,7 @@ class RegisterFormCard extends StatelessWidget {
   final VoidCallback onToggleConfirmPassword;
   final VoidCallback onSubmit;
   final VoidCallback onGoogle;
+  final bool isLoading;
   final TextEditingController? emailController;
   final TextEditingController? passwordController;
   final TextEditingController? confirmPasswordController;
@@ -114,21 +116,30 @@ class RegisterFormCard extends StatelessWidget {
           SizedBox(
             height: 48,
             child: FilledButton(
-              onPressed: onSubmit,
+              onPressed: isLoading ? null : onSubmit,
               style: FilledButton.styleFrom(
                 backgroundColor: AppColors.primaryContainer,
                 foregroundColor: Colors.white,
                 elevation: 2,
                 shape: const StadiumBorder(),
               ),
-              child: const Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text('Daftar'),
-                  SizedBox(width: 8),
-                  Icon(Icons.arrow_forward, size: 18),
-                ],
-              ),
+              child: isLoading
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text('Daftar'),
+                        SizedBox(width: 8),
+                        Icon(Icons.arrow_forward, size: 18),
+                      ],
+                    ),
             ),
           ),
           const SizedBox(height: 20),

@@ -33,7 +33,8 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
     }
     Navigator.of(context).push(
       MaterialPageRoute<void>(
-        builder: (_) => CheckEmailPage(email: _emailController.text),
+        builder: (_) =>
+            CheckEmailPage(email: _emailController.text, isPasswordReset: true),
       ),
     );
   }

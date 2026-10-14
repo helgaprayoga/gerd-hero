@@ -63,7 +63,7 @@ void main() {
     expect(find.text('Konfirmasi kata sandi'), findsOneWidget);
   });
 
-  testWidgets('continues to profile onboarding after valid login', (
+  testWidgets('does not bypass Supabase authentication during login', (
     tester,
   ) async {
     await tester.pumpWidget(const MaterialApp(home: LoginPage()));
@@ -74,8 +74,9 @@ void main() {
     await tester.tap(find.widgetWithText(FilledButton, 'Masuk'));
     await tester.pumpAndSettle();
 
-    expect(find.byType(ProfilePage), findsOneWidget);
-    expect(find.text('Data Profil'), findsOneWidget);
+    expect(find.byType(ProfilePage), findsNothing);
+    expect(find.byType(LoginPage), findsOneWidget);
+    expect(find.text('Periksa kembali'), findsOneWidget);
   });
 
   testWidgets('shows validation messages only after invalid input', (

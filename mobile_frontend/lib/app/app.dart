@@ -17,38 +17,54 @@ class GerdHeroApp extends StatefulWidget {
 }
 
 class _GerdHeroAppState extends State<GerdHeroApp> {
-  late final StreamSubscription<AuthState> _authSubscription;
+  StreamSubscription<AuthState>? _authSubscription;
 
   @override
   void initState() {
     super.initState();
 
-    // Dengarkan perubahan status autentikasi Supabase.
-    // Dipanggil setelah Google OAuth callback diterima oleh deep link.
-    _authSubscription =
-        Supabase.instance.client.auth.onAuthStateChange.listen((data) {
-      final session = data.session;
-      final event = data.event;
+    if (_supabaseIsInitialized) {
+      // Dengarkan perubahan status autentikasi Supabase.
+      // Dipanggil setelah Google OAuth callback diterima oleh deep link.
+      _authSubscription = Supabase.instance.client.auth.onAuthStateChange.listen((
+        data,
+      ) {
+        final session = data.session;
+        final event = data.event;
 
-      if (event == AuthChangeEvent.signedIn && session != null) {
-        // Navigasi ke ProfilePage setelah login berhasil (Google OAuth maupun email).
-        // Gunakan navigatorKey agar bisa navigate dari luar BuildContext widget tree.
-        navigatorKey.currentState?.pushAndRemoveUntil(
-          MaterialPageRoute<void>(builder: (_) => const ProfilePage()),
-          (route) => false, // Hapus semua route sebelumnya
-        );
-      }
-    });
+        if ((event == AuthChangeEvent.signedIn ||
+                event == AuthChangeEvent.initialSession) &&
+            session != null) {
+          // Navigasi ke ProfilePage setelah login berhasil (Google OAuth maupun email).
+          // Gunakan navigatorKey agar bisa navigate dari luar BuildContext widget tree.
+          navigatorKey.currentState?.pushAndRemoveUntil(
+            MaterialPageRoute<void>(builder: (_) => const ProfilePage()),
+            (route) => false, // Hapus semua route sebelumnya
+          );
+        }
+
+        if (event == AuthChangeEvent.signedOut) {
+          navigatorKey.currentState?.pushAndRemoveUntil(
+            MaterialPageRoute<void>(builder: (_) => _landingPage()),
+            (route) => false,
+          );
+        }
+      });
+    }
   }
 
   @override
   void dispose() {
-    _authSubscription.cancel();
+    _authSubscription?.cancel();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    final hasSession =
+        _supabaseIsInitialized &&
+        Supabase.instance.client.auth.currentSession != null;
+
     return MaterialApp(
       title: 'GERDHero',
       debugShowCheckedModeBanner: false,
@@ -59,22 +75,32 @@ class _GerdHeroAppState extends State<GerdHeroApp> {
         onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
         child: child,
       ),
-      home: LandingPage(
-        onStart: (context) {
-          Navigator.of(context).push(
-            MaterialPageRoute<void>(
-              builder: (_) => DisclaimerPage(
-                onContinue: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute<void>(builder: (_) => const LoginPage()),
-                  );
-                },
-              ),
-            ),
-          );
-        },
-      ),
+      home: hasSession ? const ProfilePage() : _landingPage(),
     );
+  }
+
+  Widget _landingPage() => LandingPage(
+    onStart: (context) {
+      Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          builder: (_) => DisclaimerPage(
+            onContinue: () {
+              Navigator.of(context).push(
+                MaterialPageRoute<void>(builder: (_) => const LoginPage()),
+              );
+            },
+          ),
+        ),
+      );
+    },
+  );
+
+  bool get _supabaseIsInitialized {
+    try {
+      return Supabase.instance.isInitialized;
+    } on AssertionError {
+      return false;
+    }
   }
 }
 
