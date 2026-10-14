@@ -4,9 +4,14 @@ import '../../../../core/theme/app_colors.dart';
 import 'home_day_bar.dart';
 
 class HomeGerdSummary extends StatelessWidget {
-  const HomeGerdSummary({required this.isSymptomatic, super.key});
+  const HomeGerdSummary({
+    required this.isSymptomatic,
+    this.onHistoryTap,
+    super.key,
+  });
 
   final bool isSymptomatic;
+  final VoidCallback? onHistoryTap;
 
   @override
   Widget build(BuildContext context) => Container(
@@ -58,7 +63,7 @@ class HomeGerdSummary extends StatelessWidget {
         const SizedBox(height: 12),
         Center(
           child: TextButton.icon(
-            onPressed: () {},
+            onPressed: onHistoryTap,
             icon: const Icon(Icons.arrow_forward, size: 16),
             label: const Text('Lihat riwayat lengkap'),
           ),

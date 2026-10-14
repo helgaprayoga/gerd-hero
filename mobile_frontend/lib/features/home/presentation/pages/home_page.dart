@@ -15,6 +15,7 @@ import '../widgets/home_profile_card.dart';
 import '../widgets/home_gerd_summary.dart';
 import '../pages/daily_log_step_one_page.dart';
 import '../widgets/home_today_log_card.dart';
+import 'daily_history_page.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({this.scenario = HomeScenario.profileIncomplete, super.key});
@@ -41,7 +42,7 @@ class HomePage extends StatelessWidget {
         label: const Text('Isi Log Harian'),
       ),
     ),
-    floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+    floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     body: SafeArea(
       bottom: false,
       child: Column(
@@ -92,7 +93,14 @@ class HomePage extends StatelessWidget {
                     ),
                     const SizedBox(height: 20),
                   ],
-                  HomeGerdSummary(isSymptomatic: isSymptomatic),
+                  HomeGerdSummary(
+                    isSymptomatic: isSymptomatic,
+                    onHistoryTap: () => Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => const RiwayatLengkapPage(),
+                      ),
+                    ),
+                  ),
                   if (hasLogs) ...[
                     const SizedBox(height: 20),
                     const HomeDailyChart(),
