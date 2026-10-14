@@ -27,12 +27,14 @@ part 'daily_log_step_two_bottom_actions.dart';
 
 class DailyLogStepTwoView extends StatefulWidget {
   const DailyLogStepTwoView({
+    this.dateLabel = 'hari ini',
     this.initialSameAsYesterday = true,
     this.onContinue,
     super.key,
   });
 
   final bool initialSameAsYesterday;
+  final String dateLabel;
   final VoidCallback? onContinue;
 
   @override
@@ -133,9 +135,9 @@ class _DailyLogStepTwoViewState extends State<DailyLogStepTwoView> {
                 children: [
                   _StepTwoHeader(onBack: () => Navigator.of(context).pop()),
                   const SizedBox(height: 24),
-                  const _SectionTitle(
+                  _SectionTitle(
                     icon: Icons.restaurant_outlined,
-                    title: 'Makanan & minuman hari ini',
+                    title: 'Makanan & minuman ${widget.dateLabel}',
                     subtitle: 'Pilih yang kamu konsumsi dalam 24 jam terakhir',
                   ),
                   const SizedBox(height: 12),
@@ -145,7 +147,11 @@ class _DailyLogStepTwoViewState extends State<DailyLogStepTwoView> {
                         setState(() => _foods[food] = value),
                   ),
                   const SizedBox(height: 16),
-                  _FrequencyCard(count: _mealCount, onChanged: _setMealCount),
+                  _FrequencyCard(
+                    count: _mealCount,
+                    dateLabel: widget.dateLabel,
+                    onChanged: _setMealCount,
+                  ),
                   const SizedBox(height: 16),
                   _MealTimeCard(
                     sameAsYesterday: _sameAsYesterday,
@@ -169,6 +175,7 @@ class _DailyLogStepTwoViewState extends State<DailyLogStepTwoView> {
                   ),
                   const SizedBox(height: 16),
                   _MedicineCard(
+                    dateLabel: widget.dateLabel,
                     tookMedicine: _tookMedicine,
                     medicines: _medicines,
                     showForm: _showMedicineForm,

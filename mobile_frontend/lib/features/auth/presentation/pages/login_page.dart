@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/widgets/app_feedback.dart';
 import '../models/auth_mode.dart';
 import '../utils/auth_validators.dart';
 import '../widgets/auth_form_card.dart';
@@ -66,9 +67,12 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   void _showMessage(String message) {
-    ScaffoldMessenger.of(
+    showAppFeedback(
       context,
-    ).showSnackBar(SnackBar(content: Text(message)));
+      title: 'Periksa kembali',
+      message: message,
+      icon: Icons.info_outline,
+    );
   }
 
   @override
