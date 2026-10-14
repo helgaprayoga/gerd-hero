@@ -97,6 +97,30 @@ def update_profile():
         key: body[key] for key in extended_fields if key in body
     })
 
+    for field in ("smoking", "alcohol", "work_pattern"):
+        value = extended_update.get(field)
+        if value is not None and not isinstance(value, str):
+            return json_error(f"{field} harus berupa teks atau null.")
+
+    coffee = extended_update.get("coffee")
+    if coffee is not None and not isinstance(coffee, bool):
+        return json_error("coffee harus berupa boolean atau null.")
+
+    for field in ("medical_history", "routine_meds"):
+        if field in extended_update and not isinstance(extended_update[field], list):
+            return json_error(f"{field} harus berupa array.")
+
+    if "medical_history" in extended_update and any(
+        not isinstance(condition, str)
+        for condition in extended_update["medical_history"]
+    ):
+        return json_error("medical_history harus berupa array teks.")
+
+    if "routine_meds" in extended_update and any(
+        not isinstance(medicine, dict) for medicine in extended_update["routine_meds"]
+    ):
+        return json_error("routine_meds harus berupa array object.")
+
     try:
         if user_update:
             response = (
@@ -107,13 +131,16 @@ def update_profile():
             )
             if response_error(response):
                 return json_error(response_error(response), 400, "Database Error")
-        if extended_update:
-            extended_update["user_id"] = g.user_id
-            response = get_table(g.supabase, "user_profiles_extended").upsert(
-                extended_update, on_conflict="user_id"
-            ).execute()
-            if response_error(response):
-                return json_error(response_error(response), 400, "Database Error")
+
+        # Always create the extended profile row, even when onboarding only
+        # sends the required fields stored in the users table. Existing
+        # extended values are preserved when no extended fields are supplied.
+        extended_update["user_id"] = g.user_id
+        response = get_table(g.supabase, "user_profiles_extended").upsert(
+            extended_update, on_conflict="user_id"
+        ).execute()
+        if response_error(response):
+            return json_error(response_error(response), 400, "Database Error")
         user, extended = _get_profile_rows()
     except Exception as error:
         return json_error(str(error), 502, "Database Error")

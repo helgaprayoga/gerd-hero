@@ -5,9 +5,9 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../core/theme/app_theme.dart';
 import '../features/auth/presentation/pages/login_page.dart';
+import '../features/auth/presentation/pages/profile_gate_page.dart';
 import '../features/landing/presentation/pages/landing_page.dart';
 import '../features/onboarding/presentation/pages/disclaimer_page.dart';
-import '../features/onboarding/presentation/pages/profile_page.dart';
 
 class GerdHeroApp extends StatefulWidget {
   const GerdHeroApp({super.key});
@@ -17,7 +17,8 @@ class GerdHeroApp extends StatefulWidget {
 }
 
 class _GerdHeroAppState extends State<GerdHeroApp> {
-  late final StreamSubscription<AuthState> _authSubscription;
+  StreamSubscription<AuthState>? _authSubscription;
+  bool _isRoutingAfterAuth = false;
 
   @override
   void initState() {
@@ -25,25 +26,44 @@ class _GerdHeroAppState extends State<GerdHeroApp> {
 
     // Dengarkan perubahan status autentikasi Supabase.
     // Dipanggil setelah Google OAuth callback diterima oleh deep link.
-    _authSubscription =
-        Supabase.instance.client.auth.onAuthStateChange.listen((data) {
-      final session = data.session;
-      final event = data.event;
+    try {
+      _authSubscription = Supabase.instance.client.auth.onAuthStateChange
+          .listen((data) {
+            final session = data.session;
+            final event = data.event;
 
-      if (event == AuthChangeEvent.signedIn && session != null) {
-        // Navigasi ke ProfilePage setelah login berhasil (Google OAuth maupun email).
-        // Gunakan navigatorKey agar bisa navigate dari luar BuildContext widget tree.
-        navigatorKey.currentState?.pushAndRemoveUntil(
-          MaterialPageRoute<void>(builder: (_) => const ProfilePage()),
-          (route) => false, // Hapus semua route sebelumnya
-        );
-      }
-    });
+            if ((event == AuthChangeEvent.signedIn ||
+                    event == AuthChangeEvent.initialSession) &&
+                session != null &&
+                !_isRoutingAfterAuth) {
+              _routeAfterAuth();
+            } else if (event == AuthChangeEvent.signedOut) {
+              _isRoutingAfterAuth = false;
+            }
+          });
+    } on AssertionError {
+      // Widget tests may render the shell without initializing Supabase.
+    }
+  }
+
+  void _routeAfterAuth() {
+    if (!mounted || _isRoutingAfterAuth) return;
+    final navigator = navigatorKey.currentState;
+    if (navigator == null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _routeAfterAuth());
+      return;
+    }
+
+    _isRoutingAfterAuth = true;
+    navigator.pushAndRemoveUntil(
+      MaterialPageRoute<void>(builder: (_) => const ProfileGatePage()),
+      (route) => false,
+    );
   }
 
   @override
   void dispose() {
-    _authSubscription.cancel();
+    _authSubscription?.cancel();
     super.dispose();
   }
 

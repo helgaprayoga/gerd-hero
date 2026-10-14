@@ -12,7 +12,6 @@ import '../widgets/auth_mode_switcher.dart';
 import '../widgets/auth_privacy_note.dart';
 import '../widgets/register_form_card.dart';
 import 'forgot_password_page.dart';
-import '../../../onboarding/presentation/pages/profile_page.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -25,6 +24,7 @@ class _LoginPageState extends State<LoginPage> {
   AuthMode _mode = AuthMode.login;
   bool _passwordVisible = false;
   bool _confirmPasswordVisible = false;
+  bool _isSubmitting = false;
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -42,7 +42,8 @@ class _LoginPageState extends State<LoginPage> {
     super.dispose();
   }
 
-  void _submit() {
+  Future<void> _submit() async {
+    if (_isSubmitting) return;
     final isRegister = _mode == AuthMode.register;
     final hasError =
         !(_formKey.currentState?.validate() ?? false) ||
@@ -62,9 +63,31 @@ class _LoginPageState extends State<LoginPage> {
       return;
     }
 
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute<void>(builder: (_) => const ProfilePage()),
-    );
+    setState(() => _isSubmitting = true);
+    try {
+      if (isRegister) {
+        final response = await Supabase.instance.client.auth.signUp(
+          email: _registerEmailController.text.trim(),
+          password: _registerPasswordController.text,
+        );
+        if (response.session == null && mounted) {
+          _showMessage(
+            'Pendaftaran berhasil. Silakan cek email untuk verifikasi.',
+          );
+        }
+      } else {
+        await Supabase.instance.client.auth.signInWithPassword(
+          email: _emailController.text.trim(),
+          password: _passwordController.text,
+        );
+      }
+    } on AuthException catch (error) {
+      if (mounted) _showMessage(error.message);
+    } catch (_) {
+      if (mounted) _showMessage('Tidak dapat terhubung ke server autentikasi.');
+    } finally {
+      if (mounted) setState(() => _isSubmitting = false);
+    }
   }
 
   void _showMessage(String message) {
