@@ -102,6 +102,11 @@ class _HomePageState extends State<HomePage> {
 
   bool get isEvaluationDue => _status == HomeStatus.evaluationDue;
 
+  bool get canOpenGerdq =>
+      hasProfile &&
+      (_status == HomeStatus.evaluationDue ||
+          (_dashboard != null && _dashboard!.latestGerdq == null));
+
   bool get shouldShowProfileCard {
     final currentProfile = _dashboard?.profile ?? profile;
     return currentProfile == null
@@ -223,12 +228,17 @@ class _HomePageState extends State<HomePage> {
                                 ),
                               ),
                             ),
-                            if (hasLogs || _dashboard?.latestGerdq != null) ...[
-                              const SizedBox(height: 20),
-                              HomeDailyChart(
-                                latestGerdq: _dashboard?.latestGerdq,
-                              ),
-                            ],
+                            const SizedBox(height: 20),
+                            HomeDailyChart(
+                              latestGerdq: _dashboard?.latestGerdq,
+                              onAction: canOpenGerdq
+                                  ? () => Navigator.of(context).push(
+                                      MaterialPageRoute<void>(
+                                        builder: (_) => const GerdQIntroPage(),
+                                      ),
+                                    )
+                                  : null,
+                            ),
                             const SizedBox(height: 72),
                           ],
                         ),

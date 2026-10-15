@@ -94,11 +94,6 @@ class HomeDashboardData {
     if (!profile.hasBasicProfile) return HomeStatus.profileIncomplete;
 
     final now = _dateOnly(DateTime.now());
-    if (latestGerdq != null &&
-        now.difference(_dateOnly(latestGerdq!.createdAt)).inDays >= 7) {
-      return HomeStatus.evaluationDue;
-    }
-
     final today = weeklyLogs.cast<HomeDailyLog?>().firstWhere(
       (log) => log != null && _dateOnly(log.date) == now,
       orElse: () => null,
@@ -107,6 +102,10 @@ class HomeDashboardData {
       return today.isSymptomatic
           ? HomeStatus.symptomaticToday
           : HomeStatus.loggedToday;
+    }
+    if (latestGerdq != null &&
+        now.difference(_dateOnly(latestGerdq!.createdAt)).inDays >= 7) {
+      return HomeStatus.evaluationDue;
     }
     return weeklyLogs.isEmpty ? HomeStatus.noData : HomeStatus.noTodayLog;
   }

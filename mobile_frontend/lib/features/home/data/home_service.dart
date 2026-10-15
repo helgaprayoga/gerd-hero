@@ -17,27 +17,35 @@ class HomeService {
     final profile = ProfileData.fromJson(Map<String, dynamic>.from(rawProfile));
     final week = _currentIsoWeek(DateTime.now());
 
-    final results = await Future.wait([
+    final results = await Future.wait<Object?>([
       _loadLatestGerdq(),
-      ApiService.instance.get('/api/logs?week=$week'),
+      _loadWeeklyLogs(week),
     ]);
-
-    final logsResponse = results[1] as Map<String, dynamic>;
-    final rawLogs = logsResponse['data'];
-    final logs = rawLogs is List
-        ? rawLogs
-              .whereType<Map>()
-              .map(
-                (row) => HomeDailyLog.fromJson(Map<String, dynamic>.from(row)),
-              )
-              .toList(growable: false)
-        : const <HomeDailyLog>[];
 
     return HomeDashboardData(
       profile: profile,
       latestGerdq: results[0] as HomeGerdqData?,
-      weeklyLogs: logs,
+      weeklyLogs: results[1] as List<HomeDailyLog>,
     );
+  }
+
+  Future<List<HomeDailyLog>> _loadWeeklyLogs(String week) async {
+    try {
+      final response = await ApiService.instance.get('/api/logs?week=$week');
+      final rawLogs = response['data'];
+      return rawLogs is List
+          ? rawLogs
+                .whereType<Map>()
+                .map(
+                  (row) =>
+                      HomeDailyLog.fromJson(Map<String, dynamic>.from(row)),
+                )
+                .toList(growable: false)
+          : const <HomeDailyLog>[];
+    } catch (_) {
+      // Data GERD-Q dan profil tetap dapat tampil walaupun log mingguan gagal.
+      return const <HomeDailyLog>[];
+    }
   }
 
   Future<HomeGerdqData?> _loadLatestGerdq() async {
@@ -47,9 +55,10 @@ class HomeService {
       return data is Map
           ? HomeGerdqData.fromJson(Map<String, dynamic>.from(data))
           : null;
-    } on ApiException catch (error) {
-      if (error.statusCode == 404) return null;
-      rethrow;
+    } catch (_) {
+      // GERD-Q bersifat independen dari profil dan log mingguan. Jika endpoint
+      // gagal, Home tetap menampilkan data lain dan kartu empty state GERD-Q.
+      return null;
     }
   }
 

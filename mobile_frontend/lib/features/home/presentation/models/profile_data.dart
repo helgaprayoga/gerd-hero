@@ -61,9 +61,10 @@ class ProfileData {
 
   double get completion {
     var completed = 0;
-    const total = 12;
-    if ((nickname?.trim().isNotEmpty ?? false) ||
-        (name?.trim().isNotEmpty ?? false)) {
+    // Riwayat penyakit dan obat rutin bersifat opsional. Tidak semua pengguna
+    // memiliki data tersebut, sehingga keduanya tidak menjadi syarat 100%.
+    const total = 9;
+    if (nickname?.trim().isNotEmpty ?? false) {
       completed++;
     }
     if (birthDate != null) completed++;
@@ -74,8 +75,6 @@ class ProfileData {
     if (alcohol != null) completed++;
     if (workPattern != null) completed++;
     if (coffee != null) completed++;
-    if (medicalHistory.isNotEmpty) completed++;
-    if (routineMeds.isNotEmpty) completed++;
     return completed / total;
   }
 

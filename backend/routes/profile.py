@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from datetime import date
+
 from flask import Blueprint, g, jsonify
 
 from connection.supabase import get_table
@@ -11,7 +13,19 @@ profile_bp = Blueprint("profile", __name__)
 
 
 def _profile_payload(user: dict, extended: dict | None) -> dict:
-    return {**user, "extended": extended or {}}
+    payload = {**user, "extended": extended or {}}
+
+    # A streak is only active through today. Keep the stored value for
+    # historical purposes, but do not expose an old streak as still active.
+    last_log_date = user.get("last_log_date")
+    try:
+        last_log_date = date.fromisoformat(last_log_date) if last_log_date else None
+    except (TypeError, ValueError):
+        last_log_date = None
+    if last_log_date is None or (date.today() - last_log_date).days > 1:
+        payload["streak_days"] = 0
+
+    return payload
 
 
 def _get_profile_rows():

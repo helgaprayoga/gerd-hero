@@ -61,4 +61,10 @@ def get_latest_gerdq():
         return json_error(str(error), 502, "Database Error")
     if row is None:
         return json_error("Belum ada hasil GERD-Q.", 404, "Not Found")
-    return jsonify({"success": True, "data": row})
+    score = row.get("score", 0)
+    evaluation = (
+        "Kemungkinan menderita GERD"
+        if isinstance(score, (int, float)) and score >= 8
+        else "Kemungkinan tidak menderita GERD"
+    )
+    return jsonify({"success": True, "data": {**row, "evaluation": evaluation}})
