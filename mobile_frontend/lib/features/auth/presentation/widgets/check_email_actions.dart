@@ -38,20 +38,21 @@ class CheckEmailActions extends StatelessWidget {
         children: [
           SizedBox(
             width: double.infinity,
-            height: 48,
             child: FilledButton(
               onPressed: onOpenEmail,
               style: FilledButton.styleFrom(
                 backgroundColor: AppColors.primaryContainer,
                 foregroundColor: Colors.white,
                 elevation: 3,
+                minimumSize: const Size.fromHeight(48),
                 shape: const StadiumBorder(),
               ),
-              child: const Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text('Saya sudah membuka email'),
-                  SizedBox(width: 8),
+              child: Wrap(
+                alignment: WrapAlignment.center,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                spacing: 8,
+                children: const [
+                  Text('Saya sudah membuka email', textAlign: TextAlign.center),
                   Icon(Icons.info_outline, size: 20),
                 ],
               ),
@@ -60,7 +61,6 @@ class CheckEmailActions extends StatelessWidget {
           const SizedBox(height: 16),
           SizedBox(
             width: double.infinity,
-            height: 48,
             child: FilledButton(
               onPressed: canResend ? onResend : null,
               style: FilledButton.styleFrom(
@@ -68,6 +68,7 @@ class CheckEmailActions extends StatelessWidget {
                 foregroundColor: canResend
                     ? AppColors.primary
                     : AppColors.secondary,
+                minimumSize: const Size.fromHeight(48),
                 shape: const StadiumBorder(),
               ),
               child: isResending
@@ -76,15 +77,17 @@ class CheckEmailActions extends StatelessWidget {
                       height: 20,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
-                  : Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
+                  : Wrap(
+                      alignment: WrapAlignment.center,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      spacing: 8,
                       children: [
                         const Icon(Icons.mail, size: 18),
-                        const SizedBox(width: 8),
                         Text(
                           canResend
                               ? 'Kirim Ulang Email Sekarang'
                               : 'Kirim ulang dalam ${secondsLeft}s',
+                          textAlign: TextAlign.center,
                         ),
                       ],
                     ),

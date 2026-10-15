@@ -950,12 +950,17 @@ class _BmiCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                'BMI: ${bmi.toStringAsFixed(1)}',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+              Expanded(
+                child: Text(
+                  'BMI: ${bmi.toStringAsFixed(1)}',
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
               ),
+              const SizedBox(width: 8),
               _SummaryPill(label: 'Kategori $category'),
             ],
           ),
@@ -989,24 +994,31 @@ class _BmiCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 6),
-          const Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                '< 18.5 Kurang',
-                style: TextStyle(color: AppColors.secondary, fontSize: 10),
-              ),
-              Text(
-                '18.5 - 24.9 Ideal',
-                style: TextStyle(
-                  color: AppColors.primary,
-                  fontSize: 10,
-                  fontWeight: FontWeight.w600,
+          Row(
+            children: const [
+              Expanded(
+                child: Text(
+                  '< 18.5 Kurang',
+                  style: TextStyle(color: AppColors.secondary, fontSize: 10),
                 ),
               ),
-              Text(
-                '> 25.0 Lebih',
-                style: TextStyle(color: AppColors.secondary, fontSize: 10),
+              Expanded(
+                child: Text(
+                  '18.5 - 24.9 Ideal',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: AppColors.primary,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              Expanded(
+                child: Text(
+                  '> 25.0 Lebih',
+                  textAlign: TextAlign.right,
+                  style: TextStyle(color: AppColors.secondary, fontSize: 10),
+                ),
               ),
             ],
           ),

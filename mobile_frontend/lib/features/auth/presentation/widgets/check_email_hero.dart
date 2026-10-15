@@ -63,6 +63,7 @@ class CheckEmailHero extends StatelessWidget {
           ],
         ),
         textAlign: TextAlign.center,
+        softWrap: true,
         style: Theme.of(
           context,
         ).textTheme.bodyMedium?.copyWith(color: AppColors.onSurfaceVariant),

@@ -45,26 +45,29 @@ class _ReportsPageState extends State<ReportsPage> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Laporan Klinis',
-                              style: TextStyle(
-                                fontSize: 22,
-                                fontWeight: FontWeight.w600,
+                        const Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Laporan Klinis',
+                                style: TextStyle(
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.w600,
+                                ),
                               ),
-                            ),
-                            SizedBox(height: 2),
-                            Text(
-                              'Ringkasan untuk konsultasi dokter',
-                              style: TextStyle(
-                                color: AppColors.onSurfaceVariant,
-                                fontSize: 14,
+                              SizedBox(height: 2),
+                              Text(
+                                'Ringkasan untuk konsultasi dokter',
+                                style: TextStyle(
+                                  color: AppColors.onSurfaceVariant,
+                                  fontSize: 14,
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
+                        const SizedBox(width: 12),
                         Container(
                           width: 40,
                           height: 40,

@@ -169,12 +169,17 @@ class _HistoryDetailWellnessCardState extends State<HistoryDetailWellnessCard> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
-                    'Tidur Semalam',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                  const Expanded(
+                    child: Text(
+                      'Tidur Semalam',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                   ),
+                  const SizedBox(width: 8),
                   Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 10,
@@ -224,16 +229,18 @@ class _HistoryDetailWellnessCardState extends State<HistoryDetailWellnessCard> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
-                    'Konsumsi Obat\nLambung',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      height: 1.38,
+                  const Expanded(
+                    child: Text(
+                      'Konsumsi Obat\nLambung',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        height: 1.38,
+                      ),
                     ),
                   ),
+                  const SizedBox(width: 8),
                   _YesNo(
                     value: widget.tookMedicine,
                     onChanged: widget.onMedicineChanged,
@@ -452,12 +459,14 @@ class _MealSchedule extends StatelessWidget {
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
       Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          const Text(
-            'Jadwal & Jam Makan',
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+          const Expanded(
+            child: Text(
+              'Jadwal & Jam Makan',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+            ),
           ),
+          const SizedBox(width: 8),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
             decoration: BoxDecoration(

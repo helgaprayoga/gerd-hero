@@ -33,16 +33,20 @@ class _TimeBox extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                value,
-                style: const TextStyle(
-                  color: AppColors.onSurface,
-                  fontSize: 18,
-                  fontWeight: FontWeight.w800,
+              Expanded(
+                child: Text(
+                  value,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: AppColors.onSurface,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w800,
+                  ),
                 ),
               ),
+              const SizedBox(width: 8),
               const Icon(Icons.access_time, size: 16, color: AppColors.primary),
             ],
           ),

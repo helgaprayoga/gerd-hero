@@ -73,36 +73,40 @@ class AnalyticsPeriodControls extends StatelessWidget {
               constraints: const BoxConstraints.tightFor(width: 32, height: 32),
               padding: EdgeInsets.zero,
             ),
-            Row(
-              children: [
-                InkWell(
-                  onTap: onPickDate,
-                  borderRadius: BorderRadius.circular(999),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 4,
-                      vertical: 2,
-                    ),
-                    child: Row(
-                      children: [
-                        const Icon(
-                          Icons.calendar_today_outlined,
-                          color: AppColors.primary,
-                          size: 16,
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
+            Expanded(
+              child: InkWell(
+                onTap: onPickDate,
+                borderRadius: BorderRadius.circular(999),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 4,
+                    vertical: 2,
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(
+                        Icons.calendar_today_outlined,
+                        color: AppColors.primary,
+                        size: 16,
+                      ),
+                      const SizedBox(width: 8),
+                      Flexible(
+                        child: Text(
                           periodLabel,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          textAlign: TextAlign.center,
                           style: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ),
-              ],
+              ),
             ),
             IconButton(
               onPressed: onNext,

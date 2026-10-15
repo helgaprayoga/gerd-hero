@@ -10,11 +10,17 @@ class LandingTopBar extends StatelessWidget {
   Widget build(BuildContext context) => Row(
     mainAxisAlignment: MainAxisAlignment.spaceBetween,
     children: [
-      const PillBadge(
-        label: 'Panduan Lambung Terpercaya',
-        icon: Icons.health_and_safety,
-        backgroundColor: AppColors.surfaceContainer,
+      const Expanded(
+        child: Align(
+          alignment: Alignment.centerLeft,
+          child: PillBadge(
+            label: 'Panduan Lambung Terpercaya',
+            icon: Icons.health_and_safety,
+            backgroundColor: AppColors.surfaceContainer,
+          ),
+        ),
       ),
+      const SizedBox(width: 8),
       Row(
         children: [
           Container(

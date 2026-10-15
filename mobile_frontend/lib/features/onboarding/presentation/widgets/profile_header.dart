@@ -26,13 +26,19 @@ class ProfileHeader extends StatelessWidget {
       child: Stack(
         alignment: Alignment.center,
         children: [
-          const Text(
-            'Data Profil',
-            style: TextStyle(
-              fontFamily: 'Plus Jakarta Sans',
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-              color: AppColors.onSurface,
+          const Positioned(
+            left: 16,
+            right: 80,
+            child: Text(
+              'Data Profil',
+              textAlign: TextAlign.center,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontFamily: 'Plus Jakarta Sans',
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: AppColors.onSurface,
+              ),
             ),
           ),
           Align(

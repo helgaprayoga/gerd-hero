@@ -162,16 +162,18 @@ class _DailyLogStepOneViewState extends State<DailyLogStepOneView> {
                   if (!_noSymptoms) ...[
                     const SizedBox(height: 20),
                     Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text(
-                          'Daftar Gejala Terkait',
-                          style: TextStyle(
-                            color: AppColors.secondary,
-                            fontSize: 14,
-                            fontWeight: FontWeight.w700,
+                        const Expanded(
+                          child: Text(
+                            'Daftar Gejala Terkait',
+                            style: TextStyle(
+                              color: AppColors.secondary,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w700,
+                            ),
                           ),
                         ),
+                        const SizedBox(width: 8),
                         Container(
                           padding: const EdgeInsets.symmetric(
                             horizontal: 10,
@@ -217,16 +219,18 @@ class _DailyLogStepOneViewState extends State<DailyLogStepOneView> {
                   if (!_noSymptoms) ...[
                     const SizedBox(height: 12),
                     Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: const [
-                        Text(
-                          'Deskripsi (opsional)',
-                          style: TextStyle(
-                            color: AppColors.onSurface,
-                            fontSize: 14,
-                            fontWeight: FontWeight.w700,
+                        Expanded(
+                          child: Text(
+                            'Deskripsi (opsional)',
+                            style: TextStyle(
+                              color: AppColors.onSurface,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w700,
+                            ),
                           ),
                         ),
+                        SizedBox(width: 8),
                         Text(
                           'Maks. 250 karakter',
                           style: TextStyle(

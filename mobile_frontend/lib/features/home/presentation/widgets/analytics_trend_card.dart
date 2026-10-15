@@ -36,20 +36,29 @@ class _AnalyticsTrendCardState extends State<AnalyticsTrendCard> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Tren Indeks Gejala',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-                  ),
-                  SizedBox(height: 2),
-                  Text(
-                    'Skala fluktuasi keparahan asam',
-                    style: TextStyle(color: AppColors.secondary, fontSize: 12),
-                  ),
-                ],
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Tren Indeks Gejala',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    SizedBox(height: 2),
+                    Text(
+                      'Skala fluktuasi keparahan asam',
+                      style: TextStyle(
+                        color: AppColors.secondary,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
               ),
+              if (trend.isNotEmpty) const SizedBox(width: 8),
               if (trend.isNotEmpty)
                 Container(
                   padding: const EdgeInsets.symmetric(

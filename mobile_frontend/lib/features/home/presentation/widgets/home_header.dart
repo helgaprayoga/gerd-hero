@@ -18,24 +18,31 @@ class HomeHeader extends StatelessWidget {
   Widget build(BuildContext context) => Row(
     mainAxisAlignment: MainAxisAlignment.spaceBetween,
     children: [
-      Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Halo, $nickname',
-            style: TextStyle(
-              color: AppColors.onSurface,
-              fontSize: 22,
-              fontWeight: FontWeight.w700,
+      Expanded(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Halo, $nickname',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color: AppColors.onSurface,
+                fontSize: 22,
+                fontWeight: FontWeight.w700,
+              ),
             ),
-          ),
-          SizedBox(height: 2),
-          Text(
-            'Selamat pagi, jaga kesehatan lambung',
-            style: TextStyle(color: AppColors.onSurfaceVariant, fontSize: 12),
-          ),
-        ],
+            SizedBox(height: 2),
+            Text(
+              'Selamat pagi, jaga kesehatan lambung',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(color: AppColors.onSurfaceVariant, fontSize: 12),
+            ),
+          ],
+        ),
       ),
+      const SizedBox(width: 12),
       InkWell(
         onTap: onProfileTap,
         borderRadius: BorderRadius.circular(99),

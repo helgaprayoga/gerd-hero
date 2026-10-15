@@ -21,16 +21,20 @@ class _MealTimeRow extends StatelessWidget {
         border: Border.all(color: AppColors.secondaryContainer),
       ),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(
-            label,
-            style: const TextStyle(
-              color: AppColors.onSurface,
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
+          Expanded(
+            child: Text(
+              label,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                color: AppColors.onSurface,
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+              ),
             ),
           ),
+          const SizedBox(width: 8),
           OutlinedButton.icon(
             onPressed: onTap,
             icon: const Icon(Icons.access_time, size: 15),

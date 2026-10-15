@@ -51,12 +51,16 @@ class HistoryDetailSymptomsCard extends StatelessWidget {
                 children: [
                   Icon(Icons.expand_more, color: AppColors.primary, size: 18),
                   SizedBox(width: 8),
-                  Text(
-                    '${_symptomDetails.length - selected.length} Gejala Lainnya (Tidak Dialami Hari Ini)',
-                    style: TextStyle(
-                      color: AppColors.primary,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
+                  Expanded(
+                    child: Text(
+                      '${_symptomDetails.length - selected.length} Gejala Lainnya (Tidak Dialami Hari Ini)',
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: AppColors.primary,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                 ],
@@ -220,18 +224,20 @@ class _SectionHeading extends StatelessWidget {
         ),
       ),
       const SizedBox(width: 8),
-      Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-          ),
-          Text(
-            subtitle,
-            style: const TextStyle(color: AppColors.secondary, fontSize: 12),
-          ),
-        ],
+      Expanded(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              title,
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+            ),
+            Text(
+              subtitle,
+              style: const TextStyle(color: AppColors.secondary, fontSize: 12),
+            ),
+          ],
+        ),
       ),
     ],
   );

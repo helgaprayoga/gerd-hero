@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/layout/responsive.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../data/repositories/daily_log_repository.dart';
 import '../../domain/entities/daily_log_draft.dart';

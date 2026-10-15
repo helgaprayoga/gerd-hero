@@ -20,13 +20,19 @@ class GerdQHeader extends StatelessWidget {
       child: Stack(
         alignment: Alignment.center,
         children: [
-          const Text(
-            'Kuesioner GERD-Q',
-            style: TextStyle(
-              fontFamily: 'Plus Jakarta Sans',
-              fontSize: 16,
-              fontWeight: FontWeight.w700,
-              color: AppColors.onSurface,
+          Positioned(
+            left: onBack == null ? 16 : 56,
+            right: 72,
+            child: const Text(
+              'Kuesioner GERD-Q',
+              textAlign: TextAlign.center,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontFamily: 'Plus Jakarta Sans',
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                color: AppColors.onSurface,
+              ),
             ),
           ),
           if (onBack != null)

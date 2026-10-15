@@ -38,6 +38,8 @@ class HomeDayBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final textScale = MediaQuery.textScalerOf(context).scale(1);
+    final cardHeight = (150 + (textScale - 1).clamp(0, 2) * 24).toDouble();
     final barHeight = hasLog
         ? _minBarHeight + _level * _maxBarHeight
         : _minBarHeight;
@@ -56,8 +58,8 @@ class HomeDayBar extends StatelessWidget {
     );
 
     return Container(
-      width: 38,
-      height: 150,
+      width: double.infinity,
+      height: cardHeight,
       padding: const EdgeInsets.all(6),
       decoration: BoxDecoration(
         color: hasLog ? AppColors.surfaceContainerLow : Colors.white,

@@ -14,21 +14,30 @@ class _InfoPill extends StatelessWidget {
       borderRadius: BorderRadius.circular(12),
     ),
     child: Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(
-          label,
-          style: const TextStyle(
-            color: AppColors.onSurfaceVariant,
-            fontSize: 12,
+        Expanded(
+          child: Text(
+            label,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              color: AppColors.onSurfaceVariant,
+              fontSize: 12,
+            ),
           ),
         ),
-        Text(
-          value,
-          style: const TextStyle(
-            color: AppColors.primary,
-            fontSize: 12,
-            fontWeight: FontWeight.w700,
+        const SizedBox(width: 8),
+        Flexible(
+          child: Text(
+            value,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.right,
+            style: const TextStyle(
+              color: AppColors.primary,
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+            ),
           ),
         ),
       ],

@@ -17,7 +17,6 @@ class _StressCard extends StatelessWidget {
         ),
         const SizedBox(height: 14),
         Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             for (final item in [
               ('😌', 'Rileks'),
@@ -26,12 +25,14 @@ class _StressCard extends StatelessWidget {
               ('😟', 'Tinggi'),
               ('😫', 'Berat'),
             ])
-              _StressChoice(
-                emoji: item.$1,
-                score: _stressIndex(item.$2),
-                label: item.$2,
-                active: selected == _stressIndex(item.$2),
-                onTap: () => onChanged(_stressIndex(item.$2)),
+              Expanded(
+                child: _StressChoice(
+                  emoji: item.$1,
+                  score: _stressIndex(item.$2),
+                  label: item.$2,
+                  active: selected == _stressIndex(item.$2),
+                  onTap: () => onChanged(_stressIndex(item.$2)),
+                ),
               ),
           ],
         ),

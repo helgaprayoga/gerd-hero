@@ -72,8 +72,15 @@ class HomeGerdSummary extends StatelessWidget {
         ),
         const SizedBox(height: 16),
         Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [for (var index = 0; index < 7; index++) _buildDay(index)],
+          children: [
+            for (var index = 0; index < 7; index++)
+              Expanded(
+                child: Padding(
+                  padding: EdgeInsets.only(right: index == 6 ? 0 : 4),
+                  child: _buildDay(index),
+                ),
+              ),
+          ],
         ),
         const SizedBox(height: 12),
         Center(

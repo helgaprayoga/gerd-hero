@@ -38,14 +38,17 @@ class PasswordStrengthMeter extends StatelessWidget {
         ),
         const SizedBox(height: 4),
         Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'Minimal 8 karakter, kombinasi huruf dan angka.',
-              style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                color: AppColors.onSurfaceVariant,
+            Expanded(
+              child: Text(
+                'Minimal 8 karakter, kombinasi huruf dan angka.',
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                  color: AppColors.onSurfaceVariant,
+                ),
               ),
             ),
+            const SizedBox(width: 8),
             Text(
               _label,
               style: Theme.of(context).textTheme.labelSmall?.copyWith(

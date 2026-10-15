@@ -27,17 +27,25 @@ class HistoryTriggerBox extends StatelessWidget {
           runSpacing: 8,
           children: [
             for (final trigger in triggers)
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 5,
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 260),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 5,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(999),
+                    border: Border.all(color: const Color(0xFFFFE4B5)),
+                  ),
+                  child: Text(
+                    trigger,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontSize: 12),
+                  ),
                 ),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(999),
-                  border: Border.all(color: const Color(0xFFFFE4B5)),
-                ),
-                child: Text(trigger, style: const TextStyle(fontSize: 12)),
               ),
           ],
         ),

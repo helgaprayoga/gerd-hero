@@ -19,7 +19,7 @@ class _StressChoice extends StatelessWidget {
     onTap: onTap,
     borderRadius: BorderRadius.circular(12),
     child: Container(
-      width: 53,
+      width: double.infinity,
       padding: const EdgeInsets.symmetric(vertical: 9, horizontal: 3),
       decoration: BoxDecoration(
         color: active ? AppColors.surfaceContainerLow : const Color(0xFFF8FCFB),
