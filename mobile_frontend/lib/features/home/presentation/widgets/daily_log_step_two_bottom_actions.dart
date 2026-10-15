@@ -50,7 +50,10 @@ class _BottomActions extends StatelessWidget {
                 style: OutlinedButton.styleFrom(
                   minimumSize: const Size.fromHeight(48),
                 ),
-                child: const Text('Kembali'),
+                child: const FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text('Kembali'),
+                ),
               ),
               const SizedBox(height: 8),
               continueButton,
@@ -63,7 +66,10 @@ class _BottomActions extends StatelessWidget {
             OutlinedButton(
               onPressed: onBack,
               style: OutlinedButton.styleFrom(minimumSize: const Size(96, 48)),
-              child: const Text('Kembali'),
+              child: const FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text('Kembali'),
+              ),
             ),
             const SizedBox(width: 12),
             Expanded(child: continueButton),

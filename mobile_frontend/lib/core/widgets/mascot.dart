@@ -1,11 +1,17 @@
 import 'package:flutter/material.dart';
 
+import 'mascot_expression.dart';
 import 'mascot_painter.dart';
 
 class Mascot extends StatelessWidget {
-  const Mascot({required this.animation, super.key});
+  const Mascot({
+    required this.animation,
+    this.expression = MascotExpression.calm,
+    super.key,
+  });
 
   final Animation<double> animation;
+  final MascotExpression expression;
 
   @override
   Widget build(BuildContext context) => AnimatedBuilder(
@@ -17,6 +23,9 @@ class Mascot extends StatelessWidget {
         child: child,
       ),
     ),
-    child: CustomPaint(size: const Size.square(176), painter: MascotPainter()),
+    child: CustomPaint(
+      size: const Size.square(176),
+      painter: MascotPainter(expression: expression),
+    ),
   );
 }

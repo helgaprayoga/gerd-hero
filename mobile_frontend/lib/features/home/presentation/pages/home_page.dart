@@ -204,6 +204,16 @@ class _HomePageState extends State<HomePage> {
         : currentProfile.completion < 1;
   }
 
+  GerdieState get _gerdieState =>
+      _dashboard?.gerdieState ??
+      switch (widget.scenario) {
+        HomeScenario.profileIncomplete ||
+        HomeScenario.emptyData => GerdieState.firstVisit,
+        HomeScenario.loggedToday => GerdieState.noSymptoms,
+        HomeScenario.symptomatic => GerdieState.moderateSymptoms,
+        HomeScenario.evaluationDue => GerdieState.noSymptoms,
+      };
+
   DateTime get _periodStart {
     final today = DateTime.now();
     return DateTime(
@@ -270,6 +280,7 @@ class _HomePageState extends State<HomePage> {
                             const SizedBox(height: 16),
                             HomeHeroCard(
                               status: _status,
+                              gerdieState: _gerdieState,
                               onAction: isEvaluationDue
                                   ? () => Navigator.of(context).push(
                                       MaterialPageRoute<void>(

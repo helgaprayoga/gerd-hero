@@ -1,4 +1,4 @@
-﻿import 'dart:typed_data';
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:pdfx/pdfx.dart';
@@ -166,9 +166,7 @@ class _ReportPreviewPageState extends State<ReportPreviewPage> {
                         ),
                       )
                     : const Icon(Icons.download_outlined),
-                label: Text(
-                  _exporting ? 'Membuat PDF...' : 'Ekspor PDF (2 Halaman)',
-                ),
+                label: Text(_exporting ? 'Membuat PDF...' : 'Ekspor PDF'),
                 style: FilledButton.styleFrom(
                   minimumSize: const Size.fromHeight(52),
                   shape: const StadiumBorder(),

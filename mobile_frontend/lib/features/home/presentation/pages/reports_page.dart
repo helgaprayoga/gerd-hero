@@ -51,6 +51,8 @@ class _ReportsPageState extends State<ReportsPage> {
                             children: [
                               Text(
                                 'Laporan Klinis',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                                 style: TextStyle(
                                   fontSize: 22,
                                   fontWeight: FontWeight.w600,
@@ -59,6 +61,8 @@ class _ReportsPageState extends State<ReportsPage> {
                               SizedBox(height: 2),
                               Text(
                                 'Ringkasan untuk konsultasi dokter',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                                 style: TextStyle(
                                   color: AppColors.onSurfaceVariant,
                                   fontSize: 14,
@@ -159,6 +163,10 @@ class _ReportsPageState extends State<ReportsPage> {
       initialDateRange: _customRange,
     );
     if (range != null && mounted) {
+      if (range.duration.inDays + 1 > 90) {
+        _showError('Periode laporan maksimal 90 hari.');
+        return;
+      }
       setState(() {
         _period = 0;
         _customRange = range;

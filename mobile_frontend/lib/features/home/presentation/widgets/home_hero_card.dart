@@ -2,17 +2,31 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/mascot.dart';
+import '../../../../core/widgets/mascot_expression.dart';
 import '../models/home_dashboard_data.dart';
 
 class HomeHeroCard extends StatelessWidget {
-  const HomeHeroCard({required this.status, this.onAction, super.key});
+  const HomeHeroCard({
+    required this.status,
+    required this.gerdieState,
+    this.onAction,
+    super.key,
+  });
 
   final HomeStatus status;
+  final GerdieState gerdieState;
   final VoidCallback? onAction;
 
   bool get warning =>
       status == HomeStatus.symptomaticToday ||
       status == HomeStatus.evaluationDue;
+
+  MascotExpression get _mascotExpression => switch (gerdieState) {
+    GerdieState.firstVisit => MascotExpression.welcome,
+    GerdieState.noSymptoms => MascotExpression.calm,
+    GerdieState.moderateSymptoms => MascotExpression.moderate,
+    GerdieState.highSymptoms => MascotExpression.high,
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -124,10 +138,13 @@ class HomeHeroCard extends StatelessWidget {
                   radius: 48,
                   backgroundColor: Color(0x66FFFFFF),
                 ),
-                const SizedBox(
+                SizedBox(
                   width: 88,
                   height: 88,
-                  child: Mascot(animation: AlwaysStoppedAnimation(0)),
+                  child: Mascot(
+                    animation: AlwaysStoppedAnimation(0),
+                    expression: _mascotExpression,
+                  ),
                 ),
                 if (warning || isDue)
                   const Positioned(

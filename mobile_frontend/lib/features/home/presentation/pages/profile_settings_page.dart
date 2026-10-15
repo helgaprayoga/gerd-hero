@@ -286,7 +286,10 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
                           color: Colors.white,
                         ),
                       )
-                    : const Text('Simpan Perubahan'),
+                    : const FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Text('Simpan Perubahan'),
+                      ),
                 style: FilledButton.styleFrom(
                   minimumSize: const Size.fromHeight(48),
                   shape: const StadiumBorder(),
@@ -740,9 +743,16 @@ class _ProfileSection extends StatelessWidget {
               child: Icon(icon, color: AppColors.primary, size: 21),
             ),
             const SizedBox(width: 8),
-            Text(
-              title,
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+            Expanded(
+              child: Text(
+                title,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
             ),
           ],
         ),
@@ -823,11 +833,15 @@ class _ProfileField extends StatelessWidget {
               ),
             ),
             if (suffix != null)
-              Text(
-                suffix!,
-                style: const TextStyle(
-                  color: AppColors.secondary,
-                  fontWeight: FontWeight.w600,
+              Flexible(
+                child: Text(
+                  suffix!,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: AppColors.secondary,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
             ?trailing,
@@ -860,12 +874,15 @@ class _SummaryPill extends StatelessWidget {
       color: AppColors.surfaceContainer,
       borderRadius: BorderRadius.circular(99),
     ),
-    child: Text(
-      label,
-      style: const TextStyle(
-        color: AppColors.onSurfaceVariant,
-        fontSize: 11,
-        fontWeight: FontWeight.w500,
+    child: FittedBox(
+      fit: BoxFit.scaleDown,
+      child: Text(
+        label,
+        style: const TextStyle(
+          color: AppColors.onSurfaceVariant,
+          fontSize: 11,
+          fontWeight: FontWeight.w500,
+        ),
       ),
     ),
   );
@@ -907,7 +924,12 @@ class _ChoiceButton extends StatelessWidget {
       children: [
         Icon(icon, size: 18),
         const SizedBox(width: 6),
-        Text(label, style: const TextStyle(fontSize: 14)),
+        Flexible(
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(label, style: const TextStyle(fontSize: 14)),
+          ),
+        ),
       ],
     ),
   );
@@ -954,6 +976,8 @@ class _BmiCard extends StatelessWidget {
               Expanded(
                 child: Text(
                   'BMI: ${bmi.toStringAsFixed(1)}',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
@@ -961,7 +985,7 @@ class _BmiCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 8),
-              _SummaryPill(label: 'Kategori $category'),
+              Flexible(child: _SummaryPill(label: 'Kategori $category')),
             ],
           ),
           const SizedBox(height: 14),
@@ -994,33 +1018,32 @@ class _BmiCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 6),
-          Row(
-            children: const [
-              Expanded(
-                child: Text(
+          const FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
                   '< 18.5 Kurang',
                   style: TextStyle(color: AppColors.secondary, fontSize: 10),
                 ),
-              ),
-              Expanded(
-                child: Text(
+                SizedBox(width: 8),
+                Text(
                   '18.5 - 24.9 Ideal',
-                  textAlign: TextAlign.center,
                   style: TextStyle(
                     color: AppColors.primary,
                     fontSize: 10,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
-              ),
-              Expanded(
-                child: Text(
+                SizedBox(width: 8),
+                Text(
                   '> 25.0 Lebih',
-                  textAlign: TextAlign.right,
                   style: TextStyle(color: AppColors.secondary, fontSize: 10),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ],
       ),
@@ -1069,15 +1092,18 @@ class _SegmentField extends StatelessWidget {
                           : Colors.transparent,
                       borderRadius: BorderRadius.circular(99),
                     ),
-                    child: Text(
-                      option,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: value == option
-                            ? Colors.white
-                            : AppColors.secondary,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500,
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        option,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: value == option
+                              ? Colors.white
+                              : AppColors.secondary,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
                     ),
                   ),
@@ -1319,12 +1345,19 @@ class _AddActions extends StatelessWidget {
   Widget build(BuildContext context) => Row(
     mainAxisAlignment: MainAxisAlignment.end,
     children: [
-      TextButton(onPressed: onCancel, child: const Text('Batal')),
+      Flexible(
+        child: TextButton(
+          onPressed: onCancel,
+          child: const FittedBox(fit: BoxFit.scaleDown, child: Text('Batal')),
+        ),
+      ),
       const SizedBox(width: 8),
-      FilledButton(
-        onPressed: onAdd,
-        style: FilledButton.styleFrom(shape: const StadiumBorder()),
-        child: Text(label),
+      Flexible(
+        child: FilledButton(
+          onPressed: onAdd,
+          style: FilledButton.styleFrom(shape: const StadiumBorder()),
+          child: FittedBox(fit: BoxFit.scaleDown, child: Text(label)),
+        ),
       ),
     ],
   );

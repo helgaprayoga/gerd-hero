@@ -47,84 +47,91 @@ class GerdQScoreCard extends StatelessWidget {
                     strokeWidth: 8,
                     backgroundColor: AppColors.secondaryContainer,
                     valueColor: AlwaysStoppedAnimation<Color>(
-                      isLikelyGerd ? AppColors.tertiary : AppColors.primary,
+                      isLikelyGerd ? AppColors.gerdLikely : AppColors.primary,
                     ),
                   ),
                 ),
-                Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Text(
-                      'SKOR ANDA',
-                      style: TextStyle(
-                        color: AppColors.onSurfaceVariant,
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 1.1,
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Text(
+                        'SKOR ANDA',
+                        style: TextStyle(
+                          color: AppColors.onSurfaceVariant,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 1.1,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text.rich(
-                      TextSpan(
-                        children: [
-                          TextSpan(
-                            text: '$score',
-                            style: TextStyle(
-                              color: isLikelyGerd
-                                  ? const Color(0xFF835400)
-                                  : AppColors.primary,
-                              fontSize: 28,
-                              fontWeight: FontWeight.w800,
+                      const SizedBox(height: 2),
+                      Text.rich(
+                        TextSpan(
+                          children: [
+                            TextSpan(
+                              text: '$score',
+                              style: TextStyle(
+                                color: isLikelyGerd
+                                    ? AppColors.gerdLikely
+                                    : AppColors.primary,
+                                fontSize: 28,
+                                fontWeight: FontWeight.w800,
+                              ),
                             ),
-                          ),
-                          const TextSpan(
-                            text: ' / 18',
-                            style: TextStyle(
-                              color: AppColors.secondary,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w700,
+                            const TextSpan(
+                              text: ' / 18',
+                              style: TextStyle(
+                                color: AppColors.secondary,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w700,
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ],
             ),
           ),
           const SizedBox(height: 16),
           Container(
+            width: double.infinity,
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 7),
             decoration: BoxDecoration(
               color: isLikelyGerd
-                  ? AppColors.tertiaryFixed.withValues(alpha: 0.35)
+                  ? AppColors.gerdLikelyBackground
                   : AppColors.surface,
               borderRadius: BorderRadius.circular(999),
             ),
-            child: Wrap(
-              alignment: WrapAlignment.center,
-              crossAxisAlignment: WrapCrossAlignment.center,
-              spacing: 6,
-              runSpacing: 4,
+            child: Row(
               children: [
                 Icon(
                   isLikelyGerd
                       ? Icons.warning_amber_rounded
                       : Icons.check_circle,
-                  color: isLikelyGerd ? AppColors.error : AppColors.primary,
+                  color: isLikelyGerd
+                      ? AppColors.gerdLikely
+                      : AppColors.primary,
                   size: 18,
                 ),
-                Text(
-                  isLikelyGerd
-                      ? 'Kemungkinan menderita GERD'
-                      : 'Kemungkinan tidak menderita GERD',
-                  textAlign: TextAlign.center,
-                  softWrap: true,
-                  style: TextStyle(
-                    color: isLikelyGerd ? AppColors.error : AppColors.primary,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    isLikelyGerd
+                        ? 'Kemungkinan menderita GERD'
+                        : 'Kemungkinan tidak menderita GERD',
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: isLikelyGerd
+                          ? AppColors.gerdLikely
+                          : AppColors.primary,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                 ),
               ],

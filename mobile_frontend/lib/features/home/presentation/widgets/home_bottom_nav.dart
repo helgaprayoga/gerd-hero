@@ -32,23 +32,29 @@ class HomeBottomNav extends StatelessWidget {
     child: Row(
       mainAxisAlignment: MainAxisAlignment.spaceAround,
       children: [
-        HomeNavItem(
-          icon: Icons.home_outlined,
-          label: 'Beranda',
-          active: active == 'Beranda',
-          onTap: onHome,
+        Expanded(
+          child: HomeNavItem(
+            icon: Icons.home_outlined,
+            label: 'Beranda',
+            active: active == 'Beranda',
+            onTap: onHome,
+          ),
         ),
-        HomeNavItem(
-          icon: Icons.insights_outlined,
-          label: 'Analitik',
-          active: active == 'Analitik',
-          onTap: onAnalytics,
+        Expanded(
+          child: HomeNavItem(
+            icon: Icons.insights_outlined,
+            label: 'Analitik',
+            active: active == 'Analitik',
+            onTap: onAnalytics,
+          ),
         ),
-        HomeNavItem(
-          icon: Icons.description_outlined,
-          label: 'Laporan',
-          active: active == 'Laporan',
-          onTap: onReports,
+        Expanded(
+          child: HomeNavItem(
+            icon: Icons.description_outlined,
+            label: 'Laporan',
+            active: active == 'Laporan',
+            onTap: onReports,
+          ),
         ),
       ],
     ),

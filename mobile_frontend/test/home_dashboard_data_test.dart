@@ -43,4 +43,55 @@ void main() {
 
     expect(dashboard.hasLogToday, isFalse);
   });
+
+  test('uses first visit state when the user has no log data', () {
+    final dashboard = HomeDashboardData(
+      profile: const ProfileData(),
+      weeklyLogs: const [],
+    );
+
+    expect(dashboard.gerdieState, GerdieState.firstVisit);
+  });
+
+  test('uses calm state for a symptom-free log', () {
+    final dashboard = HomeDashboardData(
+      profile: const ProfileData(),
+      weeklyLogs: [
+        HomeDailyLog(
+          date: DateTime.now(),
+          gerdLevel: 0,
+          noSymptoms: true,
+          symptoms: const [],
+          triggers: const {},
+        ),
+      ],
+    );
+
+    expect(dashboard.gerdieState, GerdieState.noSymptoms);
+  });
+
+  test('uses moderate and high states from today symptom level', () {
+    HomeDailyLog log(double level) => HomeDailyLog(
+      date: DateTime.now(),
+      gerdLevel: level,
+      noSymptoms: false,
+      symptoms: const ['Heartburn'],
+      triggers: const {},
+    );
+
+    expect(
+      HomeDashboardData(
+        profile: const ProfileData(),
+        weeklyLogs: [log(0.30)],
+      ).gerdieState,
+      GerdieState.moderateSymptoms,
+    );
+    expect(
+      HomeDashboardData(
+        profile: const ProfileData(),
+        weeklyLogs: [log(0.60)],
+      ).gerdieState,
+      GerdieState.highSymptoms,
+    );
+  });
 }

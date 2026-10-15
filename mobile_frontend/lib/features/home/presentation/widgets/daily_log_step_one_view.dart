@@ -166,6 +166,8 @@ class _DailyLogStepOneViewState extends State<DailyLogStepOneView> {
                         const Expanded(
                           child: Text(
                             'Daftar Gejala Terkait',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                             style: TextStyle(
                               color: AppColors.secondary,
                               fontSize: 14,
@@ -219,10 +221,12 @@ class _DailyLogStepOneViewState extends State<DailyLogStepOneView> {
                   if (!_noSymptoms) ...[
                     const SizedBox(height: 12),
                     Row(
-                      children: const [
+                      children: [
                         Expanded(
                           child: Text(
                             'Deskripsi (opsional)',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                             style: TextStyle(
                               color: AppColors.onSurface,
                               fontSize: 14,
@@ -231,11 +235,16 @@ class _DailyLogStepOneViewState extends State<DailyLogStepOneView> {
                           ),
                         ),
                         SizedBox(width: 8),
-                        Text(
-                          'Maks. 250 karakter',
-                          style: TextStyle(
-                            color: AppColors.secondary,
-                            fontSize: 12,
+                        Flexible(
+                          child: Text(
+                            'Maks. 250 karakter',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            textAlign: TextAlign.end,
+                            style: TextStyle(
+                              color: AppColors.secondary,
+                              fontSize: 12,
+                            ),
                           ),
                         ),
                       ],

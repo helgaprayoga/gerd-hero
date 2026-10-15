@@ -56,6 +56,8 @@ class GerdQResultInterpretation extends StatelessWidget {
           score: '8 – 18',
           label: 'Kemungkinan menderita GERD',
           active: isLikelyGerd,
+          activeColor: AppColors.gerdLikely,
+          activeBackground: AppColors.gerdLikelyBackground,
         ),
         SizedBox(height: 16),
         DecoratedBox(

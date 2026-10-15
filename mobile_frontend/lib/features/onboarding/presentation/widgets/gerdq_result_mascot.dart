@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/mascot.dart';
+import '../../../../core/widgets/mascot_expression.dart';
 
 class GerdQResultMascot extends StatelessWidget {
   const GerdQResultMascot({required this.isLikelyGerd, super.key});
@@ -15,10 +16,12 @@ class GerdQResultMascot extends StatelessWidget {
     alignment: Alignment.center,
     decoration: BoxDecoration(
       color: isLikelyGerd
-          ? Colors.white
+          ? AppColors.gerdLikelyBackground
           : AppColors.primaryFixed.withValues(alpha: 0.40),
       shape: BoxShape.circle,
-      border: isLikelyGerd ? Border.all(color: const Color(0x4CBCC9C6)) : null,
+      border: isLikelyGerd
+          ? Border.all(color: AppColors.gerdLikely.withValues(alpha: 0.35))
+          : null,
       boxShadow: const [
         BoxShadow(
           color: Color(0x0C000000),
@@ -30,10 +33,15 @@ class GerdQResultMascot extends StatelessWidget {
     child: Stack(
       alignment: Alignment.center,
       children: [
-        const SizedBox(
+        SizedBox(
           width: 40,
           height: 40,
-          child: Mascot(animation: AlwaysStoppedAnimation(0)),
+          child: Mascot(
+            animation: AlwaysStoppedAnimation(0),
+            expression: isLikelyGerd
+                ? MascotExpression.high
+                : MascotExpression.calm,
+          ),
         ),
         if (isLikelyGerd)
           Positioned(
@@ -44,7 +52,7 @@ class GerdQResultMascot extends StatelessWidget {
               height: 16,
               alignment: Alignment.center,
               decoration: const BoxDecoration(
-                color: AppColors.tertiary,
+                color: AppColors.gerdLikely,
                 shape: BoxShape.circle,
               ),
               child: const Icon(

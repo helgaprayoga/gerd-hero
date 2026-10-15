@@ -20,30 +20,32 @@ class _MealTimeRow extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: AppColors.secondaryContainer),
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Expanded(
-            child: Text(
-              label,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                color: AppColors.onSurface,
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
-              ),
+          Text(
+            label,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              color: AppColors.onSurface,
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
             ),
           ),
-          const SizedBox(width: 8),
-          OutlinedButton.icon(
-            onPressed: onTap,
-            icon: const Icon(Icons.access_time, size: 15),
-            label: Text(time),
-            style: OutlinedButton.styleFrom(
-              foregroundColor: AppColors.onSurface,
-              padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
-              minimumSize: Size.zero,
-              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          const SizedBox(height: 8),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: OutlinedButton.icon(
+              onPressed: onTap,
+              icon: const Icon(Icons.access_time, size: 15),
+              label: Text(time),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: AppColors.onSurface,
+                padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+                minimumSize: Size.zero,
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              ),
             ),
           ),
         ],

@@ -44,7 +44,7 @@ class HomeDayBar extends StatelessWidget {
         ? _minBarHeight + _level * _maxBarHeight
         : _minBarHeight;
     final bar = Container(
-      width: 20,
+      width: 18,
       height: barHeight,
       decoration: BoxDecoration(
         color: _barColor,
@@ -72,16 +72,22 @@ class HomeDayBar extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(
-            day,
-            style: const TextStyle(fontSize: 10, color: AppColors.secondary),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              day,
+              style: const TextStyle(fontSize: 10, color: AppColors.secondary),
+            ),
           ),
-          Text(
-            date,
-            style: const TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.w700,
-              color: AppColors.onSurface,
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              date,
+              style: const TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w700,
+                color: AppColors.onSurface,
+              ),
             ),
           ),
           if (hasLog)

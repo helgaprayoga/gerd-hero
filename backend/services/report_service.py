@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections import Counter
-from datetime import date, datetime
+from datetime import date
 from io import BytesIO
 from typing import Any
 from xml.sax.saxutils import escape
@@ -53,6 +53,15 @@ def _rows(logs: list[dict[str, Any]], key: str) -> Counter[str]:
 
 def _cell(value: Any, paragraph, style) -> Any:
     return _paragraph(value, paragraph, style)
+
+
+def _medication_text(value: Any) -> str:
+    """Format medication JSON objects for a readable clinical report."""
+    if isinstance(value, dict):
+        name = _text(value.get("name"))
+        schedule = _text(value.get("schedule"))
+        return f"{name} ({schedule})"
+    return _text(value)
 
 
 def generate_pdf(
@@ -184,7 +193,17 @@ def generate_pdf(
     story.extend(section_title("H. OBAT & SUPLEMEN YANG DIKONSUMSI"))
     medicine_rows = [[_cell("Tanggal", Paragraph, header), _cell("Jenis Obat", Paragraph, header), _cell("Status", Paragraph, header)]]
     for log in logs:
-        medicine_rows.append([_cell(_date_text(log.get("log_date")), Paragraph, small), _cell(", ".join(str(item) for item in (log.get("medications") or [])) or "-", Paragraph, small), _cell("Digunakan" if log.get("took_medication") else "Tidak digunakan", Paragraph, small)])
+        medications = log.get("medications") or []
+        medication_text = ", ".join(_medication_text(item) for item in medications) or "-"
+        medicine_rows.append([
+            _cell(_date_text(log.get("log_date")), Paragraph, small),
+            _cell(medication_text, Paragraph, small),
+            _cell(
+                "Digunakan" if log.get("took_medication") else "Tidak digunakan",
+                Paragraph,
+                small,
+            ),
+        ])
     story.append(card(medicine_rows, [4.2 * cm, 9 * cm, 4.3 * cm]))
     story.extend([Spacer(1, 0.25 * cm), Paragraph("Laporan ini merupakan ringkasan pemantauan mandiri dan bukan diagnosis medis.", muted)])
 
@@ -195,7 +214,7 @@ def generate_pdf(
         canvas.setFont("Helvetica", 7)
         canvas.setFillColor(colors.HexColor("#69777D"))
         canvas.drawString(1.6 * cm, 0.75 * cm, "GERDHero • SALINAN PASIEN")
-        canvas.drawRightString(19.4 * cm, 0.75 * cm, f"Halaman {canvas.getPageNumber()} dari 2")
+        canvas.drawRightString(19.4 * cm, 0.75 * cm, f"Halaman {canvas.getPageNumber()}")
         canvas.restoreState()
 
     document = SimpleDocTemplate(output, pagesize=A4, rightMargin=1.6 * cm, leftMargin=1.6 * cm, topMargin=1.4 * cm, bottomMargin=1.6 * cm)

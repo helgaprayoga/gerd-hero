@@ -15,7 +15,7 @@ class _ToggleChoice extends StatelessWidget {
     onTap: onTap,
     borderRadius: BorderRadius.circular(6),
     child: Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
       decoration: BoxDecoration(
         color: active ? AppColors.primary : Colors.transparent,
         borderRadius: BorderRadius.circular(6),
@@ -24,7 +24,7 @@ class _ToggleChoice extends StatelessWidget {
         label,
         style: TextStyle(
           color: active ? Colors.white : AppColors.onSurfaceVariant,
-          fontSize: 12,
+          fontSize: 11,
           fontWeight: active ? FontWeight.w700 : FontWeight.w500,
         ),
       ),

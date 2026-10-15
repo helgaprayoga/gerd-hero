@@ -165,12 +165,17 @@ class AuthFormCard extends StatelessWidget {
                 foregroundColor: AppColors.onSurface,
                 shape: const StadiumBorder(),
               ),
-              child: const Row(
+              child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  GoogleMark(),
+                  const GoogleMark(),
                   SizedBox(width: 12),
-                  Text('Lanjutkan dengan Google'),
+                  Flexible(
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: const Text('Lanjutkan dengan Google'),
+                    ),
+                  ),
                 ],
               ),
             ),

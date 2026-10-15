@@ -9,6 +9,10 @@ enum HomeStatus {
   noData,
 }
 
+enum GerdieState { firstVisit, noSymptoms, moderateSymptoms, highSymptoms }
+
+const gerdieHighThreshold = 0.60;
+
 class HomeGerdqData {
   const HomeGerdqData({
     required this.score,
@@ -96,6 +100,23 @@ class HomeDashboardData {
     final profileLogExists =
         lastLogDate != null && _dateOnly(lastLogDate!) == today;
     return logExists || profileLogExists;
+  }
+
+  GerdieState get gerdieState {
+    final hasAnyLog = profile.lastLogDate != null || weeklyLogs.isNotEmpty;
+    if (!hasAnyLog) return GerdieState.firstVisit;
+
+    final today = weeklyLogs.cast<HomeDailyLog?>().firstWhere(
+      (log) => log != null && _dateOnly(log.date) == _dateOnly(DateTime.now()),
+      orElse: () => null,
+    );
+    if (today == null || today.noSymptoms || today.gerdLevel <= 0) {
+      return GerdieState.noSymptoms;
+    }
+    if (today.gerdLevel >= gerdieHighThreshold) {
+      return GerdieState.highSymptoms;
+    }
+    return GerdieState.moderateSymptoms;
   }
 
   HomeStatus get status {
