@@ -14,9 +14,11 @@ SUPABASE_URL=https://project.supabase.co
 SUPABASE_PUBLISHABLE_KEY=isi-publishable-key
 SUPABASE_SECRET_KEY=isi-secret-key-server
 CORS_ORIGINS=*
+APP_TIMEZONE=Asia/Jakarta
 ```
 
 Backend akan gagal dijalankan jika variabel wajib tidak tersedia atau `SUPABASE_URL` bukan URL HTTP/HTTPS.
+`APP_TIMEZONE` menentukan tanggal bisnis untuk Daily Log, streak, analytics, dan report; default-nya `Asia/Jakarta`.
 
 ## Database migration
 
