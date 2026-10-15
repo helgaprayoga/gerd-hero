@@ -174,7 +174,7 @@ def generate_text(prompt: str, json_mode: bool = False) -> str:
     kwargs: dict[str, Any] = {
         "model": "gerdhero-primary",
         "messages": messages,
-        "temperature": 0.2,
+        # "temperature": 0.2,
     }
     if json_mode:
         kwargs["response_format"] = {"type": "json_object"}
