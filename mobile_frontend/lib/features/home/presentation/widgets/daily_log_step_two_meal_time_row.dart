@@ -20,31 +20,37 @@ class _MealTimeRow extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: AppColors.secondaryContainer),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
+      child: Row(
         children: [
-          Text(
-            label,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
-              color: AppColors.onSurface,
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
+          Expanded(
+            child: Text(
+              label,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                color: AppColors.onSurface,
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+              ),
             ),
           ),
-          const SizedBox(height: 8),
-          Align(
-            alignment: Alignment.centerLeft,
-            child: OutlinedButton.icon(
-              onPressed: onTap,
-              icon: const Icon(Icons.access_time, size: 15),
-              label: Text(time),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: AppColors.onSurface,
-                padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
-                minimumSize: Size.zero,
-                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          const SizedBox(width: 8),
+          Flexible(
+            child: Align(
+              alignment: Alignment.centerRight,
+              child: OutlinedButton.icon(
+                onPressed: onTap,
+                icon: const Icon(Icons.access_time, size: 15),
+                label: Text(time, overflow: TextOverflow.ellipsis),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: AppColors.onSurface,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 9,
+                    vertical: 4,
+                  ),
+                  minimumSize: Size.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
               ),
             ),
           ),

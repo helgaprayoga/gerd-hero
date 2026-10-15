@@ -57,35 +57,40 @@ class _GerdQResultPageState extends State<GerdQResultPage> {
   Widget build(BuildContext context) {
     final result = calculateGerdQ(widget.answers);
 
-    return Scaffold(
-      backgroundColor: AppColors.surface,
-      body: Column(
-        children: [
-          const GerdQResultHeader(),
-          Expanded(
-            child: SafeArea(
-              top: false,
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
-                child: Column(
-                  children: [
-                    const GerdQResultIntro(),
-                    const SizedBox(height: 16),
-                    GerdQScoreCard(score: result.score),
-                    const SizedBox(height: 20),
-                    GerdQResultInterpretation(score: result.score),
-                    const SizedBox(height: 32),
-                    GerdQResultAction(
-                      onPressed: _isSubmitting ? null : () => _finish(context),
-                    ),
-                    const SizedBox(height: 16),
-                    const AuthPrivacyNote(),
-                  ],
+    return PopScope(
+      canPop: false,
+      child: Scaffold(
+        backgroundColor: AppColors.surface,
+        body: Column(
+          children: [
+            const GerdQResultHeader(),
+            Expanded(
+              child: SafeArea(
+                top: false,
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+                  child: Column(
+                    children: [
+                      const GerdQResultIntro(),
+                      const SizedBox(height: 16),
+                      GerdQScoreCard(score: result.score),
+                      const SizedBox(height: 20),
+                      GerdQResultInterpretation(score: result.score),
+                      const SizedBox(height: 32),
+                      GerdQResultAction(
+                        onPressed: _isSubmitting
+                            ? null
+                            : () => _finish(context),
+                      ),
+                      const SizedBox(height: 16),
+                      const AuthPrivacyNote(),
+                    ],
+                  ),
                 ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

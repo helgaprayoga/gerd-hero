@@ -37,9 +37,14 @@ class _DailyHistorySummaryPageState extends State<DailyHistorySummaryPage> {
         final log = await (widget.repository ?? DailyLogRepository()).fetchDate(
           date,
         );
-        if (mounted) {
-          setState(() => _response = DailyLogResponse(data: log.data));
+        var data = Map<String, dynamic>.from(log.data);
+        final existingAnalysis = data['ai_analysis'];
+        if (existingAnalysis is! Map || existingAnalysis.isEmpty) {
+          final generated = await (widget.repository ?? DailyLogRepository())
+              .generateDailySummary(date);
+          data = {...data, ...generated.data};
         }
+        if (mounted) setState(() => _response = DailyLogResponse(data: data));
         return;
       } catch (_) {
         // Keep the selected date and card data visible when the detail request fails.

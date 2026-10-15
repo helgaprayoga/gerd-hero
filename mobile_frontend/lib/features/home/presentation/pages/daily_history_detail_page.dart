@@ -4,7 +4,6 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/network/api_client.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/app_feedback.dart';
-import '../../data/models/daily_log_models.dart';
 import '../../data/repositories/daily_log_repository.dart';
 import '../../domain/entities/daily_log_draft.dart';
 import '../models/daily_history_entry.dart';
@@ -13,7 +12,7 @@ import '../widgets/history_detail_confirmation_sheets.dart';
 import '../widgets/history_detail_habits_card.dart';
 import '../widgets/history_detail_symptoms_card.dart';
 import '../widgets/history_detail_wellness_card.dart';
-import 'daily_log_summary_page.dart';
+import 'daily_history_summary_page.dart';
 
 class DailyHistoryDetailPage extends StatefulWidget {
   const DailyHistoryDetailPage({
@@ -38,7 +37,6 @@ class _DailyHistoryDetailPageState extends State<DailyHistoryDetailPage> {
   double _stress = 3;
   bool _tookMedicine = true;
   bool _hasChanges = false;
-  DailyLogResponse? _lastResponse;
   TimeOfDay _sleepTime = const TimeOfDay(hour: 23, minute: 0);
   TimeOfDay _wakeTime = const TimeOfDay(hour: 6, minute: 30);
 
@@ -122,35 +120,42 @@ class _DailyHistoryDetailPageState extends State<DailyHistoryDetailPage> {
     }
   }
 
+  Future<bool> _persistChanges() async {
+    if (widget.entry.dateIso == null) return false;
+    try {
+      final draft = _toDraft();
+      await (widget.repository ?? DailyLogRepository()).createOrUpdate(
+        draft,
+        allowUpdate: true,
+      );
+      return true;
+    } on ApiException catch (error) {
+      if (mounted) {
+        showAppFeedback(
+          context,
+          title: 'Gagal menyimpan',
+          message: error.message,
+          icon: Icons.error_outline,
+        );
+      }
+      return false;
+    }
+  }
+
   Future<void> _save() async {
     final saved = await showHistorySaveSheet(
       context,
       date: '${widget.entry.day}, ${widget.entry.date} 2026',
     );
     if (saved == true && mounted) {
-      try {
-        if (widget.entry.dateIso != null) {
-          final draft = _toDraft();
-          _lastResponse = await (widget.repository ?? DailyLogRepository())
-              .createOrUpdate(draft, allowUpdate: true);
-        }
-        if (!mounted) return;
-        setState(() => _hasChanges = false);
-        showAppFeedback(
-          context,
-          title: 'Catatan tersimpan',
-          message: 'Perubahan catatan harian berhasil diperbarui.',
-        );
-      } on ApiException catch (error) {
-        if (mounted) {
-          showAppFeedback(
-            context,
-            title: 'Gagal menyimpan',
-            message: error.message,
-            icon: Icons.error_outline,
-          );
-        }
-      }
+      final persisted = await _persistChanges();
+      if (!persisted || !mounted) return;
+      setState(() => _hasChanges = false);
+      showAppFeedback(
+        context,
+        title: 'Catatan tersimpan',
+        message: 'Perubahan catatan harian berhasil diperbarui.',
+      );
     }
   }
 
@@ -162,6 +167,8 @@ class _DailyHistoryDetailPageState extends State<DailyHistoryDetailPage> {
     final result = await showHistoryChangedSheet(context);
     if (!mounted) return;
     if (result == 'save') {
+      final persisted = await _persistChanges();
+      if (!persisted || !mounted) return;
       setState(() => _hasChanges = false);
       _openSummary();
     } else if (result == 'discard') {
@@ -172,7 +179,10 @@ class _DailyHistoryDetailPageState extends State<DailyHistoryDetailPage> {
   void _openSummary() {
     Navigator.of(context).push(
       MaterialPageRoute<void>(
-        builder: (_) => DailyLogSummaryPage(response: _lastResponse),
+        builder: (_) => DailyHistorySummaryPage(
+          entry: widget.entry,
+          repository: widget.repository,
+        ),
       ),
     );
   }

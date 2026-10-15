@@ -194,71 +194,74 @@ class _ProfilePageState extends State<ProfilePage> {
     final height = _parseMeasurement(_heightController.text);
     final weight = _parseMeasurement(_weightController.text);
 
-    return Scaffold(
-      backgroundColor: AppColors.surface,
-      body: Column(
-        children: [
-          ProfileHeader(onSkip: _skipProfile),
-          if (_isLoadingProfile) const LinearProgressIndicator(minHeight: 2),
-          Expanded(
-            child: SafeArea(
-              top: false,
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
-                child: Column(
-                  children: [
-                    const ProfileIntroCard(),
-                    const SizedBox(height: 20),
-                    ProfileFormCard(
-                      nameController: _nameController,
-                      heightController: _heightController,
-                      weightController: _weightController,
-                      birthDate: _birthDate,
-                      gender: _gender,
-                      onBirthDateTap: _selectBirthDate,
-                      onGenderChanged: (value) =>
-                          setState(() => _gender = value),
-                    ),
-                    const SizedBox(height: 20),
-                    BmiCard(height: height, weight: weight),
-                    const SizedBox(height: 24),
-                    SizedBox(
-                      width: double.infinity,
-                      height: 48,
-                      child: FilledButton(
-                        onPressed: _isLoading ? null : _saveProfile,
-                        style: FilledButton.styleFrom(
-                          backgroundColor: AppColors.primaryContainer,
-                          foregroundColor: Colors.white,
-                          shape: const StadiumBorder(),
-                        ),
-                        child: _isLoading
-                            ? const SizedBox(
-                                width: 20,
-                                height: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: Colors.white,
-                                ),
-                              )
-                            : const Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Text('Lanjut'),
-                                  SizedBox(width: 8),
-                                  Icon(Icons.arrow_forward, size: 18),
-                                ],
-                              ),
+    return PopScope(
+      canPop: false,
+      child: Scaffold(
+        backgroundColor: AppColors.surface,
+        body: Column(
+          children: [
+            ProfileHeader(onSkip: _skipProfile),
+            if (_isLoadingProfile) const LinearProgressIndicator(minHeight: 2),
+            Expanded(
+              child: SafeArea(
+                top: false,
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+                  child: Column(
+                    children: [
+                      const ProfileIntroCard(),
+                      const SizedBox(height: 20),
+                      ProfileFormCard(
+                        nameController: _nameController,
+                        heightController: _heightController,
+                        weightController: _weightController,
+                        birthDate: _birthDate,
+                        gender: _gender,
+                        onBirthDateTap: _selectBirthDate,
+                        onGenderChanged: (value) =>
+                            setState(() => _gender = value),
                       ),
-                    ),
-                    const SizedBox(height: 24),
-                    const AuthPrivacyNote(),
-                  ],
+                      const SizedBox(height: 20),
+                      BmiCard(height: height, weight: weight),
+                      const SizedBox(height: 24),
+                      SizedBox(
+                        width: double.infinity,
+                        height: 48,
+                        child: FilledButton(
+                          onPressed: _isLoading ? null : _saveProfile,
+                          style: FilledButton.styleFrom(
+                            backgroundColor: AppColors.primaryContainer,
+                            foregroundColor: Colors.white,
+                            shape: const StadiumBorder(),
+                          ),
+                          child: _isLoading
+                              ? const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: Colors.white,
+                                  ),
+                                )
+                              : const Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Text('Lanjut'),
+                                    SizedBox(width: 8),
+                                    Icon(Icons.arrow_forward, size: 18),
+                                  ],
+                                ),
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      const AuthPrivacyNote(),
+                    ],
+                  ),
                 ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

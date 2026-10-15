@@ -21,16 +21,16 @@ class _FrequencyCard extends StatelessWidget {
           subtitle: 'Jumlah waktu makan berat $dateLabel',
         ),
         const SizedBox(height: 14),
-        FittedBox(
-          fit: BoxFit.scaleDown,
+        Center(
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            mainAxisSize: MainAxisSize.min,
             children: [
               IconButton(
                 onPressed: count > 1 ? () => onChanged(count - 1) : null,
                 icon: const Icon(Icons.remove_circle_outline),
               ),
               Column(
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
                     '${count}x',
@@ -59,6 +59,7 @@ class _FrequencyCard extends StatelessWidget {
         const SizedBox(height: 8),
         Text(
           'Pilih jumlah makan berat yang kamu lakukan $dateLabel.',
+          textAlign: TextAlign.center,
           style: Theme.of(context).textTheme.bodySmall,
         ),
       ],
