@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
 from os import getenv
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from dotenv import load_dotenv
 
@@ -23,6 +24,7 @@ class Settings:
     supabase_publishable_key: str
     supabase_secret_key: str
     cors_origins: tuple[str, ...]
+    app_timezone: str
 
 
 def _parse_bool(value: str | None, default: bool = False) -> bool:
@@ -83,6 +85,12 @@ def get_settings() -> Settings:
     if not cors_origins:
         raise ConfigurationError("CORS_ORIGINS tidak boleh kosong")
 
+    app_timezone = (getenv("APP_TIMEZONE") or "Asia/Jakarta").strip()
+    try:
+        ZoneInfo(app_timezone)
+    except ZoneInfoNotFoundError as error:
+        raise ConfigurationError(f"APP_TIMEZONE tidak valid: {app_timezone}") from error
+
     return Settings(
         flask_secret_key=getenv("FLASK_SECRET_KEY", ""),
         flask_debug=_parse_bool(getenv("FLASK_DEBUG")),
@@ -99,4 +107,5 @@ def get_settings() -> Settings:
         supabase_publishable_key=getenv("SUPABASE_PUBLISHABLE_KEY", ""),
         supabase_secret_key=getenv("SUPABASE_SECRET_KEY", ""),
         cors_origins=cors_origins,
+        app_timezone=app_timezone,
     )

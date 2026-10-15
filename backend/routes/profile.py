@@ -7,6 +7,7 @@ from flask import Blueprint, g, jsonify
 from connection.supabase import get_table
 from middleware.auth import require_auth
 from routes.helpers import first_row, json_error, request_body, response_error
+from services.time_service import application_today
 
 
 profile_bp = Blueprint("profile", __name__)
@@ -22,7 +23,7 @@ def _profile_payload(user: dict, extended: dict | None) -> dict:
         last_log_date = date.fromisoformat(last_log_date) if last_log_date else None
     except (TypeError, ValueError):
         last_log_date = None
-    if last_log_date is None or (date.today() - last_log_date).days > 1:
+    if last_log_date is None or (application_today() - last_log_date).days > 1:
         payload["streak_days"] = 0
 
     return payload

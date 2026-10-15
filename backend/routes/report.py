@@ -10,6 +10,7 @@ from connection.supabase import get_storage_admin_client, get_table
 from middleware.auth import require_auth
 from routes.helpers import first_row, json_error, request_body, response_error
 from services.report_service import generate_pdf
+from services.time_service import application_today
 
 
 report_bp = Blueprint("report", __name__)
@@ -55,9 +56,9 @@ def _report_period(body: dict | None) -> tuple[date, date]:
     body = body or {}
     start_value = body.get("period_start", body.get("start_date"))
     end_value = body.get("period_end", body.get("end_date"))
-    end = date.fromisoformat(end_value) if end_value else date.today()
+    end = date.fromisoformat(end_value) if end_value else application_today()
     start = date.fromisoformat(start_value) if start_value else end - timedelta(days=6)
-    if end > date.today():
+    if end > application_today():
         raise ValueError("period_end tidak boleh di masa depan.")
     if start > end:
         raise ValueError("period_start tidak boleh setelah period_end.")
@@ -170,7 +171,7 @@ def generate_report():
             gerdq,
             {"start": start.isoformat(), "end": end.isoformat()},
         )
-        report_number = f"GERD-{date.today():%Y%m%d}-{uuid4().hex[:8].upper()}"
+        report_number = f"GERD-{application_today():%Y%m%d}-{uuid4().hex[:8].upper()}"
         storage_path = f"{g.user_id}/{report_number}.pdf"
         # The `reports` bucket must exist in Supabase Storage.
         get_storage_admin_client().storage.from_("reports").upload(

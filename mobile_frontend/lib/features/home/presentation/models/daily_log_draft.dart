@@ -1,6 +1,7 @@
+import '../../../../core/utils/local_date.dart';
+
 class DailyLogDraft {
-  DailyLogDraft({DateTime? logDate})
-    : logDate = _dateOnly(logDate ?? DateTime.now());
+  DailyLogDraft({DateTime? logDate}) : logDate = localDateOnly(logDate);
 
   DateTime logDate;
   List<String> symptoms = [];
@@ -38,11 +39,5 @@ class DailyLogDraft {
     'took_medication': tookMedication,
   };
 
-  static DateTime _dateOnly(DateTime value) =>
-      DateTime(value.year, value.month, value.day);
-
-  static String _isoDate(DateTime value) =>
-      '${value.year.toString().padLeft(4, '0')}-'
-      '${value.month.toString().padLeft(2, '0')}-'
-      '${value.day.toString().padLeft(2, '0')}';
+  static String _isoDate(DateTime value) => dateOnlyString(value);
 }

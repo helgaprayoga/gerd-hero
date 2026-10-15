@@ -15,6 +15,7 @@ from services.analytics_service import (
     get_period_statistics,
     get_top_triggers,
 )
+from services.time_service import application_today
 
 
 analytics_bp = Blueprint("analytics", __name__)
@@ -23,7 +24,7 @@ _CACHE_TTL = timedelta(hours=1)
 
 def _period() -> tuple[str, date, date]:
     period_type = request.args.get("period", "weekly")
-    anchor_text = request.args.get("date", date.today().isoformat())
+    anchor_text = request.args.get("date", application_today().isoformat())
     anchor = date.fromisoformat(anchor_text)
     if period_type == "weekly":
         start = anchor - timedelta(days=anchor.weekday())
