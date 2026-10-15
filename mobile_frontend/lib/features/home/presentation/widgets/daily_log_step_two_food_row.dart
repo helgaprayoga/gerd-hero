@@ -19,7 +19,7 @@ class _FoodRow extends StatelessWidget {
       children: [
         Text(emoji, style: const TextStyle(fontSize: 20)),
         const SizedBox(width: 10),
-        Flexible(
+        Expanded(
           child: Text(
             label,
             maxLines: 2,
@@ -27,7 +27,11 @@ class _FoodRow extends StatelessWidget {
             style: const TextStyle(color: AppColors.onSurface, fontSize: 12),
           ),
         ),
-        _YesNoToggle(selected: selected, onChanged: onChanged),
+        const SizedBox(width: 10),
+        Align(
+          alignment: Alignment.centerRight,
+          child: _YesNoToggle(selected: selected, onChanged: onChanged),
+        ),
       ],
     ),
   );

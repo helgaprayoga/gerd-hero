@@ -43,4 +43,12 @@ class DailyLogRepository {
     }
     return DailyHistoryLog.fromData(Map<String, dynamic>.from(value));
   }
+
+  Future<DailyLogResponse> generateDailySummary(String date) async {
+    final response = await _client.post(
+      '/api/logs/ai/daily-summary',
+      body: {'log_date': date},
+    );
+    return DailyLogResponse.fromJson(response);
+  }
 }

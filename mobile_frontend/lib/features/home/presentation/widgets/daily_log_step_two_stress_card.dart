@@ -18,13 +18,14 @@ class _StressCard extends StatelessWidget {
         const SizedBox(height: 14),
         Row(
           children: [
-            for (final item in [
-              ('😌', 'Rileks'),
-              ('🙂', 'Tenang'),
-              ('😐', 'Sedang'),
-              ('😟', 'Tinggi'),
-              ('😫', 'Berat'),
-            ])
+            for (final (index, item) in [
+              (0, ('😌', 'Rileks')),
+              (1, ('🙂', 'Tenang')),
+              (2, ('😐', 'Sedang')),
+              (3, ('😟', 'Tinggi')),
+              (4, ('😫', 'Berat')),
+            ]) ...[
+              if (index > 0) const SizedBox(width: 5),
               Expanded(
                 child: _StressChoice(
                   emoji: item.$1,
@@ -34,6 +35,7 @@ class _StressCard extends StatelessWidget {
                   onTap: () => onChanged(_stressIndex(item.$2)),
                 ),
               ),
+            ],
           ],
         ),
         const SizedBox(height: 14),

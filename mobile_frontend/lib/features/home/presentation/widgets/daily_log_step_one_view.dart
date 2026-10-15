@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/widgets/app_feedback.dart';
 import '../../domain/entities/daily_log_draft.dart';
 import 'daily_log_step_two_view.dart';
 
@@ -273,6 +274,16 @@ class _DailyLogStepOneViewState extends State<DailyLogStepOneView> {
                     height: 48,
                     child: FilledButton(
                       onPressed: () {
+                        if (!_noSymptoms && _selectedSymptoms.isEmpty) {
+                          showTopAppSnackbar(
+                            context,
+                            title: 'Data belum lengkap',
+                            message:
+                                'Pilih “Tidak ada gejala” atau pilih minimal satu gejala terlebih dahulu.',
+                            icon: Icons.warning_amber_rounded,
+                          );
+                          return;
+                        }
                         _draft.noSymptoms = _noSymptoms;
                         _draft.symptomDescription = _noteController.text.trim();
                         if (widget.onNext != null) {

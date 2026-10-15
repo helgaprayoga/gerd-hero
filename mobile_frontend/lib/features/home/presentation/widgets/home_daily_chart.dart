@@ -25,10 +25,11 @@ class HomeDailyChart extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Text(
             'Skor GERD-Q Terakhir',
+            textAlign: TextAlign.center,
             style: TextStyle(
               color: AppColors.onSurface,
               fontSize: 18,
@@ -44,39 +45,49 @@ class HomeDailyChart extends StatelessWidget {
             child: Padding(
               padding: EdgeInsets.all(14),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  FittedBox(
-                    fit: BoxFit.scaleDown,
-                    alignment: Alignment.centerLeft,
-                    child: Row(
-                      children: [
-                        Text(
-                          latestGerdq == null
-                              ? '-- / 18'
-                              : '${latestGerdq!.score} / 18',
-                          style: TextStyle(
-                            color: scoreColor,
-                            fontSize: 24,
-                            fontWeight: FontWeight.w800,
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Flexible(
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: Alignment.center,
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                latestGerdq == null
+                                    ? '-- / 18'
+                                    : '${latestGerdq!.score} / 18',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  color: scoreColor,
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                              if (isLikelyGerd) ...[
+                                const SizedBox(width: 8),
+                                Icon(
+                                  Icons.warning_amber_rounded,
+                                  color: AppColors.gerdLikely,
+                                  size: 20,
+                                ),
+                              ],
+                            ],
                           ),
                         ),
-                        if (isLikelyGerd) ...[
-                          const SizedBox(width: 8),
-                          Icon(
-                            Icons.warning_amber_rounded,
-                            color: AppColors.gerdLikely,
-                            size: 20,
-                          ),
-                        ],
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 8),
                   Text(
                     latestGerdq?.evaluation ?? 'Belum ada hasil GERD-Q',
                     maxLines: 3,
                     overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.center,
                     style: const TextStyle(
                       color: AppColors.onSurfaceVariant,
                       fontSize: 12,
@@ -85,13 +96,20 @@ class HomeDailyChart extends StatelessWidget {
                   ),
                   if (latestGerdq == null && onAction != null) ...[
                     const SizedBox(height: 8),
-                    _ActionButton(label: 'Isi GERD-Q', onPressed: onAction!),
+                    Center(
+                      child: _ActionButton(
+                        label: 'Isi GERD-Q',
+                        onPressed: onAction!,
+                      ),
+                    ),
                   ],
                   if (latestGerdq != null && onAction != null) ...[
                     const SizedBox(height: 8),
-                    _ActionButton(
-                      label: 'Evaluasi ulang',
-                      onPressed: onAction!,
+                    Center(
+                      child: _ActionButton(
+                        label: 'Evaluasi ulang',
+                        onPressed: onAction!,
+                      ),
                     ),
                   ],
                 ],

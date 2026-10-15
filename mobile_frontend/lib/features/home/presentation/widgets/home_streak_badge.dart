@@ -16,16 +16,16 @@ class HomeStreakBadge extends StatelessWidget {
       border: Border.all(color: AppColors.primaryFixed.withValues(alpha: 0.7)),
     ),
     child: Row(
+      mainAxisSize: MainAxisSize.min,
       children: [
         Icon(Icons.local_fire_department, color: AppColors.tertiary, size: 16),
-        SizedBox(width: 6),
-        Expanded(
+        const SizedBox(width: 6),
+        Flexible(
           child: Text(
             streakDays == 0
                 ? 'Mulai streak hari ini'
                 : '$streakDays hari berturut-turut',
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
+            softWrap: true,
             style: TextStyle(
               color: AppColors.onSurfaceVariant,
               fontSize: 12,
