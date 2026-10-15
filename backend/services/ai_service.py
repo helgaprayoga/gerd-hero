@@ -1,4 +1,4 @@
-"""Gemini-backed analysis with a deterministic fallback.
+﻿"""Gemini-backed analysis with a deterministic fallback.
 
 The service deliberately keeps statistics and thresholds outside the model.
 Gemini is used only to explain already collected data in user-friendly text.
@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import json
 import logging
+from datetime import date
 from pathlib import Path
 from typing import Any
 
@@ -16,6 +17,10 @@ from connection.api import generate_text
 
 _FALLBACK_PATH = Path(__file__).resolve().parent.parent / "templates" / "ai_fallback.json"
 _LOGGER = logging.getLogger(__name__)
+_ANALYTICS_FALLBACK_SUMMARY = (
+    "Layanan analisis sedang tidak tersedia. Catatan harian Anda telah "
+    "berhasil disimpan. Silakan cek kembali nanti untuk analisis pemicu."
+)
 
 
 def _load_fallback() -> dict[str, Any]:
@@ -41,6 +46,166 @@ def _parse_json_response(response: str) -> dict[str, Any]:
     return parsed
 
 
+def _calculate_age(birth_date: Any, reference_date: Any) -> int | None:
+    """Calculate age server-side so the model never has to infer it."""
+    if not birth_date:
+        return None
+    try:
+        birth = date.fromisoformat(str(birth_date)[:10])
+        reference = date.fromisoformat(str(reference_date)[:10])
+    except (TypeError, ValueError):
+        return None
+
+    return reference.year - birth.year - (
+        (reference.month, reference.day) < (birth.month, birth.day)
+    )
+
+
+def _age_personalisation(age: int | None) -> dict[str, Any]:
+    """Return an age-aware language profile without inventing a user's age."""
+    if age is None:
+        return {
+            "kelompok_usia": "18-35",
+            "gaya_bahasa": (
+                "ringan, conversational, dan relevan untuk rutinitas dewasa muda"
+            ),
+            "usia_tidak_tersedia": True,
+        }
+    if age < 18:
+        return {
+            "kelompok_usia": "di bawah 18",
+            "gaya_bahasa": "sederhana, jelas, dan mudah dipahami",
+            "usia_tidak_tersedia": False,
+        }
+    if age <= 35:
+        return {
+            "kelompok_usia": "18-35",
+            "gaya_bahasa": (
+                "ringan, conversational, dan relevan untuk rutinitas dewasa muda"
+            ),
+            "usia_tidak_tersedia": False,
+        }
+    if age <= 55:
+        return {
+            "kelompok_usia": "36-55",
+            "gaya_bahasa": "praktis, personal, dan berorientasi pada rutinitas kesehatan",
+            "usia_tidak_tersedia": False,
+        }
+    return {
+        "kelompok_usia": "56+",
+        "gaya_bahasa": "sederhana, jelas, tenang, dan tidak terlalu teknis",
+        "usia_tidak_tersedia": False,
+    }
+
+
+def build_daily_summary_prompt(
+    log_data: dict[str, Any], profile_data: dict[str, Any] | None = None
+) -> str:
+    """Build the structured, read-only context used by the daily summary AI."""
+    profile_data = profile_data or {}
+    user = profile_data.get("users") or profile_data.get("user") or {}
+    extended = profile_data.get("extended") or {}
+    log_date = log_data.get("log_date") or date.today().isoformat()
+    gerd_level = log_data.get("gerd_level")
+    age = _calculate_age(user.get("birth_date"), log_date)
+    age_personalisation = _age_personalisation(age)
+
+    context = {
+        "tanggal": log_date,
+        "gejala": {
+            "dipilih": log_data.get("symptoms") or [],
+            "tanpa_gejala": bool(log_data.get("no_symptoms", False)),
+            "deskripsi": log_data.get("symptom_description"),
+            # This value is deterministic and must not be recalculated by AI.
+            "gerd_level": gerd_level,
+            "gerd_level_persen": (
+                round(float(gerd_level) * 100, 2)
+                if gerd_level is not None
+                else None
+            ),
+        },
+        "pemicu_harian": log_data.get("triggers") or {},
+        "pola_harian": {
+            "frekuensi_makan": log_data.get("meal_frequency"),
+            "jam_makan": log_data.get("meal_times") or [],
+            "tingkat_stres": log_data.get("stress_level"),
+            "jam_tidur": log_data.get("sleep_time"),
+            "jam_bangun": log_data.get("wake_time"),
+            "durasi_tidur_menit": log_data.get("sleep_duration_minutes"),
+            "jeda_makan_tidur_jam": log_data.get(
+                "last_meal_to_sleep_gap_hours"
+            ),
+            "minum_obat": log_data.get("took_medication", False),
+            "obat": log_data.get("medications") or [],
+        },
+        "indikator_deterministik": log_data.get("indicators") or {},
+        "profil_pengguna": {
+            "usia": age,
+            **age_personalisation,
+            "bmi": user.get("bmi"),
+            "gender": user.get("gender"),
+            "merokok": extended.get("smoking"),
+            "alkohol": extended.get("alcohol"),
+            "pola_kerja": extended.get("work_pattern"),
+            "kopi": extended.get("coffee"),
+            "riwayat_penyakit": extended.get("medical_history") or [],
+            "obat_rutin": extended.get("routine_meds") or [],
+        },
+    }
+
+    return (
+        "Analisis ringkasan log harian GERD berikut secara hati-hati dalam "
+        "bahasa Indonesia. Level GERD sudah dihitung oleh sistem hanya dari "
+        "gejala menggunakan Certainty Factor. Jangan menghitung ulang, "
+        "mengubah, atau menentukan level GERD.\n\n"
+        "Hubungkan gejala dengan pemicu harian, pola kebiasaan, dan data diri "
+        "yang tersedia. Gunakan hanya data yang diberikan; jangan menebak "
+        "nilai yang kosong. Gunakan frasa 'berpotensi berkaitan', bukan "
+        "hubungan sebab-akibat pasti. Jangan mendiagnosis, jangan menyatakan "
+        "pengguna aman, dan jangan menampilkan proses reasoning internal.\n"
+        "Sesuaikan gaya bahasa dengan kelompok usia pada profil pengguna. "
+        "Jika usia tidak tersedia, gunakan gaya bahasa kelompok 18-35 hanya "
+        "sebagai default gaya komunikasi; jangan menyatakan atau mengarang "
+        "bahwa pengguna berusia 18-35. Gunakan sapaan personal 'kamu' bila "
+        "sesuai dan berikan rekomendasi yang praktis untuk rutinitas pengguna.\n"
+        "Buat satu object untuk setiap pemicu aktif; jangan menggabungkan "
+        "beberapa pemicu menjadi satu string. Masukkan pola stres, tidur, "
+        "makan, merokok, alkohol, pola kerja, dan kopi ke bagian kebiasaan. "
+        "Masukkan hanya usia dan BMI ke bagian data diri.\n\n"
+        "Kembalikan JSON object tanpa markdown dengan struktur tepat berikut:\n"
+        "{\n"
+        '  "analisis_pemicu_gejala": [{"pemicu": "", "nilai": "", '
+        '"bukti": "", "penjelasan_korelasi": ""}],\n'
+        '  "kebiasaan_mendukung_gejala": [{"kebiasaan": "", '
+        '"nilai": "", "bukti": "", "penjelasan": ""}],\n'
+        '  "data_diri_mendukung": [{"faktor": "", "nilai": "", '
+        '"label": "", "penjelasan": ""}],\n'
+        '  "rekomendasi": ["" ]\n'
+        "}\n\n"
+        "Aturan output: keluarkan hanya faktor yang didukung data; gunakan "
+        "array kosong jika tidak ada; setiap penjelasan harus singkat, "
+        "empatik, dan tidak menghakimi.\n\n"
+        f"DATA_TERSTRUKTUR:\n{json.dumps(context, ensure_ascii=False, default=str)}"
+    )
+
+
+def _normalise_daily_result(result: dict[str, Any]) -> dict[str, Any]:
+    """Ensure the public daily-summary contract is always complete."""
+    fallback = _load_fallback()
+    list_fields = (
+        "analisis_pemicu_gejala",
+        "kebiasaan_mendukung_gejala",
+        "data_diri_mendukung",
+        "rekomendasi",
+    )
+    normalised = {}
+    for field in list_fields:
+        value = result.get(field, fallback.get(field, []))
+        normalised[field] = value if isinstance(value, list) else fallback.get(field, [])
+
+    return normalised
+
+
 def _fallback_daily_result(log_data: dict[str, Any] | None = None) -> dict[str, Any]:
     """Return a useful deterministic result when Gemini is unavailable."""
     fallback = _load_fallback()
@@ -62,60 +227,30 @@ def _fallback_daily_result(log_data: dict[str, Any] | None = None) -> dict[str, 
             }
             for name in active_triggers
         ]
-        summary = (
-            "Pemicu aktif dan gejala tercatat pada log yang sama. "
-            "Korelasi ini bersifat pemantauan mandiri, bukan diagnosis."
-        )
     else:
         trigger_analysis = fallback["analisis_pemicu_gejala"]
-        summary = fallback["ringkasan_analisis"]
     return {
         "analisis_pemicu_gejala": trigger_analysis,
-        "ringkasan_analisis": summary,
+        "kebiasaan_mendukung_gejala": fallback.get("kebiasaan_mendukung_gejala", []),
+        "data_diri_mendukung": fallback.get("data_diri_mendukung", []),
         "rekomendasi": fallback["rekomendasi"],
         "analysis_source": "fallback",
     }
 
 
-def _normalise_daily_result(result: dict[str, Any]) -> dict[str, Any]:
-    """Ensure the public daily-analysis contract is always complete."""
-    fallback = _load_fallback()
-    trigger_analysis = result.get("analisis_pemicu_gejala")
-    if not isinstance(trigger_analysis, list) or not trigger_analysis:
-        trigger_analysis = fallback["analisis_pemicu_gejala"]
-    summary = result.get("ringkasan_analisis")
-    if not isinstance(summary, str) or not summary.strip():
-        summary = fallback["ringkasan_analisis"]
-    recommendations = result.get("rekomendasi")
-    if not isinstance(recommendations, list):
-        recommendations = fallback["rekomendasi"]
-    return {
-        "analisis_pemicu_gejala": trigger_analysis,
-        "ringkasan_analisis": summary,
-        "rekomendasi": recommendations,
-        "analysis_source": result.get("analysis_source", "gemini"),
-    }
-
-
-def generate_daily_analysis(log_data: dict[str, Any]) -> dict[str, Any]:
-    """Generate D6 analysis and return D7 fallback when Gemini is unavailable."""
-    prompt = (
-        "Analisis data log GERD berikut secara hati-hati. Gunakan bahasa Indonesia. "
-        "Jangan mendiagnosis dan gunakan frasa 'berpotensi berkaitan'. "
-        "Kembalikan JSON object tanpa markdown dengan keys: "
-        "analisis_pemicu_gejala (array object pemicu dan penjelasan_korelasi), "
-        "ringkasan_analisis (string), rekomendasi (array string).\n\n"
-        f"DATA_LOG:\n{json.dumps(log_data, ensure_ascii=False, default=str)}"
-    )
-
+def generate_daily_analysis(
+    log_data: dict[str, Any], profile_data: dict[str, Any] | None = None
+) -> dict[str, Any]:
+    """Generate D6 summary using daily log and profile context."""
+    prompt = build_daily_summary_prompt(log_data, profile_data)
     try:
-        parsed = _parse_json_response(generate_text(prompt))
+        parsed = _parse_json_response(generate_text(prompt, json_mode=True))
         if not isinstance(parsed.get("analisis_pemicu_gejala"), list) or not parsed[
             "analisis_pemicu_gejala"
         ]:
             return _fallback_daily_result(log_data)
         result = _normalise_daily_result(parsed)
-        result["analysis_source"] = "gemini"
+        result["analysis_source"] = "llm"
         return result
     except Exception:
         _LOGGER.exception("Analisis AI harian gagal; menggunakan fallback template")
@@ -124,7 +259,7 @@ def generate_daily_analysis(log_data: dict[str, Any]) -> dict[str, Any]:
 
 def generate_analytics_summary(period_data: dict[str, Any]) -> str:
     """Generate E3 period summary, or return the safe fallback summary."""
-    fallback_summary = _load_fallback()["ringkasan_analisis"]
+    fallback_summary = _ANALYTICS_FALLBACK_SUMMARY
     prompt = (
         "Buat ringkasan analitik GERD dalam bahasa Indonesia berdasarkan data berikut. "
         "Jangan mendiagnosis, jangan menyatakan hubungan sebab-akibat pasti, dan "
@@ -150,7 +285,7 @@ def generate_habit_recommendations(context: dict[str, Any]) -> list[str]:
         f"KONTEKS:\n{json.dumps(context, ensure_ascii=False, default=str)}"
     )
     try:
-        parsed = _parse_json_response(generate_text(prompt))
+        parsed = _parse_json_response(generate_text(prompt, json_mode=True))
         recommendations = parsed.get("rekomendasi")
         if isinstance(recommendations, list):
             return [str(item) for item in recommendations if item][:5] or fallback

@@ -90,7 +90,7 @@ Karena OpenAI API tidak menyediakan tier gratis (membutuhkan deposit saldo praba
 > 1. **Primary Tier:** `gemini/gemini-2.5-flash` (Google AI Studio Key 1 & Key 2)
 > 2. **Fallback Tier 1:** `groq/llama-3.3-70b-versatile` (Super cepat, format JSON presisi)
 > 3. **Fallback Tier 2:** `openrouter/meta-llama/llama-3.3-70b-instruct:free` (Jaring pengaman lintas provider)
-> 4. **Emergency Tier:** Template deterministik lokal di [`templates/ai_fallback.json`](file:///C:/Users/acer/Documents/hackaton/git-hero-backend/backend/templates/ai_fallback.json).
+> 4. **Emergency Tier:** Template deterministik lokal di [`templates/ai_fallback.json`](file:///C:/Users/Lenovo/Downloads/GERDHero/gerd-hero/backend/templates/ai_fallback.json).
 
 ---
 

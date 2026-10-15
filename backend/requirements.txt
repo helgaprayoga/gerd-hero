@@ -1,7 +1,7 @@
 Flask>=3.0,<4.0
 supabase
 python-dotenv
-google-genai
+litellm>=1.40.0
 requests
 flask-cors
 reportlab>=4.0      # PDF generation (F2)

@@ -13,6 +13,14 @@ class DailySummaryGerdCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final result = response ?? DailyLogResponse.demo();
     final percent = result.gerdPercent;
+    final comparison = result.gerdLevelComparison;
+    final difference = comparison['difference_percent'];
+    final differenceValue = difference is num ? difference.toDouble() : 0;
+    final comparisonLabel =
+        comparison['label']?.toString() ??
+        (result.indicators.isEmpty
+            ? 'Data hari ini berhasil tersimpan di server.'
+            : 'Indikator harian berhasil dihitung dari log kamu.');
     return DailySummaryCardShell(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -90,18 +98,18 @@ class DailySummaryGerdCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Icon(
-                      Icons.trending_down,
-                      color: AppColors.primary,
+                      differenceValue > 0
+                          ? Icons.trending_up
+                          : differenceValue < 0
+                          ? Icons.trending_down
+                          : Icons.remove,
+                      color: differenceValue > 0
+                          ? AppColors.error
+                          : AppColors.primary,
                       size: 18,
                     ),
                     SizedBox(width: 6),
-                    Expanded(
-                      child: Text(
-                        result.indicators.isEmpty
-                            ? 'Data hari ini berhasil\ntersimpan di server.'
-                            : 'Indikator harian berhasil\ndihitung dari log kamu.',
-                      ),
-                    ),
+                    Expanded(child: Text(comparisonLabel)),
                   ],
                 ),
               ),

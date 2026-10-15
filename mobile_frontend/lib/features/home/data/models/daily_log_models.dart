@@ -35,8 +35,16 @@ class DailyLogResponse {
                 'Berpotensi berkaitan dengan sensasi heartburn.',
           },
         ],
-        'ringkasan_analisis': 'Data log berhasil disimpan.',
-        'rekomendasi': <String>[],
+        'kebiasaan_mendukung_gejala': [
+          {
+            'kebiasaan': 'Jeda makan-tidur pendek',
+            'nilai': '1,5 jam',
+            'bukti': 'Makan malam dan waktu tidur berdekatan.',
+            'penjelasan':
+                'Jeda yang pendek berpotensi membuat refluks lebih mudah muncul.',
+          },
+        ],
+        'rekomendasi': <String>['Jaga jeda makan-tidur minimal 2 jam.'],
       },
     },
   );
@@ -46,10 +54,13 @@ class DailyLogResponse {
   int get gerdPercent => (gerdLevel * 100).round();
   List<String> get symptoms => _strings(data['symptoms']);
   Map<String, dynamic> get triggers => _map(data['triggers']);
-  Map<String, dynamic> get indicators => _map(data['indicators']);
   Map<String, dynamic> get aiAnalysis => _map(data['ai_analysis']);
+  Map<String, dynamic> get indicators =>
+      _map(data['indicators'] ?? aiAnalysis['indicators']);
+  Map<String, dynamic> get gerdLevelComparison =>
+      _map(data['gerd_level_comparison']);
   String get analysisSource =>
-      aiAnalysis['analysis_source']?.toString() ?? 'gemini';
+      aiAnalysis['analysis_source']?.toString() ?? 'llm';
   List<String> get recommendations => _strings(aiAnalysis['rekomendasi']);
 
   List<Map<String, dynamic>> get aiTriggerAnalysis {
@@ -61,11 +72,24 @@ class DailyLogResponse {
         .toList();
   }
 
+  List<Map<String, dynamic>> get aiHabitAnalysis =>
+      _objectList(aiAnalysis['kebiasaan_mendukung_gejala']);
+
+  List<Map<String, dynamic>> get aiProfileAnalysis =>
+      _objectList(aiAnalysis['data_diri_mendukung']);
+
   static double _number(dynamic value) => value is num ? value.toDouble() : 0;
   static List<String> _strings(dynamic value) =>
       value is List ? value.map((item) => item.toString()).toList() : const [];
   static Map<String, dynamic> _map(dynamic value) =>
       value is Map ? Map<String, dynamic>.from(value) : <String, dynamic>{};
+
+  static List<Map<String, dynamic>> _objectList(dynamic value) => value is List
+      ? value
+            .whereType<Map>()
+            .map((item) => Map<String, dynamic>.from(item))
+            .toList()
+      : const [];
 }
 
 class DailyHistoryLog {

@@ -13,7 +13,7 @@ class DailySummaryTriggerCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final result = response ?? DailyLogResponse.demo();
-    final entries = result.aiTriggerAnalysis;
+    final entries = _displayEntries(result.aiTriggerAnalysis);
     return DailySummaryCardShell(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -67,12 +67,30 @@ class DailySummaryTriggerCard extends StatelessWidget {
     );
   }
 
-  String _emojiFor(String? trigger) => switch (trigger) {
-    'Pedas' => '🌶️',
-    'Berkafein' => '☕',
-    'Asam' => '🍋',
-    'Bersoda' => '🥤',
-    'Berlemak/gorengan' => '🍟',
-    _ => 'ℹ️',
-  };
+  List<Map<String, dynamic>> _displayEntries(
+    List<Map<String, dynamic>> source,
+  ) {
+    final entries = <Map<String, dynamic>>[];
+    for (final entry in source) {
+      final title = entry['pemicu']?.toString() ?? 'Pemicu';
+      final names = title
+          .split(',')
+          .map((item) => item.trim())
+          .where((item) => item.isNotEmpty);
+      for (final name in names) {
+        entries.add({...entry, 'pemicu': name});
+      }
+    }
+    return entries;
+  }
+
+  String _emojiFor(String? trigger) {
+    final value = trigger?.toLowerCase() ?? '';
+    if (value.contains('pedas')) return '🌶️';
+    if (value.contains('kafein')) return '☕';
+    if (value.contains('asam')) return '🍋';
+    if (value.contains('soda')) return '🥤';
+    if (value.contains('lemak') || value.contains('goreng')) return '🍟';
+    return 'ℹ️';
+  }
 }
