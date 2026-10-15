@@ -13,7 +13,6 @@ class AuthService {
       'io.supabase.gerdhero://password-reset';
 
   bool _isPasswordRecovery = false;
-
   GoTrueClient get _auth => Supabase.instance.client.auth;
 
   Future<AuthResponse> register({

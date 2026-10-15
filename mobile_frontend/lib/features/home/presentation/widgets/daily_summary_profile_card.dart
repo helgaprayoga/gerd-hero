@@ -1,18 +1,22 @@
 import 'package:flutter/material.dart';
 
+import '../../data/models/daily_log_models.dart';
 import '../models/profile_data.dart';
 import 'daily_summary_card_shell.dart';
 import 'daily_summary_profile_panel.dart';
 
 class DailySummaryProfileCard extends StatelessWidget {
-  const DailySummaryProfileCard({this.profile, super.key});
+  const DailySummaryProfileCard({this.profile, this.response, super.key});
 
   final ProfileData? profile;
+  final DailyLogResponse? response;
 
   @override
   Widget build(BuildContext context) {
     final age = _age;
     final bmi = profile?.bmi;
+    final ageInsight = _profileInsight('usia');
+    final bmiInsight = _profileInsight('bmi');
     return DailySummaryCardShell(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -33,6 +37,7 @@ class DailySummaryProfileCard extends StatelessWidget {
                   value: age?.toString() ?? '—',
                   unit: age == null ? 'Belum diisi' : 'Tahun',
                   description:
+                      ageInsight['penjelasan']?.toString() ??
                       'Faktor metabolisme &\nelastisitas sfingter\nesofagus.',
                 ),
               ),
@@ -45,6 +50,7 @@ class DailySummaryProfileCard extends StatelessWidget {
                       : bmi.toStringAsFixed(1).replaceAll('.', ','),
                   unit: bmi == null ? 'Belum diisi' : _bmiLabel(bmi),
                   description:
+                      bmiInsight['penjelasan']?.toString() ??
                       'Peningkatan tekanan\nintra-abdomen dapat\nmemicu refluks.',
                   badge: bmi != null,
                 ),
@@ -65,6 +71,14 @@ class DailySummaryProfileCard extends StatelessWidget {
       age--;
     }
     return age;
+  }
+
+  Map<String, dynamic> _profileInsight(String factor) {
+    for (final item in response?.aiProfileAnalysis ?? const []) {
+      final value = item['faktor']?.toString().toLowerCase() ?? '';
+      if (value.contains(factor)) return item;
+    }
+    return const {};
   }
 
   String _bmiLabel(double bmi) {

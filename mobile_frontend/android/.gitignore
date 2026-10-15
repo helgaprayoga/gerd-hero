@@ -53,6 +53,7 @@ instance/
 .flutter-plugins-dependencies
 .pub-cache/
 .pub/
+GeneratedPluginRegistrant.java
 /build/
 /coverage/
 

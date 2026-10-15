@@ -4,10 +4,10 @@ import '../../../../core/network/api_client.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../data/models/daily_log_models.dart';
 import '../../domain/entities/daily_log_draft.dart';
-// import '../widgets/daily_summary_attention_callout.dart';
 import '../widgets/daily_summary_gerd_card.dart';
 import '../widgets/daily_summary_habits_card.dart';
 import '../widgets/daily_summary_profile_card.dart';
+import '../widgets/daily_summary_recommendations_card.dart';
 import '../widgets/daily_summary_trigger_card.dart';
 import '../models/profile_data.dart';
 import 'home_page.dart';
@@ -95,9 +95,14 @@ class _DailyLogSummaryPageState extends State<DailyLogSummaryPage> {
                 const SizedBox(height: 16),
                 DailySummaryHabitsCard(response: widget.response),
                 const SizedBox(height: 16),
-                DailySummaryProfileCard(profile: _profile),
+                DailySummaryProfileCard(
+                  profile: _profile,
+                  response: widget.response,
+                ),
                 const SizedBox(height: 16),
-                // const DailySummaryAttentionCallout(),
+                DailySummaryRecommendationsCard(
+                  recommendations: widget.response?.recommendations ?? const [],
+                ),
                 const SizedBox(height: 24),
                 SizedBox(
                   width: double.infinity,

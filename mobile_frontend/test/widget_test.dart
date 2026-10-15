@@ -328,6 +328,15 @@ void main() {
     expect(find.text('Ringkasan Hari Ini'), findsOneWidget);
     expect(find.text('39%'), findsOneWidget);
     expect(find.text('Pemicu Berkaitan'), findsOneWidget);
+    expect(find.text('Jeda makan-tidur pendek'), findsOneWidget);
+    expect(
+      find.textContaining(
+        'Jeda yang pendek berpotensi membuat refluks lebih mudah muncul.',
+      ),
+      findsOneWidget,
+    );
+    expect(find.text('Rekomendasi'), findsOneWidget);
+    expect(find.text('Jaga jeda makan-tidur minimal 2 jam.'), findsOneWidget);
     expect(find.text('Selesai • Kembali ke Beranda'), findsOneWidget);
   });
 

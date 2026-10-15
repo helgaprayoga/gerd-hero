@@ -56,7 +56,6 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
     }
 
     if (!mounted) return;
-
     if (requestError != null) {
       await showAppFeedback(
         context,
@@ -72,6 +71,12 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
         builder: (_) => CheckEmailPage(email: email, isPasswordReset: true),
       ),
     );
+    final errorMessage = requestError;
+    if (errorMessage != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(errorMessage)),
+      );
+    }
   }
 
   @override
