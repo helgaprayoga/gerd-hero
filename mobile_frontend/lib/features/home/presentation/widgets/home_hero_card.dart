@@ -16,8 +16,7 @@ class HomeHeroCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isEmpty =
-        status == HomeStatus.noData || status == HomeStatus.noTodayLog;
+    final isEmpty = status == HomeStatus.noData;
     final loggedToday = status == HomeStatus.loggedToday;
     final isDue = status == HomeStatus.evaluationDue;
     final incomplete = status == HomeStatus.profileIncomplete;
@@ -29,6 +28,8 @@ class HomeHeroCard extends StatelessWidget {
         ? 'Sudah waktunya\nevaluasi lagi.'
         : warning
         ? 'Hari ini terasa kurang\nnyaman. Aku temani ya.'
+        : status == HomeStatus.noTodayLog
+        ? 'Belum ada log hari ini.\nYuk catat kondisimu.'
         : isEmpty
         ? 'Belum ada catatan.\nYuk isi log pertamamu.'
         : 'Lambungmu terlihat\ntenang hari ini.';
@@ -36,12 +37,14 @@ class HomeHeroCard extends StatelessWidget {
         ? 'Kebiasaan kecil yang konsisten membantu Gerdie memahami pola lambungmu.'
         : isDue
         ? 'Pantau perubahan gejalamu dengan evaluasi GERD-Q rutin.'
+        : status == HomeStatus.noTodayLog
+        ? 'Catat kondisi hari ini agar Gerdie bisa membantu mengenali polanya.'
         : isEmpty
         ? 'Catat makanan atau keluhan ringkas agar Gerdie bisa mengenali pola lambungmu.'
         : warning
         ? 'Tarik napas pelan. Catat keluhanmu agar kita bisa mengenali pemicunya.'
-        : status == HomeStatus.noTodayLog
-        ? 'Catat kondisi hari ini agar Gerdie bisa membantu mengenali polanya.'
+        : incomplete
+        ? 'Lengkapi data dasar dan kebiasaan gaya hidup agar rekomendasi lebih akurat.'
         : 'Teks penenang anti kecemasan';
 
     return Container(

@@ -127,22 +127,22 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
     }
   }
 
-  Future<void> _saveProfile() async {
+  Future<bool> _saveProfile() async {
     final nickname = nicknameController.text.trim();
     if (nickname.isEmpty) {
       _showError('Nama panggilan wajib diisi.');
-      return;
+      return false;
     }
 
     final height = double.tryParse(heightController.text.replaceAll(',', '.'));
     final weight = double.tryParse(weightController.text.replaceAll(',', '.'));
     if (height != null && height <= 0) {
       _showError('Tinggi badan harus lebih besar dari 0.');
-      return;
+      return false;
     }
     if (weight != null && weight <= 0) {
       _showError('Berat badan harus lebih besar dari 0.');
-      return;
+      return false;
     }
 
     setState(() => isSaving = true);
@@ -180,10 +180,13 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
           message: 'Perubahan profil kamu sudah diperbarui.',
         );
       }
+      return true;
     } on ApiException catch (error) {
       if (mounted) _showError(error.message);
+      return false;
     } catch (_) {
       if (mounted) _showError('Tidak dapat terhubung ke server.');
+      return false;
     } finally {
       if (mounted) setState(() => isSaving = false);
     }
@@ -217,33 +220,24 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
     'Asma',
   }.contains(condition);
 
-  double? _currentBmi() {
-    final height = double.tryParse(heightController.text.replaceAll(',', '.'));
-    final weight = double.tryParse(weightController.text.replaceAll(',', '.'));
-    if (height == null || weight == null || height <= 0 || weight <= 0) {
-      return bmi;
-    }
-    return weight / ((height / 100) * (height / 100));
-  }
-
   double _profileCompleteness() {
     var completed = 0;
-    const total = 12;
+    const total = 9;
     if (nicknameController.text.trim().isNotEmpty) completed++;
     if (birthDate != null) completed++;
     if (gender != null) completed++;
-    if (double.tryParse(heightController.text.replaceAll(',', '.')) != null) {
+    final height = double.tryParse(heightController.text.replaceAll(',', '.'));
+    if (height != null && height > 0) {
       completed++;
     }
-    if (double.tryParse(weightController.text.replaceAll(',', '.')) != null) {
+    final weight = double.tryParse(weightController.text.replaceAll(',', '.'));
+    if (weight != null && weight > 0) {
       completed++;
     }
     if (smoking != null) completed++;
     if (alcohol != null) completed++;
     if (workPattern != null) completed++;
     if (coffee != null) completed++;
-    if (selectedConditions.isNotEmpty) completed++;
-    if (medicines.isNotEmpty) completed++;
     return completed / total;
   }
 
@@ -257,12 +251,6 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
       : value == value.roundToDouble()
       ? value.toInt().toString()
       : value.toString();
-
-  String _genderLabel(String? value) => switch (value) {
-    'male' => 'Laki-laki',
-    'female' => 'Perempuan',
-    _ => 'Belum diisi',
-  };
 
   @override
   Widget build(BuildContext context) => Scaffold(
@@ -280,30 +268,32 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
       ),
       centerTitle: true,
     ),
-    bottomNavigationBar: SafeArea(
-      top: false,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
-        child: FilledButton.icon(
-          onPressed: isSaving ? null : _saveProfile,
-          icon: const Icon(Icons.check, size: 18),
-          label: isSaving
-              ? const SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: Colors.white,
-                  ),
-                )
-              : const Text('Simpan Perubahan'),
-          style: FilledButton.styleFrom(
-            minimumSize: const Size.fromHeight(48),
-            shape: const StadiumBorder(),
+    bottomNavigationBar: isLoading || loadError != null
+        ? null
+        : SafeArea(
+            top: false,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
+              child: FilledButton.icon(
+                onPressed: isSaving ? null : _saveProfile,
+                icon: isSaving ? null : Icon(Icons.check, size: 18),
+                label: isSaving
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : const Text('Simpan Perubahan'),
+                style: FilledButton.styleFrom(
+                  minimumSize: const Size.fromHeight(48),
+                  shape: const StadiumBorder(),
+                ),
+              ),
+            ),
           ),
-        ),
-      ),
-    ),
     body: isLoading
         ? const Center(child: CircularProgressIndicator())
         : loadError != null
@@ -334,13 +324,13 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
         : ListView(
             padding: const EdgeInsets.fromLTRB(20, 8, 20, 28),
             children: [
+              _ProfileCompletionCard(completeness: _profileCompleteness()),
+              const SizedBox(height: 12),
               _ProfileSummaryCard(
-                nickname: nicknameController.text,
+                displayName: nameController.text.trim().isEmpty
+                    ? nicknameController.text
+                    : nameController.text,
                 email: emailController.text,
-                birthDate: birthDate,
-                gender: _genderLabel(gender),
-                bmi: _currentBmi(),
-                completeness: _profileCompleteness(),
               ),
               const SizedBox(height: 20),
               _ProfileSection(
@@ -377,12 +367,13 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
                     ),
                   ),
                   const Text('Jenis Kelamin', style: _labelStyle),
-                  const SizedBox(height: 8),
+                  // const SizedBox(height: 8),
                   Row(
                     children: [
                       Expanded(
                         child: _ChoiceButton(
                           label: 'Laki-laki',
+                          icon: Icons.male,
                           selected: gender == 'male',
                           onTap: () => setState(() => gender = 'male'),
                         ),
@@ -391,13 +382,14 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
                       Expanded(
                         child: _ChoiceButton(
                           label: 'Perempuan',
+                          icon: Icons.female,
                           selected: gender == 'female',
                           onTap: () => setState(() => gender = 'female'),
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 16),
+                  // const SizedBox(height: 8),
                   Row(
                     children: [
                       Expanded(
@@ -419,7 +411,7 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 16),
+                  // const SizedBox(height: 16),
                   _BmiCard(
                     height: heightController.text,
                     weight: weightController.text,
@@ -472,11 +464,11 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
                     'Pilih kondisi kesehatan atau riwayat medis lambung & metabolik:',
                     style: TextStyle(
                       color: AppColors.secondary,
-                      fontSize: 12,
+                      fontSize: 13,
                       height: 1.5,
                     ),
                   ),
-                  const SizedBox(height: 12),
+                  // const SizedBox(height: 12),
                   Wrap(
                     spacing: 8,
                     runSpacing: 8,
@@ -502,7 +494,7 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
                         ),
                     ],
                   ),
-                  const SizedBox(height: 4),
+                  // const SizedBox(height: 4),
                   OutlinedButton.icon(
                     onPressed: () =>
                         setState(() => isAddingCondition = !isAddingCondition),
@@ -522,7 +514,7 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
                     ),
                   ),
                   if (isAddingCondition) ...[
-                    const SizedBox(height: 12),
+                    // const SizedBox(height: 12),
                     _InlineAddCard(
                       label: 'Nama kondisi',
                       controller: conditionController,
@@ -553,9 +545,9 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
                       onChanged: () => setState(() {}),
                       onDelete: () => setState(() => medicines.removeAt(index)),
                     ),
-                    if (index < medicines.length - 1) const SizedBox(height: 8),
+                    // if (index < medicines.length - 1) const SizedBox(height: 8),
                   ],
-                  const SizedBox(height: 12),
+                  // const SizedBox(height: 12),
                   OutlinedButton.icon(
                     onPressed: () =>
                         setState(() => isAddingMedicine = !isAddingMedicine),
@@ -573,7 +565,7 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
                     ),
                   ),
                   if (isAddingMedicine) ...[
-                    const SizedBox(height: 12),
+                    // const SizedBox(height: 12),
                     _InlineAddMedicineCard(
                       nameController: medicineNameController,
                       scheduleController: medicineScheduleController,
@@ -594,27 +586,28 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
                 ],
               ),
               const SizedBox(height: 20),
-              Center(
-                child: TextButton.icon(
-                  onPressed: isLoggingOut ? null : _signOut,
-                  icon: isLoggingOut
-                      ? const SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Icon(
-                          Icons.logout,
-                          color: AppColors.error,
-                          size: 18,
-                        ),
-                  label: Text(
-                    isLoggingOut ? 'Keluar...' : 'Keluar dari Akun',
-                    style: const TextStyle(
-                      color: AppColors.error,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
+              const Divider(height: 1, color: AppColors.secondaryContainer),
+              const SizedBox(height: 20),
+              const Text(
+                'Pengaturan',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+              ),
+              const SizedBox(height: 12),
+              OutlinedButton.icon(
+                onPressed: isLoggingOut ? null : _signOut,
+                icon: isLoggingOut
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.logout, size: 18),
+                label: Text(isLoggingOut ? 'Keluar...' : 'Keluar dari Akun'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: AppColors.error,
+                  side: const BorderSide(color: AppColors.error),
+                  minimumSize: const Size.fromHeight(48),
+                  shape: const StadiumBorder(),
                 ),
               ),
             ],
@@ -624,166 +617,103 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
 
 const _labelStyle = TextStyle(
   color: AppColors.onSurfaceVariant,
-  fontSize: 12,
+  fontSize: 13,
   fontWeight: FontWeight.w600,
 );
 
 class _ProfileSummaryCard extends StatelessWidget {
-  const _ProfileSummaryCard({
-    required this.nickname,
-    required this.email,
-    required this.birthDate,
-    required this.gender,
-    required this.bmi,
-    required this.completeness,
-  });
+  const _ProfileSummaryCard({required this.displayName, required this.email});
 
-  final String nickname;
+  final String displayName;
   final String email;
-  final DateTime? birthDate;
-  final String gender;
-  final double? bmi;
-  final double completeness;
 
   @override
   Widget build(BuildContext context) => Container(
     padding: const EdgeInsets.all(20),
     decoration: _cardDecoration,
     child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        CircleAvatar(
+          radius: 38,
+          backgroundColor: AppColors.surfaceContainerLow,
+          child: Text(
+            displayName.trim().isEmpty
+                ? '?'
+                : displayName.trim().substring(0, 1).toUpperCase(),
+            style: const TextStyle(
+              color: AppColors.primary,
+              fontSize: 24,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ),
+        const SizedBox(height: 12),
+        Text(
+          displayName.trim().isEmpty ? 'Belum diisi' : displayName,
+          textAlign: TextAlign.center,
+          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          email.trim().isEmpty ? 'Email belum tersedia' : email,
+          textAlign: TextAlign.center,
+          style: const TextStyle(color: AppColors.secondary, fontSize: 14),
+        ),
+      ],
+    ),
+  );
+}
+
+class _ProfileCompletionCard extends StatelessWidget {
+  const _ProfileCompletionCard({required this.completeness});
+
+  final double completeness;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    padding: const EdgeInsets.all(16),
+    decoration: _cardDecoration,
+    child: Column(
       children: [
         Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Stack(
-              children: [
-                CircleAvatar(
-                  radius: 32,
-                  backgroundColor: AppColors.surfaceContainerLow,
-                  child: Text(
-                    nickname.trim().isEmpty
-                        ? '?'
-                        : nickname.trim().substring(0, 1).toUpperCase(),
-                    style: TextStyle(
-                      color: AppColors.primary,
-                      fontSize: 20,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-                Positioned(
-                  right: 0,
-                  bottom: 0,
-                  child: Container(
-                    width: 20,
-                    height: 20,
-                    decoration: const BoxDecoration(
-                      color: AppColors.primaryContainer,
-                      shape: BoxShape.circle,
-                    ),
-                  ),
-                ),
-              ],
+            const Text(
+              'Kelengkapan Profil',
+              style: TextStyle(
+                color: AppColors.primary,
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+              ),
             ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    nickname.trim().isEmpty ? 'Belum diisi' : nickname,
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    email.trim().isEmpty ? 'Email belum tersedia' : email,
-                    style: const TextStyle(
-                      color: AppColors.secondary,
-                      fontSize: 12,
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  Wrap(
-                    spacing: 6,
-                    runSpacing: 6,
-                    children: [
-                      _SummaryPill(label: _ageLabel(birthDate)),
-                      _SummaryPill(
-                        label: bmi == null
-                            ? 'BMI belum tersedia'
-                            : 'BMI ${bmi!.toStringAsFixed(1)}',
-                      ),
-                      _SummaryPill(label: gender),
-                    ],
-                  ),
-                ],
+            Text(
+              '${(completeness * 100).round()}%',
+              style: const TextStyle(
+                color: AppColors.primary,
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
               ),
             ),
           ],
         ),
-        const SizedBox(height: 20),
-        Container(
-          padding: const EdgeInsets.all(10),
-          decoration: BoxDecoration(
-            color: AppColors.surfaceContainerLow,
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Column(
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Kelengkapan Profil',
-                    style: TextStyle(
-                      color: AppColors.primary,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  Text(
-                    '${(completeness * 100).round()}%',
-                    style: const TextStyle(
-                      color: AppColors.primary,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
+        const SizedBox(height: 10),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(99),
+          child: SizedBox(
+            height: 8,
+            child: LinearProgressIndicator(
+              value: completeness,
+              backgroundColor: AppColors.secondaryContainer,
+              valueColor: const AlwaysStoppedAnimation(
+                AppColors.primaryContainer,
               ),
-              const SizedBox(height: 8),
-              ClipRRect(
-                borderRadius: BorderRadius.circular(99),
-                child: SizedBox(
-                  height: 8,
-                  child: LinearProgressIndicator(
-                    value: completeness,
-                    backgroundColor: AppColors.secondaryContainer,
-                    valueColor: const AlwaysStoppedAnimation(
-                      AppColors.primaryContainer,
-                    ),
-                  ),
-                ),
-              ),
-            ],
+            ),
           ),
         ),
       ],
     ),
   );
-
-  static int _age(DateTime? date) {
-    if (date == null) return 0;
-    final now = DateTime.now();
-    var age = now.year - date.year;
-    if (now.month < date.month ||
-        (now.month == date.month && now.day < date.day)) {
-      age--;
-    }
-    return age;
-  }
-
-  static String _ageLabel(DateTime? date) =>
-      date == null ? 'Usia belum diisi' : '${_age(date)} tahun';
 }
 
 class _ProfileSection extends StatelessWidget {
@@ -817,9 +747,13 @@ class _ProfileSection extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 20),
-        ...children.map(
-          (child) =>
-              Padding(padding: const EdgeInsets.only(bottom: 16), child: child),
+        ...children.asMap().entries.map(
+          (entry) => Padding(
+            padding: EdgeInsets.only(
+              bottom: entry.key == children.length - 1 ? 0 : 20,
+            ),
+            child: entry.value,
+          ),
         ),
       ],
     ),
@@ -883,7 +817,7 @@ class _ProfileField extends StatelessWidget {
                   contentPadding: EdgeInsets.zero,
                 ),
                 style: const TextStyle(
-                  fontSize: 14,
+                  fontSize: 16,
                   color: AppColors.onSurface,
                 ),
               ),
@@ -949,10 +883,12 @@ class _VerifiedBadge extends StatelessWidget {
 class _ChoiceButton extends StatelessWidget {
   const _ChoiceButton({
     required this.label,
+    required this.icon,
     required this.onTap,
     this.selected = false,
   });
   final String label;
+  final IconData icon;
   final VoidCallback onTap;
   final bool selected;
   @override
@@ -966,7 +902,14 @@ class _ChoiceButton extends StatelessWidget {
       minimumSize: const Size.fromHeight(44),
       shape: const StadiumBorder(),
     ),
-    child: Text(label),
+    child: Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Icon(icon, size: 18),
+        const SizedBox(width: 6),
+        Text(label, style: const TextStyle(fontSize: 14)),
+      ],
+    ),
   );
 }
 
@@ -1121,7 +1064,7 @@ class _SegmentField extends StatelessWidget {
                         color: value == option
                             ? Colors.white
                             : AppColors.secondary,
-                        fontSize: 11,
+                        fontSize: 13,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -1153,7 +1096,7 @@ class _ConditionChip extends StatelessWidget {
     checkmarkColor: Colors.white,
     labelStyle: TextStyle(
       color: selected ? Colors.white : AppColors.onSurfaceVariant,
-      fontSize: 12,
+      fontSize: 13,
       fontWeight: FontWeight.w600,
     ),
     backgroundColor: AppColors.surfaceContainer,
@@ -1211,7 +1154,7 @@ class _MedicineCard extends StatelessWidget {
                   contentPadding: EdgeInsets.zero,
                 ),
                 style: const TextStyle(
-                  fontSize: 14,
+                  fontSize: 16,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -1228,7 +1171,7 @@ class _MedicineCard extends StatelessWidget {
                 ),
                 style: const TextStyle(
                   color: AppColors.secondary,
-                  fontSize: 11,
+                  fontSize: 13,
                 ),
               ),
             ],
@@ -1306,6 +1249,7 @@ class _InlineAddMedicineCard extends StatelessWidget {
         controller: nameController,
         autofocus: true,
         decoration: _inputDecoration('Contoh: Sucralfate Sirup 500mg'),
+        style: const TextStyle(fontSize: 16),
       ),
       const SizedBox(height: 10),
       const Text('Aturan / Waktu Minum', style: _labelStyle),
