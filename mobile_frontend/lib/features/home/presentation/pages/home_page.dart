@@ -22,6 +22,7 @@ import '../widgets/home_daily_chart.dart';
 import '../widgets/home_empty_log_card.dart';
 import '../widgets/home_evaluation_card.dart';
 import '../widgets/home_gerd_summary.dart';
+import '../widgets/home_gerdq_prompt_card.dart';
 import '../widgets/home_header.dart';
 import '../widgets/home_hero_card.dart';
 import '../widgets/home_profile_card.dart';
@@ -190,10 +191,11 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  bool get canOpenGerdq =>
-      hasProfile &&
-      (_status == HomeStatus.evaluationDue ||
-          (_dashboard != null && _dashboard!.latestGerdq == null));
+  bool get canOpenGerdq => isEvaluationDue || !hasGerdqResult;
+
+  bool get shouldPromptGerdq => !isEvaluationDue && !hasGerdqResult;
+
+  bool get hasGerdqResult => _dashboard?.latestGerdq != null;
 
   bool get shouldShowProfileCard {
     final currentProfile = _dashboard?.profile ?? profile;
@@ -277,6 +279,17 @@ class _HomePageState extends State<HomePage> {
                                   : null,
                             ),
                             const SizedBox(height: 16),
+                            if (shouldPromptGerdq) ...[
+                              HomeGerdqPromptCard(
+                                onPressed: () => Navigator.of(context).push(
+                                  SlidePageRoute<void>(
+                                    builder: (_) => const GerdQIntroPage(),
+                                    begin: const Offset(1, 0),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 20),
+                            ],
                             if (shouldShowProfileCard) ...[
                               HomeProfileCard(
                                 completion: completion,
