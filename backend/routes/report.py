@@ -15,6 +15,42 @@ from services.report_service import generate_pdf
 report_bp = Blueprint("report", __name__)
 
 
+def _report_data(user: dict, logs: list[dict], gerdq: dict | None, start: date, end: date) -> dict:
+    total_days = (end - start).days + 1
+    symptomatic_logs = [
+        log for log in logs
+        if log.get("symptoms") or float(log.get("gerd_level") or 0) > 0
+    ]
+    levels = [float(log["gerd_level"]) for log in logs if log.get("gerd_level") is not None]
+    return {
+        "period": {
+            "start": start.isoformat(),
+            "end": end.isoformat(),
+            "days": total_days,
+        },
+        "profile": {
+            "name": user.get("name"),
+            "nickname": user.get("nickname"),
+            "email": user.get("email"),
+            "birth_date": user.get("birth_date"),
+            "gender": user.get("gender"),
+            "height": user.get("height"),
+            "weight": user.get("weight"),
+            "bmi": user.get("bmi"),
+            "extended": user.get("profile") or {},
+        },
+        "summary": {
+            "logged_days": len(logs),
+            "missing_days": max(total_days - len(logs), 0),
+            "symptomatic_days": len(symptomatic_logs),
+            "average_gerd_level": round(sum(levels) / len(levels), 4) if levels else None,
+            "maximum_gerd_level": max(levels) if levels else None,
+        },
+        "gerdq": gerdq,
+        "daily_history": logs,
+    }
+
+
 def _report_period(body: dict | None) -> tuple[date, date]:
     body = body or {}
     start_value = body.get("period_start", body.get("start_date"))
@@ -63,6 +99,56 @@ def _load_report_data(start: date, end: date):
     return user, logs_response.data or [], first_row(gerdq_response)
 
 
+@report_bp.post("/preview")
+@require_auth
+def preview_report():
+    body = request_body()
+    if body is not None and not isinstance(body, dict):
+        return json_error("Body request harus berupa JSON object.")
+    try:
+        start, end = _report_period(body)
+        user, logs, gerdq = _load_report_data(start, end)
+        if not user:
+            return json_error("Profil pengguna belum tersedia.", 404, "Not Found")
+        return jsonify({
+            "success": True,
+            "data": _report_data(user, logs, gerdq, start, end),
+        })
+    except (TypeError, ValueError) as error:
+        return json_error(str(error))
+    except Exception as error:
+        return json_error(str(error), 502, "Database Error")
+
+
+@report_bp.post("/preview-pdf")
+@require_auth
+def preview_pdf_report():
+    body = request_body()
+    if body is not None and not isinstance(body, dict):
+        return json_error("Body request harus berupa JSON object.")
+    try:
+        start, end = _report_period(body)
+        user, logs, gerdq = _load_report_data(start, end)
+        if not user:
+            return json_error("Profil pengguna belum tersedia.", 404, "Not Found")
+        pdf_bytes = generate_pdf(
+            user,
+            logs,
+            gerdq,
+            {"start": start.isoformat(), "end": end.isoformat()},
+        )
+        return send_file(
+            BytesIO(pdf_bytes),
+            mimetype="application/pdf",
+            as_attachment=False,
+            download_name="GERDHero_preview.pdf",
+        )
+    except (TypeError, ValueError) as error:
+        return json_error(str(error))
+    except Exception as error:
+        return json_error(str(error), 502, "Report Preview Failed")
+
+
 @report_bp.post("/generate")
 @require_auth
 def generate_report():
@@ -88,11 +174,7 @@ def generate_report():
             pdf_bytes,
             {"content-type": "application/pdf", "upsert": "true"},
         )
-        report_data = {
-            "period": {"start": start.isoformat(), "end": end.isoformat()},
-            "log_count": len(logs),
-            "gerdq": gerdq,
-        }
+        report_data = _report_data(user, logs, gerdq, start, end)
         response = get_table(g.supabase, "reports").insert({
             "user_id": g.user_id,
             "report_number": report_number,

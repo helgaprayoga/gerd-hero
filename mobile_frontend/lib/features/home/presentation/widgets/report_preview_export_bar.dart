@@ -3,8 +3,13 @@ import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
 
 class ReportPreviewExportBar extends StatelessWidget {
-  const ReportPreviewExportBar({required this.onPressed, super.key});
-  final VoidCallback onPressed;
+  const ReportPreviewExportBar({
+    required this.onPressed,
+    this.exporting = false,
+    super.key,
+  });
+  final VoidCallback? onPressed;
+  final bool exporting;
 
   @override
   Widget build(BuildContext context) => SafeArea(
@@ -26,8 +31,17 @@ class ReportPreviewExportBar extends StatelessWidget {
         height: 48,
         child: FilledButton.icon(
           onPressed: onPressed,
-          icon: const Icon(Icons.picture_as_pdf_outlined, size: 18),
-          label: const Text('Ekspor PDF (2 Halaman)'),
+          icon: exporting
+              ? const SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: Colors.white,
+                  ),
+                )
+              : const Icon(Icons.picture_as_pdf_outlined, size: 18),
+          label: Text(exporting ? 'Membuat PDF...' : 'Ekspor PDF'),
           style: FilledButton.styleFrom(
             backgroundColor: AppColors.primaryContainer,
             foregroundColor: Colors.white,

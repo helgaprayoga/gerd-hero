@@ -20,6 +20,7 @@ class ReportsPage extends StatefulWidget {
 
 class _ReportsPageState extends State<ReportsPage> {
   int _period = 7;
+  DateTimeRange? _customRange;
 
   @override
   Widget build(BuildContext context) => Scaffold(
@@ -90,7 +91,7 @@ class _ReportsPageState extends State<ReportsPage> {
                     const SizedBox(height: 8),
                     ReportsPeriodSelector(
                       selected: _period,
-                      onChanged: (value) => setState(() => _period = value),
+                      onChanged: _selectPeriod,
                     ),
                     const SizedBox(height: 28),
                     const Text(
@@ -140,9 +141,45 @@ class _ReportsPageState extends State<ReportsPage> {
     ),
   );
 
-  void _showPreview(BuildContext context) => Navigator.of(context).push(
-    MaterialPageRoute<void>(
-      builder: (_) => ReportPreviewPage(periodDays: _period),
-    ),
-  );
+  Future<void> _selectPeriod(int value) async {
+    if (value != 0) {
+      setState(() {
+        _period = value;
+        _customRange = null;
+      });
+      return;
+    }
+    final range = await showDateRangePicker(
+      context: context,
+      firstDate: DateTime(2020),
+      lastDate: DateTime.now(),
+      initialDateRange: _customRange,
+    );
+    if (range != null && mounted) {
+      setState(() {
+        _period = 0;
+        _customRange = range;
+      });
+    }
+  }
+
+  Future<void> _showPreview(BuildContext context) async {
+    final end = _period == 0 ? _customRange?.end : DateTime.now();
+    if (end == null) {
+      _showError('Pilih periode kustom terlebih dahulu.');
+      return;
+    }
+    final start = _period == 0
+        ? _customRange!.start
+        : end.subtract(Duration(days: _period - 1));
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => ReportPreviewPage(start: start, end: end),
+      ),
+    );
+  }
+
+  void _showError(String message) => ScaffoldMessenger.of(
+    context,
+  ).showSnackBar(SnackBar(content: Text(message)));
 }

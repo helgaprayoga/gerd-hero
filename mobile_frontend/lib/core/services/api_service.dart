@@ -16,8 +16,7 @@ class ApiService {
 
   String get _baseUrl => dotenv.env['API_BASE_URL'] ?? 'http://localhost:5000';
 
-  String? get _token =>
-      AuthService.instance.currentSession?.accessToken;
+  String? get _token => AuthService.instance.currentSession?.accessToken;
 
   Map<String, String> get _headers => {
     'Content-Type': 'application/json',
@@ -25,29 +24,80 @@ class ApiService {
   };
 
   Future<Map<String, dynamic>> get(String path) async {
-    return _request(() => http.get(Uri.parse('$_baseUrl$path'), headers: _headers));
+    return _request(
+      () => http.get(Uri.parse('$_baseUrl$path'), headers: _headers),
+    );
   }
 
   Future<Map<String, dynamic>> put(
     String path,
     Map<String, dynamic> body,
   ) async {
-    return _request(() => http.put(
-      Uri.parse('$_baseUrl$path'),
-      headers: _headers,
-      body: jsonEncode(body),
-    ));
+    return _request(
+      () => http.put(
+        Uri.parse('$_baseUrl$path'),
+        headers: _headers,
+        body: jsonEncode(body),
+      ),
+    );
   }
 
   Future<Map<String, dynamic>> post(
     String path,
     Map<String, dynamic> body,
   ) async {
-    return _request(() => http.post(
+    return _request(
+      () => http.post(
+        Uri.parse('$_baseUrl$path'),
+        headers: _headers,
+        body: jsonEncode(body),
+      ),
+    );
+  }
+
+  Future<List<int>> download(String path) async {
+    var response = await http.get(
+      Uri.parse('$_baseUrl$path'),
+      headers: _headers,
+    );
+    if (response.statusCode == 401 && _token != null) {
+      await AuthService.instance.refreshSession();
+      response = await http.get(Uri.parse('$_baseUrl$path'), headers: _headers);
+    }
+    if (response.statusCode >= 400) {
+      String message = 'Gagal mengunduh file.';
+      try {
+        final decoded = jsonDecode(response.body) as Map<String, dynamic>;
+        message = decoded['message'] as String? ?? message;
+      } catch (_) {}
+      throw ApiException(message, response.statusCode);
+    }
+    return response.bodyBytes;
+  }
+
+  Future<List<int>> postBytes(String path, Map<String, dynamic> body) async {
+    var response = await http.post(
       Uri.parse('$_baseUrl$path'),
       headers: _headers,
       body: jsonEncode(body),
-    ));
+    );
+    if (response.statusCode == 401 && _token != null) {
+      await AuthService.instance.refreshSession();
+      response = await http.post(
+        Uri.parse('$_baseUrl$path'),
+        headers: _headers,
+        body: jsonEncode(body),
+      );
+    }
+    if (response.statusCode >= 400) {
+      String message = 'Gagal menyiapkan PDF.';
+      try {
+        final decoded = jsonDecode(response.body) as Map<String, dynamic>;
+        message = decoded['message'] as String? ?? message;
+      } catch (_) {}
+      throw ApiException(message, response.statusCode);
+    }
+    return response.bodyBytes;
   }
 
   Future<Map<String, dynamic>> _request(

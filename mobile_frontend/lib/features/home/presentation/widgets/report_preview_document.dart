@@ -3,418 +3,234 @@ import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
 
 class ReportPreviewDocument extends StatelessWidget {
-  const ReportPreviewDocument({required this.periodDays, super.key});
-  final int periodDays;
+  const ReportPreviewDocument({required this.data, super.key});
+
+  final Map<String, dynamic> data;
 
   @override
-  Widget build(BuildContext context) => Column(
-    children: [
-      _DocumentPage(
-        children: [
-          _DocumentMeta(periodDays: periodDays),
-          const _DocumentTitle(text: 'LAPORAN PEMANTAUAN GEJALA GERD'),
-          const _SectionTitle(title: 'A. IDENTITAS PENGGUNA'),
-          const _InfoGrid(
-            items: [
-              ('Nama Lengkap', 'Budi Pratama'),
-              ('Tanggal Lahir / Usia', '14 Mei 1994 (32 tahun)'),
-              ('Jenis Kelamin', 'Laki-laki'),
-              ('Tinggi / Berat Badan', '172 cm / 68 kg'),
-              ('Indeks Massa Tubuh (BMI)', '23.0 kg/m² (Kategori Normal)'),
-            ],
-          ),
-          const _SectionTitle(title: 'B. RINGKASAN PEMANTAUAN'),
-          const Row(
-            children: [
-              Expanded(
-                child: _Metric(
-                  label: 'Hari tercatat',
-                  value: '6 / 7',
-                  note: '86%',
-                ),
-              ),
-              SizedBox(width: 6),
-              Expanded(
-                child: _Metric(
-                  label: 'Hari bergejala',
-                  value: '4',
-                  note: 'hari',
-                ),
-              ),
-              SizedBox(width: 6),
-              Expanded(
-                child: _Metric(
-                  label: 'Rata-rata intensitas',
-                  value: '34%',
-                  note: 'intensitas',
-                ),
-              ),
-              SizedBox(width: 6),
-              Expanded(
-                child: _Metric(
-                  label: 'Arah tren',
-                  value: 'Naik',
-                  note: 'vs mgg lalu',
-                ),
-              ),
-            ],
-          ),
-          const _SectionTitle(title: 'C. RIWAYAT GEJALA'),
-          const _ReportTable(
-            headers: ['Gejala', 'Jumlah Hari', 'Terakhir'],
-            rows: [
-              ['Heartburn', '4 dari 6 hari', '12 Okt 2026'],
-              ['Regurgitasi', '2 dari 6 hari', '11 Okt 2026'],
-              ['Kembung dan gas', '3 dari 6 hari', '12 Okt 2026'],
-              ['Nyeri dada', '1 dari 6 hari', '10 Okt 2026'],
-            ],
-          ),
-          const _SectionTitle(title: 'D. SKOR GERD-Q'),
-          const _ReportTable(
-            headers: [
-              'Tanggal',
-              'Skor Total',
-              'Kesan Pemantauan',
-              'Perbandingan',
-            ],
-            rows: [
-              [
-                '12 Okt 2026',
-                '9 / 18',
-                'Kecenderungan refluks aktif',
-                '7 -> 9 (+2 poin)',
-              ],
-            ],
-          ),
-        ],
-      ),
-      const SizedBox(height: 20),
-      _DocumentPage(
-        children: [
-          const _DocumentTitle(
-            text: 'LAPORAN PEMANTAUAN GEJALA GERD\n(LANJUTAN)',
-          ),
-          const _SectionTitle(title: 'E. PEMICU YANG DILAPORKAN'),
-          const _ReportTable(
-            headers: ['Faktor Pemicu Makanan/Minuman', 'Frekuensi Terpapar'],
-            rows: [
-              ['Berkafein', '3 hari dari 7 hari'],
-              ['Pedas', '3 hari dari 7 hari'],
-              ['Berlemak / Gorengan', '4 hari dari 7 hari'],
-              ['Asam (Jeruk, cuka, tomat)', '2 hari dari 7 hari'],
-              ['Bersoda / Minuman berkarbonasi', '1 hari dari 7 hari'],
-            ],
-          ),
-          const _SectionTitle(title: 'F. POLA HIDUP'),
-          const _InfoGrid(
-            items: [
-              ('Konsistensi Frekuensi Makan', '3x sehari (Teratur)'),
-              ('Konsistensi Jam Makan', 'Bervariasi (selisih >1 jam)'),
-              ('Jeda Makan-Tidur Malam', '2 jam 15 menit (Target >3 jam)'),
-              ('Rata-rata Durasi Tidur', '6 jam 45 menit / malam'),
-              ('Rata-rata Tingkat Stres', 'Sedang (3 / 5)'),
-            ],
-          ),
-          const _SectionTitle(title: 'G. RIWAYAT & KEBIASAAN HARIAN'),
-          const _InfoGrid(
-            items: [
-              ('Merokok', 'Tidak'),
-              ('Konsumsi Alkohol', 'Tidak'),
-              ('Kopi per Hari', '1-2 cangkir'),
-              ('Pola Aktivitas', 'Reguler (09.00 - 17.00)'),
-              (
-                'Riwayat Penyakit Terkait',
-                'Gastritis episodik (2024), dispepsia fungsional',
-              ),
-            ],
-          ),
-          const _SectionTitle(title: 'H. OBAT & SUPLEMEN YANG DIKONSUMSI'),
-          const _ReportTable(
-            headers: ['Jenis Obat', 'Jadwal Minum', 'Frekuensi Minum'],
-            rows: [
-              ['Omeprazole 20mg', '1x pagi (ac)', '6 dari 7 hari'],
-              ['Antasida Suspensi', 'Bila perlu (PRN)', '2 hari diminum'],
-            ],
-          ),
-          const SizedBox(height: 12),
-          Align(
-            alignment: Alignment.centerRight,
-            child: Text(
-              'SALINAN PASIEN',
-              style: TextStyle(
-                color: AppColors.secondary,
-                fontSize: 9,
-                fontWeight: FontWeight.w700,
-                letterSpacing: 0.4,
-              ),
+  Widget build(BuildContext context) {
+    final period = _map(data['period']);
+    final profile = _map(data['profile']);
+    final summary = _map(data['summary']);
+    final gerdq = _map(data['gerdq']);
+    final logs = _maps(data['daily_history']);
+    return Column(
+      children: [
+        _ReportCard(
+          title: 'A. Identitas Pengguna',
+          child: _KeyValueList([
+            ('Nama', _value(profile['name'] ?? profile['nickname'])),
+            ('Email', _value(profile['email'])),
+            ('Tanggal lahir', _value(profile['birth_date'])),
+            ('Jenis kelamin', _value(profile['gender'])),
+            (
+              'Tinggi / berat',
+              '${_value(profile['height'])} / ${_value(profile['weight'])}',
             ),
+            ('BMI', _value(profile['bmi'])),
+          ]),
+        ),
+        _ReportCard(
+          title: 'B. Ringkasan Pemantauan',
+          child: _KeyValueList([
+            (
+              'Periode',
+              '${_value(period['start'])} s/d ${_value(period['end'])}',
+            ),
+            (
+              'Hari tercatat',
+              '${_value(summary['logged_days'])} / ${_value(period['days'])}',
+            ),
+            ('Hari bergejala', _value(summary['symptomatic_days'])),
+            ('Rata-rata level GERD', _percent(summary['average_gerd_level'])),
+            ('Level tertinggi', _percent(summary['maximum_gerd_level'])),
+          ]),
+        ),
+        _ReportCard(
+          title: 'C. Riwayat Gejala',
+          child: _LogTable(
+            logs: logs,
+            columns: const ['Tanggal', 'Gejala', 'Level'],
           ),
-        ],
-      ),
-    ],
-  );
+        ),
+        _ReportCard(
+          title: 'D. Skor GERD-Q',
+          child: _KeyValueList([
+            ('Skor', _value(gerdq['score'])),
+            ('Hasil', _gerdqResult(gerdq['result'])),
+            ('Tanggal', _value(gerdq['created_at'])),
+          ]),
+        ),
+        _ReportCard(
+          title: 'E. Pemicu yang Dilaporkan',
+          child: _LogTable(
+            logs: logs,
+            columns: const ['Tanggal', 'Pemicu', 'Gejala'],
+          ),
+        ),
+        _ReportCard(
+          title: 'F. Pola Hidup',
+          child: _LogTable(
+            logs: logs,
+            columns: const ['Tanggal', 'Makan', 'Tidur', 'Stres'],
+          ),
+        ),
+        _ReportCard(
+          title: 'G. Riwayat & Kebiasaan Harian',
+          child: _LogTable(
+            logs: logs,
+            columns: const ['Tanggal', 'Level', 'Obat'],
+          ),
+        ),
+        _ReportCard(
+          title: 'H. Obat & Suplemen',
+          child: _LogTable(
+            logs: logs,
+            columns: const ['Tanggal', 'Obat', 'Digunakan'],
+          ),
+        ),
+      ],
+    );
+  }
 }
 
-class _DocumentPage extends StatelessWidget {
-  const _DocumentPage({required this.children});
-  final List<Widget> children;
+class _ReportCard extends StatelessWidget {
+  const _ReportCard({required this.title, required this.child});
+  final String title;
+  final Widget child;
+
   @override
   Widget build(BuildContext context) => Container(
     width: double.infinity,
-    padding: const EdgeInsets.all(20),
+    margin: const EdgeInsets.only(bottom: 12),
+    padding: const EdgeInsets.all(16),
     decoration: BoxDecoration(
       color: Colors.white,
-      borderRadius: BorderRadius.circular(8),
-      boxShadow: const [
-        BoxShadow(
-          color: Color(0x1E101E1C),
-          blurRadius: 20,
-          offset: Offset(0, 8),
-        ),
-      ],
+      borderRadius: BorderRadius.circular(14),
+      boxShadow: const [BoxShadow(color: Color(0x0C000000), blurRadius: 3)],
     ),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: children,
-    ),
-  );
-}
-
-class _DocumentMeta extends StatelessWidget {
-  const _DocumentMeta({required this.periodDays});
-  final int periodDays;
-  @override
-  Widget build(BuildContext context) => Row(
-    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      Container(
-        width: 28,
-        height: 28,
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          color: AppColors.surfaceContainerLow,
-          borderRadius: BorderRadius.circular(6),
-        ),
-        child: const Icon(
-          Icons.health_and_safety_outlined,
-          color: AppColors.primary,
-          size: 18,
-        ),
-      ),
-      Container(
-        padding: const EdgeInsets.all(6),
-        decoration: BoxDecoration(
-          color: const Color(0xFFF9FAFB),
-          border: Border.all(color: const Color(0xFFE5E7EB)),
-          borderRadius: BorderRadius.circular(4),
-        ),
-        child: Text(
-          'No. Laporan: LK-2026-1013-001\nTanggal cetak: 13 Okt 2026\nPeriode: 6–12 Okt 2026 ($periodDays hari)',
-          textAlign: TextAlign.right,
-          style: const TextStyle(
-            fontFamily: 'monospace',
-            color: AppColors.onSurfaceVariant,
-            fontSize: 9,
-            height: 1.6,
-          ),
-        ),
-      ),
-    ],
-  );
-}
-
-class _DocumentTitle extends StatelessWidget {
-  const _DocumentTitle({required this.text});
-  final String text;
-  @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.symmetric(vertical: 16),
-    child: Text(
-      text,
-      style: const TextStyle(
-        color: AppColors.onSurface,
-        fontSize: 13,
-        fontWeight: FontWeight.w600,
-        height: 1.6,
-      ),
-    ),
-  );
-}
-
-class _SectionTitle extends StatelessWidget {
-  const _SectionTitle({required this.title});
-  final String title;
-  @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.only(top: 14, bottom: 8),
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           title,
           style: const TextStyle(
-            color: AppColors.onSurface,
-            fontSize: 10.5,
-            fontWeight: FontWeight.w700,
-            letterSpacing: 0.26,
+            fontWeight: FontWeight.w800,
+            color: AppColors.primary,
           ),
         ),
-        const SizedBox(height: 3),
-        Container(
-          height: 2,
-          width: double.infinity,
-          decoration: BoxDecoration(
-            color: AppColors.primaryContainer,
-            borderRadius: BorderRadius.circular(999),
-          ),
-        ),
+        const SizedBox(height: 12),
+        child,
       ],
     ),
   );
 }
 
-class _InfoGrid extends StatelessWidget {
-  const _InfoGrid({required this.items});
+class _KeyValueList extends StatelessWidget {
+  const _KeyValueList(this.items);
   final List<(String, String)> items;
 
   @override
-  Widget build(BuildContext context) => Container(
-    width: double.infinity,
-    padding: const EdgeInsets.all(10),
-    decoration: BoxDecoration(
-      color: const Color(0xFFF9FAFB),
-      border: Border.all(color: const Color(0xFFE5E7EB)),
-      borderRadius: BorderRadius.circular(4),
-    ),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        for (final item in items)
-          Padding(
-            padding: const EdgeInsets.only(bottom: 8),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
+  Widget build(BuildContext context) => Column(
+    children: [
+      for (final item in items)
+        Padding(
+          padding: const EdgeInsets.only(bottom: 8),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Text(
                   item.$1,
                   style: const TextStyle(
                     color: AppColors.secondary,
-                    fontSize: 9,
+                    fontSize: 12,
                   ),
                 ),
-                Text(
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
                   item.$2,
+                  textAlign: TextAlign.right,
                   style: const TextStyle(
-                    color: AppColors.onSurface,
-                    fontSize: 10,
+                    fontSize: 12,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
-              ],
-            ),
-          ),
-      ],
-    ),
-  );
-}
-
-class _Metric extends StatelessWidget {
-  const _Metric({required this.label, required this.value, required this.note});
-  final String label;
-  final String value;
-  final String note;
-  @override
-  Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.all(6),
-    decoration: BoxDecoration(
-      color: Colors.white,
-      border: Border.all(color: const Color(0xFFE5E7EB)),
-      borderRadius: BorderRadius.circular(4),
-    ),
-    child: Column(
-      children: [
-        Text(
-          label,
-          textAlign: TextAlign.center,
-          style: const TextStyle(color: AppColors.secondary, fontSize: 8),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          value,
-          textAlign: TextAlign.center,
-          style: const TextStyle(
-            color: AppColors.onSurface,
-            fontSize: 12,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-        Text(
-          note,
-          textAlign: TextAlign.center,
-          style: const TextStyle(color: AppColors.secondary, fontSize: 8),
-        ),
-      ],
-    ),
-  );
-}
-
-class _ReportTable extends StatelessWidget {
-  const _ReportTable({required this.headers, required this.rows});
-  final List<String> headers;
-  final List<List<String>> rows;
-  @override
-  Widget build(BuildContext context) => Container(
-    width: double.infinity,
-    clipBehavior: Clip.antiAlias,
-    decoration: BoxDecoration(
-      border: Border.all(color: const Color(0xFFE5E7EB)),
-      borderRadius: BorderRadius.circular(4),
-    ),
-    child: Column(
-      children: [
-        Container(
-          color: const Color(0xFFF3F4F6),
-          child: Row(
-            children: [
-              for (final header in headers)
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.all(8),
-                    child: Text(
-                      header,
-                      style: const TextStyle(
-                        color: AppColors.onSurface,
-                        fontSize: 9,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
-                ),
+              ),
             ],
           ),
         ),
-        for (final row in rows)
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              for (final cell in row)
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.all(8),
-                    child: Text(
-                      cell,
-                      style: const TextStyle(
-                        color: AppColors.onSurfaceVariant,
-                        fontSize: 9,
-                        height: 1.5,
-                      ),
-                    ),
-                  ),
-                ),
-            ],
-          ),
-      ],
-    ),
+    ],
   );
 }
+
+class _LogTable extends StatelessWidget {
+  const _LogTable({required this.logs, required this.columns});
+  final List<Map<String, dynamic>> logs;
+  final List<String> columns;
+
+  @override
+  Widget build(BuildContext context) {
+    if (logs.isEmpty) {
+      return const Text(
+        'Belum ada data pada periode ini.',
+        style: TextStyle(color: AppColors.secondary, fontSize: 12),
+      );
+    }
+    return Column(
+      children: logs.map((log) {
+        final symptoms = _list(log['symptoms']).join(', ');
+        final triggers = _map(
+          log['triggers'],
+        ).entries.where((e) => e.value == true).map((e) => e.key).join(', ');
+        final medications = _list(log['medications']).join(', ');
+        final values = [
+          _value(log['log_date']),
+          columns.contains('Gejala')
+              ? _value(symptoms)
+              : columns.contains('Pemicu')
+              ? _value(triggers)
+              : columns.contains('Makan')
+              ? _value(log['meal_frequency'])
+              : _percent(log['gerd_level']),
+          columns.contains('Level')
+              ? _percent(log['gerd_level'])
+              : columns.contains('Tidur')
+              ? _value(log['sleep_duration_minutes'])
+              : columns.contains('Stres')
+              ? _value(log['stress_level'])
+              : _value(medications),
+          if (columns.length > 3) _value(log['stress_level']),
+        ];
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 8),
+          child: Text(
+            values.take(columns.length).join('  •  '),
+            style: const TextStyle(fontSize: 11),
+          ),
+        );
+      }).toList(),
+    );
+  }
+}
+
+Map<String, dynamic> _map(dynamic value) =>
+    value is Map ? Map<String, dynamic>.from(value) : <String, dynamic>{};
+List<dynamic> _list(dynamic value) => value is List ? value : const <dynamic>[];
+List<Map<String, dynamic>> _maps(dynamic value) => value is List
+    ? value
+          .whereType<Map>()
+          .map((item) => Map<String, dynamic>.from(item))
+          .toList()
+    : const <Map<String, dynamic>>[];
+String _value(dynamic value) =>
+    value == null || value.toString().isEmpty ? '-' : value.toString();
+String _percent(dynamic value) =>
+    value is num ? '${(value * 100).toStringAsFixed(1)}%' : '-';
+String _gerdqResult(dynamic value) => value == 'likely_gerd'
+    ? 'Kemungkinan GERD'
+    : value == 'no_gerd'
+    ? 'Kemungkinan tidak GERD'
+    : '-';
