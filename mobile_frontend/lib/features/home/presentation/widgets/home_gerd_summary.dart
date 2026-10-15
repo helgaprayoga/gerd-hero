@@ -101,7 +101,6 @@ class HomeGerdSummary extends StatelessWidget {
       date: date.day.toString(),
       gerdLevel: log?.gerdLevel,
       hasLog: log != null,
-      symptomatic: log?.isSymptomatic ?? false,
     );
   }
 

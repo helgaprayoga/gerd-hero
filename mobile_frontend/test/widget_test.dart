@@ -327,7 +327,7 @@ void main() {
     );
     expect(find.text('Rekomendasi'), findsOneWidget);
     expect(find.text('Jaga jeda makan-tidur minimal 2 jam.'), findsOneWidget);
-    expect(find.text('Selesai • Kembali ke Beranda'), findsOneWidget);
+    expect(find.text('Kembali ke Beranda'), findsOneWidget);
   });
 
   testWidgets('finishes the daily summary at the home page', (tester) async {
