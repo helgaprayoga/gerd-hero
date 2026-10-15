@@ -23,7 +23,10 @@ class DailyLogRepository {
       queryParameters: {'week': week},
     );
     final values = response['data'];
-    if (values is! List) return const [];
+    if (values == null) return const [];
+    if (values is! List) {
+      throw const ApiException('Format data riwayat dari server tidak valid.');
+    }
     return values
         .whereType<Map>()
         .map(

@@ -3,11 +3,13 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/navigation/slide_page_route.dart';
+import '../../data/models/daily_log_models.dart';
 import '../../data/repositories/daily_log_repository.dart';
 import '../models/daily_history_entry.dart';
 import '../widgets/history_day_card.dart';
 import '../widgets/history_empty_card.dart';
 import '../widgets/history_week_selector.dart';
+import '../widgets/history_loading_skeleton.dart';
 import 'daily_log_step_one_page.dart';
 
 class RiwayatLengkapPage extends StatefulWidget {
@@ -23,52 +25,11 @@ class _RiwayatLengkapPageState extends State<RiwayatLengkapPage> {
   int _weekOffset = 0;
   bool _loading = false;
   String? _errorMessage;
-  late List<DailyHistoryEntry> _visibleEntries;
-
-  static const _demoEntries = [
-    DailyHistoryEntry(
-      day: 'Minggu',
-      date: '12 Okt',
-      badge: 'HARI INI',
-      index: 39,
-      symptoms: ['Heartburn', 'Regurgitasi'],
-      triggers: ['🌶️ Pedas', '☕ Kafein'],
-    ),
-    DailyHistoryEntry(
-      day: 'Sabtu',
-      date: '11 Okt',
-      badge: 'Kemarin',
-      index: 0,
-      symptoms: ['Tanpa Gejala'],
-    ),
-    DailyHistoryEntry(
-      day: 'Jumat',
-      date: '10 Okt',
-      index: 52,
-      symptoms: ['Heartburn', 'Nyeri dada', 'Suara serak', '+1'],
-      triggers: ['🌶️ Pedas', '☕ Kafein'],
-    ),
-    DailyHistoryEntry(day: 'Kamis', date: '9 Okt', isEmpty: true),
-    DailyHistoryEntry(
-      day: 'Rabu',
-      date: '8 Okt',
-      index: 18,
-      symptoms: ['Kembung & gas', 'Ketidaknyamanan tenggorokan'],
-      triggers: ['🌶️ Pedas', '☕ Kafein'],
-    ),
-    DailyHistoryEntry(
-      day: 'Senin',
-      date: '6 Okt',
-      index: 25,
-      symptoms: ['Gejala Ringan', 'Ketidaknyamanan tenggorokan'],
-      triggers: ['🌶️ Pedas', '☕ Kafein'],
-    ),
-  ];
+  List<DailyHistoryLog> _logs = const [];
 
   @override
   void initState() {
     super.initState();
-    _visibleEntries = _demoEntries;
     _loadEntries();
   }
 
@@ -138,7 +99,10 @@ class _RiwayatLengkapPageState extends State<RiwayatLengkapPage> {
   }
 
   Future<void> _loadEntries() async {
-    if (!_hasSession && widget.repository == null) return;
+    if (!_hasSession && widget.repository == null) {
+      if (mounted) setState(() => _loading = false);
+      return;
+    }
     setState(() {
       _loading = true;
       _errorMessage = null;
@@ -147,18 +111,90 @@ class _RiwayatLengkapPageState extends State<RiwayatLengkapPage> {
       final logs = await (widget.repository ?? DailyLogRepository()).fetchWeek(
         _isoWeek(_weekStart),
       );
-      final entries = logs.map(_toEntry).toList();
-      if (mounted) setState(() => _visibleEntries = entries);
-    } catch (_) {
+      debugPrint('Riwayat: ${logs.length} log diterima dari API.');
       if (mounted) {
-        setState(() => _errorMessage = 'Riwayat belum dapat dimuat.');
+        setState(() {
+          _logs = logs;
+          _errorMessage = null;
+        });
+      }
+    } catch (error, stackTrace) {
+      debugPrint('Riwayat: gagal mengambil data: $error');
+      debugPrintStack(stackTrace: stackTrace);
+      if (mounted) {
+        setState(() {
+          _logs = const [];
+          _errorMessage = error.toString().replaceFirst('Exception: ', '');
+        });
       }
     } finally {
       if (mounted) setState(() => _loading = false);
     }
   }
 
-  DailyHistoryEntry _toEntry(dynamic log) {
+  DateTime _dateOnly(DateTime value) =>
+      DateTime(value.year, value.month, value.day);
+
+  String _isoDate(DateTime date) =>
+      '${date.year.toString().padLeft(4, '0')}-'
+      '${date.month.toString().padLeft(2, '0')}-'
+      '${date.day.toString().padLeft(2, '0')}';
+
+  DailyHistoryLog? _logByDate(String iso) {
+    for (final log in _logs) {
+      if (log.date == iso) return log;
+    }
+    return null;
+  }
+
+  List<DailyHistoryEntry> _buildDayEntries() {
+    final today = _dateOnly(DateTime.now());
+    final entries = <DailyHistoryEntry>[];
+    for (var i = 6; i >= 0; i--) {
+      final date = _weekStart.add(Duration(days: i));
+      if (date.isAfter(today)) continue;
+      final iso = _isoDate(date);
+      final log = _logByDate(iso);
+      if (log != null) {
+        try {
+          entries.add(_toEntry(log));
+        } catch (error, stackTrace) {
+          debugPrint('Riwayat: item log tidak valid: $error');
+          debugPrintStack(stackTrace: stackTrace);
+        }
+      } else {
+        entries.add(
+          DailyHistoryEntry(
+            day: _dayName(date.weekday),
+            date: '${date.day} ${_monthName(date.month)}',
+            dateIso: iso,
+            isEmpty: true,
+          ),
+        );
+      }
+    }
+    return entries;
+  }
+
+  Future<void> _openBackfill(DailyHistoryEntry entry) async {
+    final navigator = Navigator.of(context);
+    final date = DateTime.tryParse(entry.dateIso ?? '');
+    await navigator.push(
+      SlidePageRoute<void>(
+        builder: (_) => DailyLogStepOnePage(
+          dateLabel: '${entry.day}, ${entry.date}',
+          logDate: date,
+          finishLabel: 'Kembali ke Riwayat',
+          onFinish: () =>
+              navigator.popUntil((route) => route.settings.name == '/riwayat'),
+        ),
+        begin: const Offset(1, 0),
+      ),
+    );
+    if (mounted) _loadEntries();
+  }
+
+  DailyHistoryEntry _toEntry(DailyHistoryLog log) {
     final parsed = DateTime.tryParse(log.date) ?? DateTime.now();
     final today = DateTime.now();
     final dateOnly = DateTime(parsed.year, parsed.month, parsed.day);
@@ -169,7 +205,7 @@ class _RiwayatLengkapPageState extends State<RiwayatLengkapPage> {
         ? 'Kemarin'
         : null;
     final triggers = log.triggers.entries
-        .where((entry) => entry.value == 1 || entry.value == true)
+        .where((entry) => _isActiveTrigger(entry.value))
         .map((entry) => '${_triggerEmoji(entry.key)} ${entry.key}')
         .toList();
     return DailyHistoryEntry(
@@ -182,6 +218,12 @@ class _RiwayatLengkapPageState extends State<RiwayatLengkapPage> {
       triggers: triggers,
     );
   }
+
+  bool _isActiveTrigger(dynamic value) =>
+      value == true ||
+      value == 1 ||
+      value.toString().toLowerCase() == 'true' ||
+      value.toString() == '1';
 
   String _dayName(int weekday) => const [
     'Senin',
@@ -249,57 +291,91 @@ class _RiwayatLengkapPageState extends State<RiwayatLengkapPage> {
         ),
         Expanded(
           child: _loading
-              ? const Center(child: CircularProgressIndicator())
-              : ListView.separated(
-                  padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
-                  itemCount: _visibleEntries.isEmpty
-                      ? 1
-                      : _visibleEntries.length,
-                  separatorBuilder: (_, index) => const SizedBox(height: 12),
-                  itemBuilder: (_, index) {
-                    if (_visibleEntries.isEmpty) {
-                      return HistoryEmptyCard(
-                        day: 'Belum ada data',
-                        date: _weekLabel,
-                        onFill: () => Navigator.of(context).push(
-                          SlidePageRoute<void>(
-                            builder: (_) => const DailyLogStepOnePage(
-                              dateLabel: 'tanggal ini',
-                            ),
-                            begin: const Offset(1, 0),
-                          ),
-                        ),
-                      );
-                    }
-                    final entry = _visibleEntries[index];
-                    return entry.isEmpty
-                        ? HistoryEmptyCard(
-                            day: entry.day,
-                            date: entry.date,
-                            onFill: () => Navigator.of(context).push(
-                              SlidePageRoute<void>(
-                                builder: (_) =>
-                                    DailyLogStepOnePage(dateLabel: entry.date),
-                                begin: const Offset(1, 0),
-                              ),
-                            ),
-                          )
-                        : HistoryDayCard(
-                            entry: entry,
-                            repository: widget.repository,
-                          );
-                  },
+              ? const HistoryLoadingSkeleton()
+              : _errorMessage != null
+              ? _HistoryErrorState(
+                  message: _errorMessage!,
+                  onRetry: _loadEntries,
+                )
+              : _DayList(
+                  entries: _buildDayEntries(),
+                  repository: widget.repository,
+                  onBackfill: _openBackfill,
                 ),
         ),
-        if (_errorMessage != null)
-          Padding(
-            padding: const EdgeInsets.only(bottom: 8),
-            child: Text(
-              _errorMessage!,
-              style: const TextStyle(color: AppColors.error),
+      ],
+    ),
+  );
+}
+
+class _DayList extends StatelessWidget {
+  const _DayList({
+    required this.entries,
+    required this.repository,
+    required this.onBackfill,
+  });
+
+  final List<DailyHistoryEntry> entries;
+  final DailyLogRepository? repository;
+  final ValueChanged<DailyHistoryEntry> onBackfill;
+
+  @override
+  Widget build(BuildContext context) => ListView.separated(
+    padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
+    itemCount: entries.length,
+    separatorBuilder: (_, index) => const SizedBox(height: 12),
+    itemBuilder: (_, index) {
+      final entry = entries[index];
+      return entry.isEmpty
+          ? HistoryEmptyCard(
+              day: entry.day,
+              date: entry.date,
+              onFill: () => onBackfill(entry),
+            )
+          : HistoryDayCard(entry: entry, repository: repository);
+    },
+  );
+}
+
+class _HistoryErrorState extends StatelessWidget {
+  const _HistoryErrorState({required this.message, required this.onRetry});
+
+  final String message;
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) => Center(
+    child: Padding(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(
+            Icons.cloud_off_outlined,
+            color: AppColors.secondary,
+            size: 42,
+          ),
+          const SizedBox(height: 12),
+          Text(
+            message,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              color: AppColors.onSurfaceVariant,
+              fontSize: 13,
             ),
           ),
-      ],
+          const SizedBox(height: 14),
+          OutlinedButton.icon(
+            onPressed: onRetry,
+            icon: const Icon(Icons.refresh, size: 18),
+            label: const Text('Coba Lagi'),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: AppColors.primary,
+              shape: const StadiumBorder(),
+            ),
+          ),
+        ],
+      ),
     ),
   );
 }

@@ -318,6 +318,9 @@ class _HomePageState extends State<HomePage> {
                               periodEnd: _periodEnd,
                               onHistoryTap: () => Navigator.of(context).push(
                                 MaterialPageRoute<void>(
+                                  settings: const RouteSettings(
+                                    name: '/riwayat',
+                                  ),
                                   builder: (_) => const RiwayatLengkapPage(),
                                 ),
                               ),

@@ -14,6 +14,8 @@ class DailyLogStepTwoPage extends StatefulWidget {
     this.initialSameAsYesterday = true,
     this.repository,
     this.submitter,
+    this.finishLabel = 'Kembali ke Beranda',
+    this.onFinish,
     super.key,
   });
 
@@ -22,6 +24,8 @@ class DailyLogStepTwoPage extends StatefulWidget {
   final bool initialSameAsYesterday;
   final DailyLogRepository? repository;
   final Future<DailyLogResponse> Function(DailyLogDraft)? submitter;
+  final String finishLabel;
+  final VoidCallback? onFinish;
 
   @override
   State<DailyLogStepTwoPage> createState() => _DailyLogStepTwoPageState();
@@ -55,8 +59,12 @@ class _DailyLogStepTwoPageState extends State<DailyLogStepTwoPage> {
       if (!mounted) return;
       await navigator.push(
         MaterialPageRoute<void>(
-          builder: (_) =>
-              DailyLogSummaryPage(response: response, draft: _draft),
+          builder: (_) => DailyLogSummaryPage(
+            response: response,
+            draft: _draft,
+            finishLabel: widget.finishLabel,
+            onFinish: widget.onFinish,
+          ),
         ),
       );
     } on ApiException catch (error) {

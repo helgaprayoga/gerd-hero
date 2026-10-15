@@ -49,6 +49,7 @@ class _MedicineCard extends StatelessWidget {
                 ),
               ),
             ),
+            const SizedBox(width: 12),
             _YesNoToggle(
               selected: tookMedicine,
               onChanged: onTookMedicineChanged,

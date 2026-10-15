@@ -292,7 +292,7 @@ class _DailyLogStepTwoViewState extends State<DailyLogStepTwoView> {
                   _MealTimeCard(
                     sameAsYesterday: _sameAsYesterday,
                     showComparison:
-                        _yesterdayMealCount == null ||
+                        _yesterdayMealCount != null &&
                         _yesterdayMealCount == _mealCount,
                     mealCount: _mealCount,
                     mealTimes: _mealTimes,

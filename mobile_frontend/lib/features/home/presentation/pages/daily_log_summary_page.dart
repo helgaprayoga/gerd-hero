@@ -18,6 +18,8 @@ class DailyLogSummaryPage extends StatefulWidget {
     this.draft,
     this.initialProfile,
     this.client,
+    this.finishLabel = 'Kembali ke Beranda',
+    this.onFinish,
     super.key,
   });
 
@@ -25,6 +27,8 @@ class DailyLogSummaryPage extends StatefulWidget {
   final DailyLogDraft? draft;
   final ProfileData? initialProfile;
   final ApiClient? client;
+  final String finishLabel;
+  final VoidCallback? onFinish;
 
   @override
   State<DailyLogSummaryPage> createState() => _DailyLogSummaryPageState();
@@ -54,6 +58,10 @@ class _DailyLogSummaryPageState extends State<DailyLogSummaryPage> {
   }
 
   void _finish() {
+    if (widget.onFinish != null) {
+      widget.onFinish!();
+      return;
+    }
     Navigator.of(context).pushAndRemoveUntil(
       MaterialPageRoute<void>(builder: (_) => const HomePage()),
       (route) => false,
@@ -113,7 +121,7 @@ class _DailyLogSummaryPageState extends State<DailyLogSummaryPage> {
                       backgroundColor: AppColors.primary,
                       shape: const StadiumBorder(),
                     ),
-                    child: const Text('Selesai • Kembali ke Beranda'),
+                    child: Text(widget.finishLabel),
                   ),
                 ),
               ],

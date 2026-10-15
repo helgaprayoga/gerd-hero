@@ -36,8 +36,21 @@ class HistoryEmptyCard extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text('$day, $date', style: _dateStyle),
-            const HistoryStatusBadge(label: 'Kosong'),
+            Expanded(
+              child: Text(
+                '$day, $date',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: _dateStyle,
+              ),
+            ),
+            const SizedBox(width: 8),
+            const Flexible(
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: HistoryStatusBadge(label: 'Kosong'),
+              ),
+            ),
           ],
         ),
         const SizedBox(height: 18),

@@ -14,17 +14,33 @@ class HistoryTriggerBox extends StatelessWidget {
       borderRadius: BorderRadius.circular(12),
       border: Border.all(color: const Color(0xFFFFE4B5)),
     ),
-    child: Wrap(
-      spacing: 14,
-      runSpacing: 8,
-      crossAxisAlignment: WrapCrossAlignment.center,
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text(
           'Faktor Pemicu',
           style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12),
         ),
-        for (final trigger in triggers)
-          Text(trigger, style: const TextStyle(fontSize: 12)),
+        const SizedBox(height: 8),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            for (final trigger in triggers)
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 5,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(999),
+                  border: Border.all(color: const Color(0xFFFFE4B5)),
+                ),
+                child: Text(trigger, style: const TextStyle(fontSize: 12)),
+              ),
+          ],
+        ),
       ],
     ),
   );

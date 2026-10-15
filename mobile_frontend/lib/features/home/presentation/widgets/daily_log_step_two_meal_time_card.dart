@@ -26,16 +26,16 @@ class _MealTimeCard extends StatelessWidget {
           title: 'Jam makan',
           subtitle: 'Pola waktu asupan harian',
         ),
-        const SizedBox(height: 14),
-        Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: AppColors.surfaceContainerLow,
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Column(
-            children: [
-              if (showComparison) ...[
+        if (showComparison) ...[
+          const SizedBox(height: 14),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: AppColors.surfaceContainerLow,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Column(
+              children: [
                 const Text(
                   'Jam makanmu masih di rentang kemarin (±1 jam)?',
                   style: TextStyle(color: AppColors.onSurface, fontSize: 12),
@@ -61,9 +61,9 @@ class _MealTimeCard extends StatelessWidget {
                   ],
                 ),
               ],
-            ],
+            ),
           ),
-        ),
+        ],
         const SizedBox(height: 14),
         if (showComparison && sameAsYesterday)
           Wrap(
