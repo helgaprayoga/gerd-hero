@@ -35,6 +35,12 @@ def _validate_log(body: dict[str, Any]):
     symptoms = body.get("symptoms", [])
     if not isinstance(symptoms, list) or any(not isinstance(item, str) for item in symptoms):
         raise ValueError("symptoms harus berupa array string.")
+    unknown_symptoms = [item for item in symptoms if item not in gejala_dict]
+    if unknown_symptoms:
+        raise ValueError(
+            "symptoms berisi nilai yang tidak dikenal: "
+            + ", ".join(unknown_symptoms)
+        )
     no_symptoms = body.get("no_symptoms", False)
     if type(no_symptoms) is not bool:
         raise ValueError("no_symptoms harus berupa boolean.")
@@ -72,8 +78,20 @@ def _validate_log(body: dict[str, Any]):
     took_medication = body.get("took_medication", False)
     if not isinstance(medications, list) or type(took_medication) is not bool:
         raise ValueError("medications harus array dan took_medication harus boolean.")
+    for medication in medications:
+        if not isinstance(medication, (str, dict)):
+            raise ValueError("setiap medication harus berupa string atau object.")
+        if isinstance(medication, dict):
+            if not isinstance(medication.get("name"), str) or not medication["name"].strip():
+                raise ValueError("setiap medication harus memiliki name.")
     if not took_medication:
         medications = []
+
+    symptom_description = body.get("symptom_description")
+    if symptom_description is not None and not isinstance(symptom_description, str):
+        raise ValueError("symptom_description harus berupa string.")
+    if symptom_description is not None and len(symptom_description) > 250:
+        raise ValueError("symptom_description maksimal 250 karakter.")
 
     sleep_duration = body.get("sleep_duration_minutes")
     if sleep_duration is None:
@@ -94,7 +112,7 @@ def _validate_log(body: dict[str, Any]):
         "stress_level": stress_level,
         "medications": medications,
         "took_medication": took_medication,
-        "symptom_description": body.get("symptom_description"),
+        "symptom_description": symptom_description,
         "indicators_input": indicators_input,
     }
 
@@ -199,7 +217,14 @@ def create_log():
     except Exception as error:
         return json_error(str(error), 502, "Database or AI Error")
 
-    return jsonify({"success": True, "data": {**row, "streak_days": streak}}), 201
+    return jsonify({
+        "success": True,
+        "data": {
+            **row,
+            "indicators": indicators,
+            "streak_days": streak,
+        },
+    }), 201
 
 
 @logs_bp.get("/logs")

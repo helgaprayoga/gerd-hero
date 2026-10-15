@@ -13,6 +13,7 @@ import 'package:mobile_frontend/features/onboarding/presentation/pages/gerdq_int
 import 'package:mobile_frontend/features/onboarding/presentation/pages/gerdq_question_page.dart';
 import 'package:mobile_frontend/features/onboarding/presentation/pages/gerdq_result_page.dart';
 import 'package:mobile_frontend/features/home/presentation/models/home_scenario.dart';
+import 'package:mobile_frontend/features/home/data/models/daily_log_models.dart';
 import 'package:mobile_frontend/features/home/presentation/pages/home_page.dart';
 import 'package:mobile_frontend/features/home/presentation/pages/daily_log_step_one_page.dart';
 import 'package:mobile_frontend/features/home/presentation/pages/daily_log_step_two_page.dart';
@@ -185,7 +186,7 @@ void main() {
       find.text('Gejala apa yang kamu rasakan\nhari ini?'),
       findsOneWidget,
     );
-    expect(find.text('2 Dipilih'), findsOneWidget);
+    expect(find.text('0 Dipilih'), findsOneWidget);
   });
 
   testWidgets('opens complete history from the home summary link', (
@@ -264,7 +265,13 @@ void main() {
   testWidgets('continues from daily log step two to the summary', (
     tester,
   ) async {
-    await tester.pumpWidget(const MaterialApp(home: DailyLogStepTwoPage()));
+    await tester.pumpWidget(
+      MaterialApp(
+        home: DailyLogStepTwoPage(
+          submitter: (_) async => DailyLogResponse.demo(),
+        ),
+      ),
+    );
 
     await tester.ensureVisible(find.text('Simpan & Lanjutkan'));
     await tester.tap(find.text('Simpan & Lanjutkan'));

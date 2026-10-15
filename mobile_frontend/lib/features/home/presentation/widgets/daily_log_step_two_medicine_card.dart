@@ -16,7 +16,7 @@ class _MedicineCard extends StatelessWidget {
   });
   final bool tookMedicine;
   final String dateLabel;
-  final List<String> medicines;
+  final List<MedicationDraft> medicines;
   final bool showForm;
   final TextEditingController medicineController;
   final String timing;

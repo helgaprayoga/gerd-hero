@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../models/daily_history_entry.dart';
+import '../../data/repositories/daily_log_repository.dart';
 import 'history_index_gauge.dart';
 import 'history_status_badge.dart';
 import 'history_symptom_chip.dart';
@@ -9,9 +10,10 @@ import 'history_trigger_box.dart';
 import '../pages/daily_history_detail_page.dart';
 
 class HistoryDayCard extends StatelessWidget {
-  const HistoryDayCard({required this.entry, super.key});
+  const HistoryDayCard({required this.entry, this.repository, super.key});
 
   final DailyHistoryEntry entry;
+  final DailyLogRepository? repository;
 
   @override
   Widget build(BuildContext context) => Material(
@@ -21,7 +23,8 @@ class HistoryDayCard extends StatelessWidget {
     child: InkWell(
       onTap: () => Navigator.of(context).push(
         MaterialPageRoute<void>(
-          builder: (_) => DailyHistoryDetailPage(entry: entry),
+          builder: (_) =>
+              DailyHistoryDetailPage(entry: entry, repository: repository),
         ),
       ),
       child: Container(

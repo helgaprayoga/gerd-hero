@@ -2,12 +2,11 @@ part of 'daily_log_step_two_view.dart';
 
 class _MedicineEntry extends StatelessWidget {
   const _MedicineEntry({required this.value, required this.onRemove});
-  final String value;
+  final MedicationDraft value;
   final VoidCallback onRemove;
 
   @override
   Widget build(BuildContext context) {
-    final parts = value.split('|');
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.all(12),
@@ -25,7 +24,7 @@ class _MedicineEntry extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  parts.first,
+                  value.name,
                   style: const TextStyle(
                     color: AppColors.onSurface,
                     fontSize: 12,
@@ -33,7 +32,7 @@ class _MedicineEntry extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  parts.length > 1 ? parts[1] : '',
+                  '${value.timing} · ${value.frequency}',
                   style: const TextStyle(
                     color: AppColors.onSurfaceVariant,
                     fontSize: 11,

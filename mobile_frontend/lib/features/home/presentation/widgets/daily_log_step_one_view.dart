@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../domain/entities/daily_log_draft.dart';
 import 'daily_log_step_two_view.dart';
 
 part 'daily_log_step_one_step_progress.dart';
@@ -11,11 +12,13 @@ part 'daily_log_step_one_icon_tile.dart';
 class DailyLogStepOneView extends StatefulWidget {
   const DailyLogStepOneView({
     this.dateLabel = 'hari ini',
+    this.draft,
     this.onNext,
     super.key,
   });
 
   final String dateLabel;
+  final DailyLogDraft? draft;
   final VoidCallback? onNext;
 
   @override
@@ -23,60 +26,86 @@ class DailyLogStepOneView extends StatefulWidget {
 }
 
 class _DailyLogStepOneViewState extends State<DailyLogStepOneView> {
+  late final DailyLogDraft _draft;
   final _noteController = TextEditingController();
-  final _selectedSymptoms = <String>{'heartburn', 'regurgitasi'};
-  bool _noSymptoms = false;
+  late final Set<DailySymptom> _selectedSymptoms;
+  late bool _noSymptoms;
 
   static const _symptoms = [
     (
-      id: 'heartburn',
+      symptom: DailySymptom.heartburn,
       title: 'Heartburn (rasa terbakar di dada)',
       subtitle: 'Sensasi panas menjalar ke kerongkongan',
       icon: Icons.local_fire_department_outlined,
     ),
     (
-      id: 'regurgitasi',
+      symptom: DailySymptom.regurgitasi,
       title: 'Regurgitasi (asam naik ke mulut)',
       subtitle: 'Rasa masam atau pahit di pangkal lidah',
       icon: Icons.north_outlined,
     ),
     (
-      id: 'nyeri',
+      symptom: DailySymptom.nyeriDada,
       title: 'Nyeri dada',
       subtitle: 'Rasa tertekan di tengah tulang dada',
       icon: Icons.favorite_border,
     ),
     (
-      id: 'menelan',
+      symptom: DailySymptom.kesulitanMenelan,
       title: 'Kesulitan menelan',
       subtitle: 'Sensasi makanan menyangkut di leher',
       icon: Icons.restaurant_outlined,
     ),
     (
-      id: 'kembung',
+      symptom: DailySymptom.kembungGas,
       title: 'Kembung dan gas di perut',
       subtitle: 'Perut terasa begah, padat, dan sering bersendawa',
       icon: Icons.air,
     ),
     (
-      id: 'serak',
+      symptom: DailySymptom.suaraSerak,
       title: 'Suara serak',
       subtitle: 'Pita suara teriritasi terutama di pagi hari',
       icon: Icons.record_voice_over_outlined,
     ),
     (
-      id: 'lainnya',
-      title: 'Gejala lainnya',
-      subtitle: 'Deskripsikan gejala pada catatan di bawah',
-      icon: Icons.more_horiz,
+      symptom: DailySymptom.keringatDingin,
+      title: 'Keringat dingin',
+      subtitle: 'Keringat dingin yang muncul bersama keluhan',
+      icon: Icons.ac_unit_outlined,
+    ),
+    (
+      symptom: DailySymptom.kramPerut,
+      title: 'Kram perut',
+      subtitle: 'Rasa kram atau mulas pada perut',
+      icon: Icons.healing_outlined,
+    ),
+    (
+      symptom: DailySymptom.ketidaknyamananTenggorokan,
+      title: 'Ketidaknyamanan tenggorokan',
+      subtitle: 'Rasa mengganjal atau tidak nyaman di tenggorokan',
+      icon: Icons.record_voice_over_outlined,
     ),
   ];
 
   @override
+  void initState() {
+    super.initState();
+    _draft = widget.draft ?? DailyLogDraft(logDate: DateTime.now());
+    _selectedSymptoms = _draft.symptoms;
+    _noSymptoms = _draft.noSymptoms;
+    _noteController.text = _draft.symptomDescription;
+    _noteController.addListener(_syncDescription);
+  }
+
+  @override
   void dispose() {
+    _noteController.removeListener(_syncDescription);
     _noteController.dispose();
     super.dispose();
   }
+
+  void _syncDescription() => _draft.symptomDescription = _noteController.text;
 
   @override
   Widget build(BuildContext context) => Scaffold(
@@ -124,7 +153,11 @@ class _DailyLogStepOneViewState extends State<DailyLogStepOneView> {
                   const SizedBox(height: 20),
                   _NoSymptomCard(
                     selected: _noSymptoms,
-                    onTap: () => setState(() => _noSymptoms = !_noSymptoms),
+                    onTap: () => setState(() {
+                      _noSymptoms = !_noSymptoms;
+                      _draft.noSymptoms = _noSymptoms;
+                      if (_noSymptoms) _selectedSymptoms.clear();
+                    }),
                   ),
                   if (!_noSymptoms) ...[
                     const SizedBox(height: 20),
@@ -165,13 +198,15 @@ class _DailyLogStepOneViewState extends State<DailyLogStepOneView> {
                         title: symptom.title,
                         subtitle: symptom.subtitle,
                         icon: symptom.icon,
-                        selected: _selectedSymptoms.contains(symptom.id),
+                        selected: _selectedSymptoms.contains(symptom.symptom),
                         onTap: () {
                           setState(() {
-                            if (_selectedSymptoms.contains(symptom.id)) {
-                              _selectedSymptoms.remove(symptom.id);
+                            _draft.noSymptoms = false;
+                            _noSymptoms = false;
+                            if (_selectedSymptoms.contains(symptom.symptom)) {
+                              _selectedSymptoms.remove(symptom.symptom);
                             } else {
-                              _selectedSymptoms.add(symptom.id);
+                              _selectedSymptoms.add(symptom.symptom);
                             }
                           });
                         },
