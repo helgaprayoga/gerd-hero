@@ -15,12 +15,16 @@ class GerdQInfoLine extends StatelessWidget {
       children: [
         Icon(icon, color: AppColors.primary, size: 16),
         const SizedBox(width: 8),
-        Text(
-          text,
-          style: const TextStyle(
-            color: AppColors.onSurfaceVariant,
-            fontSize: 12,
-            fontWeight: FontWeight.w500,
+        Expanded(
+          child: Text(
+            text,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              color: AppColors.onSurfaceVariant,
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+            ),
           ),
         ),
       ],

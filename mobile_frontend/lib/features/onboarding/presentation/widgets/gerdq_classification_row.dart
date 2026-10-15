@@ -7,12 +7,16 @@ class GerdQClassificationRow extends StatelessWidget {
     required this.score,
     required this.label,
     required this.active,
+    this.activeColor = AppColors.primary,
+    this.activeBackground = AppColors.surfaceContainerLow,
     super.key,
   });
 
   final String score;
   final String label;
   final bool active;
+  final Color activeColor;
+  final Color activeBackground;
 
   @override
   Widget build(BuildContext context) => Container(
@@ -20,11 +24,11 @@ class GerdQClassificationRow extends StatelessWidget {
     padding: const EdgeInsets.all(12),
     decoration: BoxDecoration(
       color: active
-          ? AppColors.surfaceContainerLow
+          ? activeBackground
           : AppColors.surfaceContainerHigh.withValues(alpha: 0.45),
       borderRadius: BorderRadius.circular(8),
       border: active
-          ? const Border(left: BorderSide(color: AppColors.primary, width: 4))
+          ? Border(left: BorderSide(color: activeColor, width: 4))
           : null,
     ),
     child: Row(
@@ -38,7 +42,7 @@ class GerdQClassificationRow extends StatelessWidget {
           child: Text(
             score,
             style: TextStyle(
-              color: active ? AppColors.primary : AppColors.secondary,
+              color: active ? activeColor : AppColors.secondary,
               fontSize: 12,
               fontWeight: FontWeight.w700,
             ),
@@ -55,8 +59,7 @@ class GerdQClassificationRow extends StatelessWidget {
             ),
           ),
         ),
-        if (active)
-          const Icon(Icons.check_circle, color: AppColors.primary, size: 18),
+        if (active) Icon(Icons.check_circle, color: activeColor, size: 18),
       ],
     ),
   );

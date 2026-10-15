@@ -19,9 +19,11 @@ class _FoodRow extends StatelessWidget {
       children: [
         Text(emoji, style: const TextStyle(fontSize: 20)),
         const SizedBox(width: 10),
-        Expanded(
+        Flexible(
           child: Text(
             label,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
             style: const TextStyle(color: AppColors.onSurface, fontSize: 12),
           ),
         ),

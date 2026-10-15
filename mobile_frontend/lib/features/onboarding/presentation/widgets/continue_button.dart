@@ -27,10 +27,15 @@ class ContinueButton extends StatelessWidget {
         elevation: enabled ? 3 : 0,
         shape: const StadiumBorder(),
       ),
-      child: const Row(
+      child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text('Lanjutkan'),
+          Flexible(
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: const Text('Lanjutkan'),
+            ),
+          ),
           SizedBox(width: 8),
           Icon(Icons.arrow_forward, size: 20),
         ],

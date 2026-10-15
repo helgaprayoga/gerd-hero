@@ -18,4 +18,6 @@ abstract final class AppColors {
   static const error = Color(0xFFBA1A1A);
   static const tertiaryFixed = Color(0xFFFFDDB5);
   static const tertiaryFixedDim = Color(0xFFFFB957);
+  static const gerdLikely = Color(0xFFD97706);
+  static const gerdLikelyBackground = Color(0xFFFFEDD5);
 }

@@ -21,37 +21,40 @@ class _FrequencyCard extends StatelessWidget {
           subtitle: 'Jumlah waktu makan berat $dateLabel',
         ),
         const SizedBox(height: 14),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            IconButton(
-              onPressed: count > 1 ? () => onChanged(count - 1) : null,
-              icon: const Icon(Icons.remove_circle_outline),
-            ),
-            Column(
-              children: [
-                Text(
-                  '${count}x',
-                  style: const TextStyle(
-                    color: AppColors.primary,
-                    fontSize: 30,
-                    fontWeight: FontWeight.w800,
+        FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              IconButton(
+                onPressed: count > 1 ? () => onChanged(count - 1) : null,
+                icon: const Icon(Icons.remove_circle_outline),
+              ),
+              Column(
+                children: [
+                  Text(
+                    '${count}x',
+                    style: const TextStyle(
+                      color: AppColors.primary,
+                      fontSize: 30,
+                      fontWeight: FontWeight.w800,
+                    ),
                   ),
-                ),
-                const Text(
-                  'makan berat',
-                  style: TextStyle(
-                    color: AppColors.onSurfaceVariant,
-                    fontSize: 12,
+                  const Text(
+                    'makan berat',
+                    style: TextStyle(
+                      color: AppColors.onSurfaceVariant,
+                      fontSize: 12,
+                    ),
                   ),
-                ),
-              ],
-            ),
-            IconButton(
-              onPressed: () => onChanged(count + 1),
-              icon: const Icon(Icons.add_circle_outline),
-            ),
-          ],
+                ],
+              ),
+              IconButton(
+                onPressed: () => onChanged(count + 1),
+                icon: const Icon(Icons.add_circle_outline),
+              ),
+            ],
+          ),
         ),
         const SizedBox(height: 8),
         Text(

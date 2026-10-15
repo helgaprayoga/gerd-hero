@@ -40,11 +40,14 @@ class _StressChoice extends StatelessWidget {
               fontWeight: FontWeight.w700,
             ),
           ),
-          Text(
-            label,
-            style: TextStyle(
-              color: active ? AppColors.primary : AppColors.onSurfaceVariant,
-              fontSize: 9,
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              label,
+              style: TextStyle(
+                color: active ? AppColors.primary : AppColors.onSurfaceVariant,
+                fontSize: 9,
+              ),
             ),
           ),
         ],

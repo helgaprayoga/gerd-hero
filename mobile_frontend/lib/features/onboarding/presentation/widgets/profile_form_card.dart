@@ -72,12 +72,7 @@ class ProfileFormCard extends StatelessWidget {
         _label('Nama panggilan'),
         TextFormField(
           controller: nameController,
-          decoration: _decoration(hint: 'Masukkan nama panggilan').copyWith(
-            suffixIcon: const Icon(
-              Icons.person_outline,
-              color: AppColors.secondary,
-            ),
-          ),
+          decoration: _decoration(hint: 'Masukkan nama panggilan'),
         ),
         const SizedBox(height: 4),
         const Text(
@@ -175,9 +170,16 @@ class ProfileFormCard extends StatelessWidget {
             : AppColors.onSurfaceVariant,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
       ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [Icon(icon, size: 19), const SizedBox(width: 6), Text(value)],
+      child: FittedBox(
+        fit: BoxFit.scaleDown,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, size: 19),
+            const SizedBox(width: 6),
+            Text(value),
+          ],
+        ),
       ),
     ),
   );

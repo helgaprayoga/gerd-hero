@@ -31,7 +31,12 @@ class GerdQResultAction extends StatelessWidget {
               ),
             )
           else ...[
-            const Text('Ke Beranda'),
+            const Flexible(
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text('Ke Beranda'),
+              ),
+            ),
             const SizedBox(width: 8),
             const Icon(Icons.home_outlined, size: 18),
           ],

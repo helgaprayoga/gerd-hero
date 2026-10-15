@@ -112,12 +112,14 @@ class BmiCard extends StatelessWidget {
                     color: bmi == null ? AppColors.secondary : accent,
                     borderRadius: BorderRadius.circular(999),
                   ),
-                  child: Text(
-                    status,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(color: Colors.white, fontSize: 11),
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      status,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(color: Colors.white, fontSize: 11),
+                    ),
                   ),
                 ),
               ),
@@ -184,40 +186,38 @@ class BmiCard extends StatelessWidget {
                     left: 0,
                     right: 0,
                     top: 26,
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Text(
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerLeft,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
                             '< 18.5',
-                            textAlign: TextAlign.left,
                             style: TextStyle(
                               fontSize: 10,
                               color: AppColors.secondary,
                             ),
                           ),
-                        ),
-                        Expanded(
-                          child: Text(
+                          SizedBox(width: 8),
+                          Text(
                             '18.5 – 24.9 (Ideal)',
-                            textAlign: TextAlign.center,
                             style: TextStyle(
                               fontSize: 10,
                               color: AppColors.primary,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
-                        ),
-                        Expanded(
-                          child: Text(
+                          SizedBox(width: 8),
+                          Text(
                             '> 25.0',
-                            textAlign: TextAlign.right,
                             style: TextStyle(
                               fontSize: 10,
                               color: AppColors.secondary,
                             ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 ],

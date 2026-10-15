@@ -10,35 +10,46 @@ class LandingTopBar extends StatelessWidget {
   Widget build(BuildContext context) => Row(
     mainAxisAlignment: MainAxisAlignment.spaceBetween,
     children: [
-      const Expanded(
+      Expanded(
         child: Align(
           alignment: Alignment.centerLeft,
-          child: PillBadge(
-            label: 'Panduan Lambung Terpercaya',
-            icon: Icons.health_and_safety,
-            backgroundColor: AppColors.surfaceContainer,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 220),
+            child: const PillBadge(
+              label: 'Panduan Lambung Terpercaya',
+              icon: Icons.health_and_safety,
+              backgroundColor: AppColors.surfaceContainer,
+            ),
           ),
         ),
       ),
       const SizedBox(width: 8),
-      Row(
-        children: [
-          Container(
-            width: 8,
-            height: 8,
-            decoration: const BoxDecoration(
-              color: AppColors.primaryContainer,
-              shape: BoxShape.circle,
+      Expanded(
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            Container(
+              width: 8,
+              height: 8,
+              decoration: const BoxDecoration(
+                color: AppColors.primaryContainer,
+                shape: BoxShape.circle,
+              ),
             ),
-          ),
-          const SizedBox(width: 4),
-          Text(
-            'Versi 2.4',
-            style: Theme.of(
-              context,
-            ).textTheme.bodySmall?.copyWith(color: AppColors.secondary),
-          ),
-        ],
+            const SizedBox(width: 4),
+            Flexible(
+              child: Text(
+                'Versi 2.4',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.end,
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(color: AppColors.secondary),
+              ),
+            ),
+          ],
+        ),
       ),
     ],
   );

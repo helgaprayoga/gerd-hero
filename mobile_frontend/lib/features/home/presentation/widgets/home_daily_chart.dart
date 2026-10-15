@@ -10,81 +10,98 @@ class HomeDailyChart extends StatelessWidget {
   final VoidCallback? onAction;
 
   @override
-  Widget build(BuildContext context) => Container(
-    width: double.infinity,
-    padding: const EdgeInsets.all(20),
-    decoration: BoxDecoration(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(20),
-    ),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Skor GERD-Q Terakhir',
-          style: TextStyle(
-            color: AppColors.onSurface,
-            fontSize: 18,
-            fontWeight: FontWeight.w800,
-          ),
-        ),
-        SizedBox(height: 12),
-        DecoratedBox(
-          decoration: BoxDecoration(
-            color: AppColors.surfaceContainerLow,
-            borderRadius: BorderRadius.all(Radius.circular(12)),
-          ),
-          child: Padding(
-            padding: EdgeInsets.all(14),
-            child: Row(
-              children: [
-                Text(
-                  latestGerdq == null
-                      ? '-- / 18'
-                      : '${latestGerdq!.score} / 18',
-                  style: TextStyle(
-                    color: AppColors.primary,
-                    fontSize: 24,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-                SizedBox(width: 14),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        latestGerdq?.evaluation ?? 'Belum ada hasil GERD-Q',
-                        style: const TextStyle(
-                          color: AppColors.onSurfaceVariant,
-                          fontSize: 12,
-                          height: 1.5,
-                        ),
-                      ),
-                      if (latestGerdq == null && onAction != null) ...[
-                        const SizedBox(height: 8),
-                        _ActionButton(
-                          label: 'Isi GERD-Q',
-                          onPressed: onAction!,
-                        ),
-                      ],
-                      if (latestGerdq != null && onAction != null) ...[
-                        const SizedBox(height: 8),
-                        _ActionButton(
-                          label: 'Evaluasi ulang',
-                          onPressed: onAction!,
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-              ],
+  Widget build(BuildContext context) {
+    final isLikelyGerd = latestGerdq?.score != null && latestGerdq!.score >= 8;
+    final scoreColor = isLikelyGerd ? AppColors.gerdLikely : AppColors.primary;
+    final scoreBackground = isLikelyGerd
+        ? AppColors.gerdLikelyBackground
+        : AppColors.surfaceContainerLow;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Skor GERD-Q Terakhir',
+            style: TextStyle(
+              color: AppColors.onSurface,
+              fontSize: 18,
+              fontWeight: FontWeight.w800,
             ),
           ),
-        ),
-      ],
-    ),
-  );
+          SizedBox(height: 12),
+          DecoratedBox(
+            decoration: BoxDecoration(
+              color: scoreBackground,
+              borderRadius: BorderRadius.all(Radius.circular(12)),
+            ),
+            child: Padding(
+              padding: EdgeInsets.all(14),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerLeft,
+                    child: Row(
+                      children: [
+                        Text(
+                          latestGerdq == null
+                              ? '-- / 18'
+                              : '${latestGerdq!.score} / 18',
+                          style: TextStyle(
+                            color: scoreColor,
+                            fontSize: 24,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                        if (isLikelyGerd) ...[
+                          const SizedBox(width: 8),
+                          Icon(
+                            Icons.warning_amber_rounded,
+                            color: AppColors.gerdLikely,
+                            size: 20,
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    latestGerdq?.evaluation ?? 'Belum ada hasil GERD-Q',
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: AppColors.onSurfaceVariant,
+                      fontSize: 12,
+                      height: 1.5,
+                    ),
+                  ),
+                  if (latestGerdq == null && onAction != null) ...[
+                    const SizedBox(height: 8),
+                    _ActionButton(label: 'Isi GERD-Q', onPressed: onAction!),
+                  ],
+                  if (latestGerdq != null && onAction != null) ...[
+                    const SizedBox(height: 8),
+                    _ActionButton(
+                      label: 'Evaluasi ulang',
+                      onPressed: onAction!,
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class _ActionButton extends StatelessWidget {
@@ -102,12 +119,16 @@ class _ActionButton extends StatelessWidget {
       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
       alignment: Alignment.centerLeft,
     ),
-    child: Text(
-      label,
-      style: const TextStyle(
-        color: AppColors.primary,
-        fontSize: 12,
-        fontWeight: FontWeight.w700,
+    child: FittedBox(
+      fit: BoxFit.scaleDown,
+      alignment: Alignment.centerLeft,
+      child: Text(
+        label,
+        style: const TextStyle(
+          color: AppColors.primary,
+          fontSize: 12,
+          fontWeight: FontWeight.w700,
+        ),
       ),
     ),
   );

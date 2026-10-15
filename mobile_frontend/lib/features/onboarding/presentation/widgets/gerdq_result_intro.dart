@@ -30,12 +30,17 @@ class GerdQResultIntro extends StatelessWidget {
               size: 16,
             ),
             SizedBox(width: 6),
-            Text(
-              'Kuesioner Selesai',
-              style: TextStyle(
-                color: AppColors.primary,
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
+            Flexible(
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  'Kuesioner Selesai',
+                  style: TextStyle(
+                    color: AppColors.primary,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
               ),
             ),
           ],

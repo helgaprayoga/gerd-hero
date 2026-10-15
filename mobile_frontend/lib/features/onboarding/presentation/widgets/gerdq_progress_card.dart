@@ -23,24 +23,34 @@ class GerdQProgressCard extends StatelessWidget {
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-          Row(
+        Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
-              'PROGRES KUESIONER',
-              style: TextStyle(
-                color: AppColors.primary,
-                fontSize: 11,
-                fontWeight: FontWeight.w800,
-                letterSpacing: 0.5,
+            Expanded(
+              child: Text(
+                'PROGRES KUESIONER',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: AppColors.primary,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 0.5,
+                ),
               ),
             ),
-            Text(
-              'Soal $currentQuestion dari $totalQuestions',
-              style: TextStyle(
-                color: AppColors.onSurfaceVariant,
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
+            const SizedBox(width: 8),
+            Flexible(
+              child: Text(
+                'Soal $currentQuestion dari $totalQuestions',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.end,
+                style: TextStyle(
+                  color: AppColors.onSurfaceVariant,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
             ),
           ],
