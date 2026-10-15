@@ -1,92 +1,116 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../data/models/analytics_models.dart';
 import 'history_detail_card_shell.dart';
 
 class AnalyticsTrendCard extends StatefulWidget {
-  const AnalyticsTrendCard({required this.monthly, super.key});
-  final bool monthly;
+  const AnalyticsTrendCard({required this.data, super.key});
+
+  final AnalyticsData data;
 
   @override
   State<AnalyticsTrendCard> createState() => _AnalyticsTrendCardState();
 }
 
 class _AnalyticsTrendCardState extends State<AnalyticsTrendCard> {
-  int _selectedIndex = 4;
+  int _selectedIndex = 0;
 
-  void _selectPoint(Offset localPosition, double width) {
+  void _selectPoint(Offset position, double width) {
+    final count = widget.data.trend.length;
+    if (count < 2) return;
     final chartWidth = width - 44;
-    final rawIndex = ((localPosition.dx - 32) / chartWidth * 6).round();
-    setState(() => _selectedIndex = rawIndex.clamp(0, 6).toInt());
+    final rawIndex = ((position.dx - 32) / chartWidth * (count - 1)).round();
+    setState(() => _selectedIndex = rawIndex.clamp(0, count - 1).toInt());
   }
 
   @override
-  Widget build(BuildContext context) => HistoryDetailCardShell(
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Tren Indeks Gejala',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-                ),
-                SizedBox(height: 2),
-                Text(
-                  'Skala fluktuasi keparahan asam',
-                  style: TextStyle(color: AppColors.secondary, fontSize: 12),
-                ),
-              ],
-            ),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-              decoration: BoxDecoration(
-                color: AppColors.surfaceContainerLow,
-                borderRadius: BorderRadius.circular(999),
+  Widget build(BuildContext context) {
+    final trend = widget.data.trend;
+    final average = widget.data.averageLevel;
+    return HistoryDetailCardShell(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Tren Indeks Gejala',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                  ),
+                  SizedBox(height: 2),
+                  Text(
+                    'Skala fluktuasi keparahan asam',
+                    style: TextStyle(color: AppColors.secondary, fontSize: 12),
+                  ),
+                ],
               ),
-              child: const Text(
-                '● Rata-rata 28%\n   Stabil',
-                style: TextStyle(
-                  color: AppColors.primary,
-                  fontSize: 11,
-                  fontWeight: FontWeight.w500,
+              if (trend.isNotEmpty)
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColors.surfaceContainerLow,
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: Text(
+                    '● Rata-rata ${(average * 100).round()}%',
+                    style: const TextStyle(
+                      color: AppColors.primary,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
                 ),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 16),
-        LayoutBuilder(
-          builder: (context, constraints) => GestureDetector(
-            onTapDown: (details) =>
-                _selectPoint(details.localPosition, constraints.maxWidth),
-            onHorizontalDragUpdate: (details) =>
-                _selectPoint(details.localPosition, constraints.maxWidth),
-            child: SizedBox(
-              height: 220,
-              child: CustomPaint(
-                painter: _TrendPainter(
-                  monthly: widget.monthly,
-                  selectedIndex: _selectedIndex,
-                ),
-                child: const SizedBox.expand(),
-              ),
-            ),
+            ],
           ),
-        ),
-      ],
-    ),
-  );
+          const SizedBox(height: 16),
+          if (trend.isEmpty)
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 32),
+              child: Center(
+                child: Text(
+                  'Belum ada log pada periode ini.',
+                  style: TextStyle(color: AppColors.secondary),
+                ),
+              ),
+            )
+          else
+            LayoutBuilder(
+              builder: (context, constraints) => GestureDetector(
+                onTapDown: (details) =>
+                    _selectPoint(details.localPosition, constraints.maxWidth),
+                onHorizontalDragUpdate: (details) =>
+                    _selectPoint(details.localPosition, constraints.maxWidth),
+                child: SizedBox(
+                  height: 220,
+                  child: CustomPaint(
+                    painter: _TrendPainter(
+                      points: trend,
+                      selectedIndex: _selectedIndex.clamp(0, trend.length - 1),
+                    ),
+                    child: const SizedBox.expand(),
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
 }
 
 class _TrendPainter extends CustomPainter {
-  _TrendPainter({required this.monthly, required this.selectedIndex});
-  final bool monthly;
+  _TrendPainter({required this.points, required this.selectedIndex});
+
+  final List<AnalyticsTrendPoint> points;
   final int selectedIndex;
 
   @override
@@ -99,26 +123,22 @@ class _TrendPainter extends CustomPainter {
       final y = chart.top + chart.height * i / 3;
       canvas.drawLine(Offset(chart.left, y), Offset(chart.right, y), grid);
     }
-    final values = monthly
-        ? [0.35, 0.42, 0.28, 0.56, 0.44, 0.38, 0.52]
-        : [0.24, 0.31, 0.22, 0.35, 0.52, 0.29, 0.18];
-    final labels = monthly
-        ? ['M1', 'M2', 'M3', 'M4', 'M5', 'M6', 'M7']
-        : ['Sen 6', 'Sel 7', 'Rab 8', 'Kam 9', 'Jum 10', 'Sab 11', 'Min 12'];
-    final points = [
-      for (var i = 0; i < values.length; i++)
+    final chartPoints = [
+      for (var i = 0; i < points.length; i++)
         Offset(
-          chart.left + chart.width * i / 6,
-          chart.bottom - chart.height * values[i],
+          chart.left +
+              chart.width *
+                  (points.length == 1 ? 0.5 : i / (points.length - 1)),
+          chart.bottom - chart.height * points[i].level.clamp(0.0, 1.0),
         ),
     ];
-    final path = Path()..moveTo(points.first.dx, points.first.dy);
-    for (final point in points.skip(1)) {
+    final path = Path()..moveTo(chartPoints.first.dx, chartPoints.first.dy);
+    for (final point in chartPoints.skip(1)) {
       path.lineTo(point.dx, point.dy);
     }
     final area = Path.from(path)
-      ..lineTo(points.last.dx, chart.bottom)
-      ..lineTo(points.first.dx, chart.bottom)
+      ..lineTo(chartPoints.last.dx, chart.bottom)
+      ..lineTo(chartPoints.first.dx, chart.bottom)
       ..close();
     canvas.drawPath(
       area,
@@ -132,38 +152,39 @@ class _TrendPainter extends CustomPainter {
         ..style = PaintingStyle.stroke
         ..strokeCap = StrokeCap.round,
     );
-    for (var i = 0; i < points.length; i++) {
+    for (var i = 0; i < chartPoints.length; i++) {
       canvas.drawCircle(
-        points[i],
+        chartPoints[i],
         i == selectedIndex ? 7 : 4,
         Paint()..color = i == selectedIndex ? AppColors.tertiary : Colors.white,
       );
       canvas.drawCircle(
-        points[i],
+        chartPoints[i],
         i == selectedIndex ? 4 : 3,
         Paint()..color = AppColors.primary,
       );
     }
-    _drawAxisLabels(canvas, labels, points, chart);
+    _drawAxisLabels(canvas, points, chartPoints, chart);
     _drawTooltip(
       canvas,
+      chartPoints[selectedIndex],
       points[selectedIndex],
-      values[selectedIndex],
-      labels[selectedIndex],
       chart,
     );
   }
 
   void _drawAxisLabels(
     Canvas canvas,
-    List<String> labels,
+    List<AnalyticsTrendPoint> values,
     List<Offset> points,
     Rect chart,
   ) {
-    for (var i = 0; i < labels.length; i++) {
+    final step = values.length > 10 ? (values.length / 7).ceil() : 1;
+    for (var i = 0; i < values.length; i += step) {
+      final label = '${values[i].date.day}/${values[i].date.month}';
       final painter = TextPainter(
         text: TextSpan(
-          text: labels[i],
+          text: label,
           style: const TextStyle(color: AppColors.secondary, fontSize: 10),
         ),
         textDirection: TextDirection.ltr,
@@ -173,7 +194,7 @@ class _TrendPainter extends CustomPainter {
         Offset(points[i].dx - painter.width / 2, chart.bottom + 12),
       );
     }
-    for (final item in [(0.0, '75%'), (0.5, '50%'), (1.0, '25%')]) {
+    for (final item in [(0.0, '100%'), (0.5, '50%'), (1.0, '0%')]) {
       final painter = TextPainter(
         text: TextSpan(
           text: item.$2,
@@ -191,12 +212,11 @@ class _TrendPainter extends CustomPainter {
   void _drawTooltip(
     Canvas canvas,
     Offset point,
-    double value,
-    String label,
+    AnalyticsTrendPoint value,
     Rect chart,
   ) {
     final text =
-        '${(value * 100).round()}% · ${value > 0.45 ? 'Puncak Refluks' : 'Stabil'}';
+        '${value.percent}% · ${value.percent > 45 ? 'Puncak Refluks' : 'Stabil'}';
     final painter = TextPainter(
       text: TextSpan(
         text: text,
@@ -217,14 +237,16 @@ class _TrendPainter extends CustomPainter {
     );
     canvas.drawRRect(rect, Paint()..color = const Color(0xFFCDDDDA));
     painter.paint(canvas, Offset(left + 10, top + 6));
-    canvas.drawRect(
-      Rect.fromLTWH(point.dx - 1, top + 24, 2, point.dy - top - 24),
-      Paint()..color = AppColors.tertiary,
-    );
+    if (point.dy > top + 24) {
+      canvas.drawRect(
+        Rect.fromLTWH(point.dx - 1, top + 24, 2, point.dy - top - 24),
+        Paint()..color = AppColors.tertiary,
+      );
+    }
   }
 
   @override
   bool shouldRepaint(covariant _TrendPainter oldDelegate) =>
-      oldDelegate.monthly != monthly ||
-      oldDelegate.selectedIndex != selectedIndex;
+      oldDelegate.selectedIndex != selectedIndex ||
+      oldDelegate.points != points;
 }

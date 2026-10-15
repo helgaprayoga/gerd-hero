@@ -1,20 +1,24 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../data/models/analytics_models.dart';
 import 'history_detail_card_shell.dart';
 
 class AnalyticsSummaryCard extends StatelessWidget {
-  const AnalyticsSummaryCard({super.key});
+  const AnalyticsSummaryCard({required this.data, super.key});
+
+  final AnalyticsData data;
+
   @override
   Widget build(BuildContext context) => HistoryDetailCardShell(
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Row(
+        Row(
           children: [
-            Icon(Icons.auto_awesome, color: AppColors.primary, size: 20),
-            SizedBox(width: 8),
-            Expanded(
+            const Icon(Icons.auto_awesome, color: AppColors.primary, size: 20),
+            const SizedBox(width: 8),
+            const Expanded(
               child: Text(
                 'Ringkasan Periode',
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
@@ -22,26 +26,21 @@ class AnalyticsSummaryCard extends StatelessWidget {
             ),
             Chip(
               label: Text(
-                'Dianalisis AI',
-                style: TextStyle(color: AppColors.primary, fontSize: 11),
+                data.aiAnalysis.source == 'fallback'
+                    ? 'Ringkasan'
+                    : 'Dianalisis AI',
+                style: const TextStyle(color: AppColors.primary, fontSize: 11),
               ),
               backgroundColor: AppColors.surfaceContainerLow,
             ),
           ],
         ),
         const SizedBox(height: 12),
-        const _Insight(
-          text:
-              'Pola kambuh mingguan paling tinggi terdeteksi di hari Jumat setelah asupan kafein ganda dan jam lembur kerja.',
-        ),
-        const _Insight(
-          text:
-              'Hari Sabtu mencatatkan bebas gejala total sejalan dengan jam makan siang teratur dan hidrasi cukup.',
-        ),
-        const _Insight(
-          text:
-              'Kepatuhan jeda tidur lebih dari 3 jam berhasil menekan keluhan refluks nokturnal hingga 35%.',
-        ),
+        if (data.aiAnalysis.summaryPoints.isEmpty)
+          const _Insight(text: 'Belum ada ringkasan untuk periode ini.')
+        else
+          for (final point in data.aiAnalysis.summaryPoints)
+            _Insight(text: point),
       ],
     ),
   );
@@ -49,7 +48,9 @@ class AnalyticsSummaryCard extends StatelessWidget {
 
 class _Insight extends StatelessWidget {
   const _Insight({required this.text});
+
   final String text;
+
   @override
   Widget build(BuildContext context) => Container(
     width: double.infinity,

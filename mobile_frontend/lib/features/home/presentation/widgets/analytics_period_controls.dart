@@ -9,6 +9,7 @@ class AnalyticsPeriodControls extends StatelessWidget {
     required this.onMonthlyChanged,
     required this.onPrevious,
     required this.onNext,
+    required this.onPickDate,
     super.key,
   });
   final bool monthly;
@@ -16,6 +17,7 @@ class AnalyticsPeriodControls extends StatelessWidget {
   final ValueChanged<bool> onMonthlyChanged;
   final VoidCallback onPrevious;
   final VoidCallback? onNext;
+  final VoidCallback onPickDate;
 
   @override
   Widget build(BuildContext context) => Column(
@@ -73,17 +75,31 @@ class AnalyticsPeriodControls extends StatelessWidget {
             ),
             Row(
               children: [
-                const Icon(
-                  Icons.calendar_today_outlined,
-                  color: AppColors.primary,
-                  size: 16,
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  periodLabel,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
+                InkWell(
+                  onTap: onPickDate,
+                  borderRadius: BorderRadius.circular(999),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 4,
+                      vertical: 2,
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(
+                          Icons.calendar_today_outlined,
+                          color: AppColors.primary,
+                          size: 16,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          periodLabel,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ],

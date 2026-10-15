@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../data/models/analytics_models.dart';
 import 'history_detail_card_shell.dart';
 
 class AnalyticsRankedFactorsCard extends StatelessWidget {
-  const AnalyticsRankedFactorsCard({super.key});
+  const AnalyticsRankedFactorsCard({required this.data, super.key});
+
+  final AnalyticsData data;
+
   @override
   Widget build(BuildContext context) => HistoryDetailCardShell(
     child: Column(
@@ -16,36 +20,27 @@ class AnalyticsRankedFactorsCard extends StatelessWidget {
         ),
         const SizedBox(height: 2),
         const Text(
-          'Faktor yang kemungkinan memicu gejala',
+          'Faktor yang kemungkinan memicu gejala pada hari bergejala',
           style: TextStyle(color: AppColors.secondary, fontSize: 12),
         ),
         const SizedBox(height: 16),
-        for (final item in const [
-          (
-            'Kafein (Kopi & Teh Pekat)',
-            '4 dari 7 hari',
-            0.57,
-            Color(0xFFBA1A1A),
-          ),
-          (
-            'Kurang tidur / Stres padat',
-            '3 dari 7 hari',
-            0.43,
-            Color(0xFFD08800),
-          ),
-          (
-            'Makanan pedas (Cabai & Sambal)',
-            '2 dari 7 hari',
-            0.29,
-            AppColors.primaryContainer,
-          ),
-        ])
-          _Factor(
-            name: item.$1,
-            count: item.$2,
-            progress: item.$3,
-            color: item.$4,
-          ),
+        if (data.topTriggers.isEmpty)
+          const Text(
+            'Belum ada pemicu yang cukup untuk dirangkum pada periode ini.',
+            style: TextStyle(color: AppColors.secondary, fontSize: 13),
+          )
+        else
+          for (final item in data.topTriggers.take(5))
+            _Factor(
+              name: item.name,
+              count: '${item.frequency} dari ${item.symptomaticDays} hari',
+              progress: (item.percentOfSymptomaticDays / 100).clamp(0.0, 1.0),
+              color: item.percentOfSymptomaticDays >= 66
+                  ? AppColors.error
+                  : item.percentOfSymptomaticDays >= 33
+                  ? AppColors.tertiary
+                  : AppColors.primaryContainer,
+            ),
       ],
     ),
   );
@@ -58,10 +53,12 @@ class _Factor extends StatelessWidget {
     required this.progress,
     required this.color,
   });
+
   final String name;
   final String count;
   final double progress;
   final Color color;
+
   @override
   Widget build(BuildContext context) => Padding(
     padding: const EdgeInsets.only(bottom: 16),
