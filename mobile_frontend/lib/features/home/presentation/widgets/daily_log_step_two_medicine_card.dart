@@ -106,16 +106,18 @@ class _MedicineCard extends StatelessWidget {
             ),
           ],
         ],
-        const SizedBox(height: 12),
-        OutlinedButton.icon(
-          onPressed: onAddPressed,
-          icon: const Icon(Icons.add, size: 18),
-          label: Text(showForm ? 'Tutup Form Obat' : 'Tambah Obat Lainnya'),
-          style: OutlinedButton.styleFrom(
-            foregroundColor: AppColors.primary,
-            minimumSize: const Size(double.infinity, 42),
+        if (tookMedicine) ...[
+          const SizedBox(height: 12),
+          OutlinedButton.icon(
+            onPressed: onAddPressed,
+            icon: const Icon(Icons.add, size: 18),
+            label: Text(showForm ? 'Tutup Form Obat' : 'Tambah Obat Lainnya'),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: AppColors.primary,
+              minimumSize: const Size(double.infinity, 42),
+            ),
           ),
-        ),
+        ],
       ],
     ),
   );

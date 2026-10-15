@@ -110,7 +110,28 @@ class _DailyLogStepOneViewState extends State<DailyLogStepOneView> {
   @override
   Widget build(BuildContext context) => Scaffold(
     backgroundColor: AppColors.surface,
+    appBar: AppBar(
+      backgroundColor: AppColors.surface,
+      elevation: 0,
+      title: const Text(
+        'LANGKAH 1 DARI 3',
+        style: TextStyle(
+          color: AppColors.primary,
+          fontSize: 12,
+          fontWeight: FontWeight.w800,
+          letterSpacing: 0.3,
+        ),
+      ),
+      bottom: const PreferredSize(
+        preferredSize: Size.fromHeight(16),
+        child: Padding(
+          padding: EdgeInsets.fromLTRB(20, 0, 20, 8),
+          child: _StepProgress(),
+        ),
+      ),
+    ),
     body: SafeArea(
+      top: false,
       child: Column(
         children: [
           Expanded(
@@ -119,28 +140,7 @@ class _DailyLogStepOneViewState extends State<DailyLogStepOneView> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      TextButton.icon(
-                        onPressed: () => Navigator.of(context).pop(),
-                        icon: const Icon(Icons.arrow_back, size: 18),
-                        label: const Text('Kembali'),
-                      ),
-                      const Text(
-                        'LANGKAH 1 DARI 3',
-                        style: TextStyle(
-                          color: AppColors.primary,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: 0.3,
-                        ),
-                      ),
-                    ],
-                  ),
                   const SizedBox(height: 8),
-                  const _StepProgress(),
-                  const SizedBox(height: 24),
                   Text(
                     'Gejala apa yang kamu rasakan\n${widget.dateLabel}?',
                     style: TextStyle(

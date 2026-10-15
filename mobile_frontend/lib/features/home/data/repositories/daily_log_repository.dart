@@ -7,8 +7,13 @@ class DailyLogRepository {
 
   final ApiClient _client;
 
-  Future<DailyLogResponse> createOrUpdate(DailyLogDraft draft) async {
-    final response = await _client.post('/api/logs', body: draft.toJson());
+  Future<DailyLogResponse> createOrUpdate(
+    DailyLogDraft draft, {
+    bool allowUpdate = false,
+  }) async {
+    final body = draft.toJson();
+    if (allowUpdate) body['allow_update'] = true;
+    final response = await _client.post('/api/logs', body: body);
     return DailyLogResponse.fromJson(response);
   }
 

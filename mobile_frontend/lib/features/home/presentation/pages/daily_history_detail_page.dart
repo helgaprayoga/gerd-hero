@@ -132,7 +132,7 @@ class _DailyHistoryDetailPageState extends State<DailyHistoryDetailPage> {
         if (widget.entry.dateIso != null) {
           final draft = _toDraft();
           _lastResponse = await (widget.repository ?? DailyLogRepository())
-              .createOrUpdate(draft);
+              .createOrUpdate(draft, allowUpdate: true);
         }
         if (!mounted) return;
         setState(() => _hasChanges = false);

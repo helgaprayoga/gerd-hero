@@ -76,6 +76,7 @@ class _DailyLogStepTwoPageState extends State<DailyLogStepTwoPage> {
       DailyLogStepTwoView(
         dateLabel: widget.dateLabel,
         initialSameAsYesterday: widget.initialSameAsYesterday,
+        repository: widget.repository,
         draft: _draft,
         onContinue: () => _submit(context),
       ),

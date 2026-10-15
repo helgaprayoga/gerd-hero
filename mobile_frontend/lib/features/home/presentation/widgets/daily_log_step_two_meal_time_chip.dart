@@ -8,7 +8,7 @@ class _MealTimeChip extends StatelessWidget {
   });
   final String label;
   final String time;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) => InkWell(

@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../../core/navigation/menu_swipe.dart';
 import '../../../../core/navigation/slide_page_route.dart';
+import '../../../../core/network/api_client.dart';
+import '../../../../core/widgets/app_feedback.dart';
+import '../../data/repositories/daily_log_repository.dart';
 import '../../data/home_service.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../features/onboarding/presentation/pages/gerdq_intro_page.dart';
@@ -102,6 +106,90 @@ class _HomePageState extends State<HomePage> {
 
   bool get isEvaluationDue => _status == HomeStatus.evaluationDue;
 
+  bool get hasLogToday {
+    if (_dashboard != null) return _dashboard!.hasLogToday;
+
+    final lastLogDate = profile?.lastLogDate;
+    final today = DateTime.now();
+    final lastLogDateOnly = lastLogDate == null
+        ? null
+        : DateTime(lastLogDate.year, lastLogDate.month, lastLogDate.day);
+    final todayOnly = DateTime(today.year, today.month, today.day);
+    return lastLogDateOnly == todayOnly ||
+        _status == HomeStatus.loggedToday ||
+        _status == HomeStatus.symptomaticToday;
+  }
+
+  bool get canStartDailyLog => !_isLoadingProfile && !hasLogToday;
+
+  bool get _hasSession {
+    try {
+      return Supabase.instance.client.auth.currentSession != null;
+    } on AssertionError {
+      return false;
+    }
+  }
+
+  Future<bool?> _lookupTodayLog() async {
+    if (!_hasSession) return null;
+    final today = DateTime.now();
+    final date =
+        '${today.year.toString().padLeft(4, '0')}-'
+        '${today.month.toString().padLeft(2, '0')}-'
+        '${today.day.toString().padLeft(2, '0')}';
+    try {
+      await DailyLogRepository().fetchDate(date);
+      return true;
+    } on ApiException catch (error) {
+      if (error.statusCode == 404) return false;
+      return null;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<void> _openDailyLogOrNotify() async {
+    if (!canStartDailyLog) {
+      showTopAppSnackbar(
+        context,
+        title: 'Log harian sudah diisi',
+        message: 'Kamu sudah mengisi log harian hari ini.',
+        icon: Icons.check_circle_outline,
+      );
+      return;
+    }
+
+    if (_dashboard == null) {
+      final todayLogExists = await _lookupTodayLog();
+      if (!mounted) return;
+      if (todayLogExists == true) {
+        showTopAppSnackbar(
+          context,
+          title: 'Log harian sudah diisi',
+          message: 'Kamu sudah mengisi log harian hari ini.',
+          icon: Icons.check_circle_outline,
+        );
+        return;
+      }
+      if (todayLogExists == null && _hasSession) {
+        showTopAppSnackbar(
+          context,
+          title: 'Status log belum dapat diperiksa',
+          message: 'Coba lagi beberapa saat sebelum mengisi log harian.',
+          icon: Icons.error_outline,
+        );
+        return;
+      }
+    }
+
+    Navigator.of(context).push(
+      SlidePageRoute<void>(
+        builder: (_) => const DailyLogStepOnePage(),
+        begin: const Offset(0, 1),
+      ),
+    );
+  }
+
   bool get canOpenGerdq =>
       hasProfile &&
       (_status == HomeStatus.evaluationDue ||
@@ -138,14 +226,7 @@ class _HomePageState extends State<HomePage> {
       floatingActionButton: Padding(
         padding: const EdgeInsets.only(bottom: 56),
         child: FloatingActionButton.extended(
-          onPressed: _isLoadingProfile
-              ? null
-              : () => Navigator.of(context).push(
-                  SlidePageRoute<void>(
-                    builder: (_) => const DailyLogStepOnePage(),
-                    begin: const Offset(0, 1),
-                  ),
-                ),
+          onPressed: _isLoadingProfile ? null : _openDailyLogOrNotify,
           backgroundColor: AppColors.primary,
           foregroundColor: Colors.white,
           icon: const Icon(Icons.edit_note),

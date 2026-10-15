@@ -6,11 +6,13 @@ class _SleepCard extends StatelessWidget {
     required this.wakeTime,
     required this.onPickSleep,
     required this.onPickWake,
+    required this.durationLabel,
   });
   final TimeOfDay sleepTime;
   final TimeOfDay wakeTime;
   final VoidCallback onPickSleep;
   final VoidCallback onPickWake;
+  final String durationLabel;
 
   @override
   Widget build(BuildContext context) => _CardShell(
@@ -43,7 +45,7 @@ class _SleepCard extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 12),
-        const _InfoPill(label: 'Durasi Tidur:', value: '7 jam 30 menit'),
+        _InfoPill(label: 'Durasi Tidur:', value: durationLabel),
       ],
     ),
   );

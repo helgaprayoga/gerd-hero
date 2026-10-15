@@ -7,6 +7,7 @@ Gemini is used only to explain already collected data in user-friendly text.
 from __future__ import annotations
 
 import json
+import logging
 from pathlib import Path
 from typing import Any
 
@@ -14,6 +15,7 @@ from connection.api import generate_text
 
 
 _FALLBACK_PATH = Path(__file__).resolve().parent.parent / "templates" / "ai_fallback.json"
+_LOGGER = logging.getLogger(__name__)
 
 
 def _load_fallback() -> dict[str, Any]:
@@ -39,17 +41,59 @@ def _parse_json_response(response: str) -> dict[str, Any]:
     return parsed
 
 
+def _fallback_daily_result(log_data: dict[str, Any] | None = None) -> dict[str, Any]:
+    """Return a useful deterministic result when Gemini is unavailable."""
+    fallback = _load_fallback()
+    log_data = log_data or {}
+    triggers = log_data.get("triggers")
+    active_triggers = (
+        [name for name, value in triggers.items() if value in (1, True)]
+        if isinstance(triggers, dict)
+        else []
+    )
+    if active_triggers:
+        trigger_analysis = [
+            {
+                "pemicu": name,
+                "penjelasan_korelasi": (
+                    f"{name} tercatat pada hari yang sama dengan gejala. "
+                    "Hal ini berpotensi berkaitan, tetapi bukan diagnosis."
+                ),
+            }
+            for name in active_triggers
+        ]
+        summary = (
+            "Pemicu aktif dan gejala tercatat pada log yang sama. "
+            "Korelasi ini bersifat pemantauan mandiri, bukan diagnosis."
+        )
+    else:
+        trigger_analysis = fallback["analisis_pemicu_gejala"]
+        summary = fallback["ringkasan_analisis"]
+    return {
+        "analisis_pemicu_gejala": trigger_analysis,
+        "ringkasan_analisis": summary,
+        "rekomendasi": fallback["rekomendasi"],
+        "analysis_source": "fallback",
+    }
+
+
 def _normalise_daily_result(result: dict[str, Any]) -> dict[str, Any]:
     """Ensure the public daily-analysis contract is always complete."""
     fallback = _load_fallback()
+    trigger_analysis = result.get("analisis_pemicu_gejala")
+    if not isinstance(trigger_analysis, list) or not trigger_analysis:
+        trigger_analysis = fallback["analisis_pemicu_gejala"]
+    summary = result.get("ringkasan_analisis")
+    if not isinstance(summary, str) or not summary.strip():
+        summary = fallback["ringkasan_analisis"]
+    recommendations = result.get("rekomendasi")
+    if not isinstance(recommendations, list):
+        recommendations = fallback["rekomendasi"]
     return {
-        "analisis_pemicu_gejala": result.get(
-            "analisis_pemicu_gejala", fallback["analisis_pemicu_gejala"]
-        ),
-        "ringkasan_analisis": result.get(
-            "ringkasan_analisis", fallback["ringkasan_analisis"]
-        ),
-        "rekomendasi": result.get("rekomendasi", fallback["rekomendasi"]),
+        "analisis_pemicu_gejala": trigger_analysis,
+        "ringkasan_analisis": summary,
+        "rekomendasi": recommendations,
+        "analysis_source": result.get("analysis_source", "gemini"),
     }
 
 
@@ -65,9 +109,17 @@ def generate_daily_analysis(log_data: dict[str, Any]) -> dict[str, Any]:
     )
 
     try:
-        return _normalise_daily_result(_parse_json_response(generate_text(prompt)))
+        parsed = _parse_json_response(generate_text(prompt))
+        if not isinstance(parsed.get("analisis_pemicu_gejala"), list) or not parsed[
+            "analisis_pemicu_gejala"
+        ]:
+            return _fallback_daily_result(log_data)
+        result = _normalise_daily_result(parsed)
+        result["analysis_source"] = "gemini"
+        return result
     except Exception:
-        return _load_fallback()
+        _LOGGER.exception("Analisis AI harian gagal; menggunakan fallback template")
+        return _fallback_daily_result(log_data)
 
 
 def generate_analytics_summary(period_data: dict[str, Any]) -> str:

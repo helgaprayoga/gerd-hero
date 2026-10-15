@@ -139,7 +139,7 @@ def _update_streak(client, user_id: str, log_date: date_type, current_user: dict
     user = current_user or {}
     previous_date = user.get("last_log_date")
     try:
-        previous_date = date.fromisoformat(previous_date) if previous_date else None
+        previous_date = date_type.fromisoformat(previous_date) if previous_date else None
     except ValueError:
         previous_date = None
     current_streak = int(user.get("streak_days") or 0)
@@ -164,6 +164,20 @@ def create_log():
         return json_error("Body request harus berupa JSON object.")
     try:
         validated = _validate_log(body)
+        existing_response = (
+            get_table(g.supabase, "daily_logs")
+            .select("log_date")
+            .eq("user_id", g.user_id)
+            .eq("log_date", validated["log_date"].isoformat())
+            .limit(1)
+            .execute()
+        )
+        if first_row(existing_response) and body.get("allow_update") is not True:
+            return json_error(
+                "Log harian untuk tanggal tersebut sudah tersedia.",
+                409,
+                "Conflict",
+            )
         previous = _previous_day(g.supabase, g.user_id, validated["log_date"])
         indicators = proses_indikator_harian(validated["indicators_input"], previous)
         symptom_inputs = {name: 1 if name in validated["symptoms"] else 0 for name in gejala_dict}
@@ -235,7 +249,7 @@ def get_logs_by_week():
         return json_error("Query parameter week wajib diisi dengan format YYYY-Www.")
     try:
         year_text, week_text = week.split("-W")
-        start = date.fromisocalendar(int(year_text), int(week_text), 1)
+        start = date_type.fromisocalendar(int(year_text), int(week_text), 1)
         end = start + timedelta(days=6)
     except (ValueError, IndexError):
         return json_error("week harus berformat YYYY-Www.")
