@@ -57,8 +57,12 @@ def _report_period(body: dict | None) -> tuple[date, date]:
     end_value = body.get("period_end", body.get("end_date"))
     end = date.fromisoformat(end_value) if end_value else date.today()
     start = date.fromisoformat(start_value) if start_value else end - timedelta(days=6)
+    if end > date.today():
+        raise ValueError("period_end tidak boleh di masa depan.")
     if start > end:
         raise ValueError("period_start tidak boleh setelah period_end.")
+    if (end - start).days + 1 > 90:
+        raise ValueError("Periode laporan maksimal 90 hari.")
     return start, end
 
 
