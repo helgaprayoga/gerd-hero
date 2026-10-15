@@ -3,7 +3,9 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/services/auth_service.dart';
+import '../../../../core/widgets/app_feedback.dart';
 import '../utils/auth_validators.dart';
+import '../utils/auth_error_message.dart';
 import '../widgets/auth_greeting.dart';
 import '../widgets/auth_header.dart';
 import '../widgets/auth_privacy_note.dart';
@@ -42,7 +44,11 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
     try {
       await AuthService.instance.requestPasswordReset(email);
     } on AuthException catch (error) {
-      requestError = error.message;
+      requestError = authErrorMessage(
+        error,
+        isLogin: false,
+        isPasswordReset: true,
+      );
     } catch (_) {
       requestError = 'Tidak dapat mengirim email reset.';
     } finally {
@@ -50,17 +56,22 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
     }
 
     if (!mounted) return;
+
+    if (requestError != null) {
+      await showAppFeedback(
+        context,
+        title: 'Email belum terkirim',
+        message: requestError,
+        icon: Icons.error_outline,
+      );
+      return;
+    }
+
     Navigator.of(context).push(
       MaterialPageRoute<void>(
         builder: (_) => CheckEmailPage(email: email, isPasswordReset: true),
       ),
     );
-    final errorMessage = requestError;
-    if (errorMessage != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(errorMessage)),
-      );
-    }
   }
 
   @override
@@ -89,6 +100,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                     onEmailChanged: (_) => setState(() {}),
                     onSubmit: _submit,
                     onBackToLogin: () => Navigator.of(context).pop(),
+                    isLoading: _isSubmitting,
                   ),
                   const SizedBox(height: 20),
                   const AuthPrivacyNote(),

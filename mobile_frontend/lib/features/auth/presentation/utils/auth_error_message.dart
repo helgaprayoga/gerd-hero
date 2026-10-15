@@ -1,6 +1,10 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-String authErrorMessage(Object error, {required bool isLogin}) {
+String authErrorMessage(
+  Object error, {
+  required bool isLogin,
+  bool isPasswordReset = false,
+}) {
   if (error is AuthException) {
     final code = error.code?.toLowerCase() ?? '';
     final message = error.message.toLowerCase();
@@ -26,6 +30,14 @@ String authErrorMessage(Object error, {required bool isLogin}) {
         message.contains('rate limit')) {
       return 'Terlalu banyak percobaan. Coba lagi nanti.';
     }
+    if (isPasswordReset &&
+        (code == 'otp_expired' ||
+            code == 'flow_state_expired' ||
+            message.contains('expired') ||
+            (message.contains('invalid') && message.contains('link')) ||
+            (message.contains('invalid') && message.contains('token')))) {
+      return 'Tautan pengaturan ulang sudah tidak berlaku. Minta tautan baru.';
+    }
     if (code == 'email_address_invalid' || message.contains('invalid email')) {
       return 'Format email tidak valid.';
     }
@@ -43,5 +55,7 @@ String authErrorMessage(Object error, {required bool isLogin}) {
 
   return isLogin
       ? 'Gagal masuk. Silakan coba lagi.'
+      : isPasswordReset
+      ? 'Permintaan pengaturan ulang gagal. Silakan coba lagi.'
       : 'Registrasi gagal. Silakan coba lagi.';
 }

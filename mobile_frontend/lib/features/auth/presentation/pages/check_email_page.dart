@@ -11,7 +11,6 @@ import '../widgets/check_email_hero.dart';
 import '../widgets/check_email_tips.dart';
 import '../utils/auth_error_message.dart';
 import 'login_page.dart';
-import 'new_password_page.dart';
 
 class CheckEmailPage extends StatefulWidget {
   const CheckEmailPage({
@@ -78,7 +77,11 @@ class _CheckEmailPageState extends State<CheckEmailPage> {
         _startCountdown();
         _showMessage('Email pengaturan ulang telah dikirim ulang.');
       } catch (error) {
-        if (mounted) _showMessage(authErrorMessage(error, isLogin: false));
+        if (mounted) {
+          _showMessage(
+            authErrorMessage(error, isLogin: false, isPasswordReset: true),
+          );
+        }
       } finally {
         if (mounted) setState(() => _isResending = false);
       }
@@ -119,10 +122,10 @@ class _CheckEmailPageState extends State<CheckEmailPage> {
                     secondsLeft: _secondsLeft,
                     isResending: _isResending,
                     onOpenEmail: widget.isPasswordReset
-                        ? () => Navigator.of(context).push(
-                            MaterialPageRoute<void>(
-                              builder: (_) => const NewPasswordPage(),
-                            ),
+                        ? () => _showMessage(
+                            'Buka emailmu dan tekan tautan pengaturan ulang. '
+                            'Aplikasi akan membuka halaman kata sandi baru '
+                            'setelah tautan diverifikasi.',
                           )
                         : () => _showMessage(
                             'Silakan buka aplikasi email dan tekan tautan verifikasi dari Supabase.',

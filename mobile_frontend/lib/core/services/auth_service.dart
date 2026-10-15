@@ -8,6 +8,12 @@ class AuthService {
 
   static final instance = AuthService._();
 
+  static const oauthRedirectUrl = 'io.supabase.gerdhero://login-callback';
+  static const passwordResetRedirectUrl =
+      'io.supabase.gerdhero://password-reset';
+
+  bool _isPasswordRecovery = false;
+
   GoTrueClient get _auth => Supabase.instance.client.auth;
 
   Future<AuthResponse> register({
@@ -40,7 +46,7 @@ class AuthService {
   Future<bool> signInWithGoogle() {
     return _auth.signInWithOAuth(
       OAuthProvider.google,
-      redirectTo: 'io.supabase.gerdhero://login-callback',
+      redirectTo: oauthRedirectUrl,
     );
   }
 
@@ -54,7 +60,7 @@ class AuthService {
   Future<void> requestPasswordReset(String email) {
     return _auth.resetPasswordForEmail(
       email.trim().toLowerCase(),
-      redirectTo: 'io.supabase.gerdhero://password-reset',
+      redirectTo: passwordResetRedirectUrl,
     );
   }
 
@@ -72,4 +78,10 @@ class AuthService {
   }
 
   Session? get currentSession => _auth.currentSession;
+
+  bool get isPasswordRecovery => _isPasswordRecovery;
+
+  void markPasswordRecovery() => _isPasswordRecovery = true;
+
+  void clearPasswordRecovery() => _isPasswordRecovery = false;
 }

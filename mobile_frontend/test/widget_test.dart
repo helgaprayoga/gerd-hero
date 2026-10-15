@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:mobile_frontend/app/app.dart';
-import 'package:mobile_frontend/features/auth/presentation/pages/forgot_password_page.dart';
 import 'package:mobile_frontend/features/auth/presentation/pages/check_email_page.dart';
-import 'package:mobile_frontend/features/auth/presentation/pages/new_password_page.dart';
+import 'package:mobile_frontend/features/auth/presentation/pages/forgot_password_page.dart';
 import 'package:mobile_frontend/features/auth/presentation/pages/login_page.dart';
+import 'package:mobile_frontend/features/auth/presentation/pages/new_password_page.dart';
 import 'package:mobile_frontend/features/auth/presentation/pages/register_page.dart';
 import 'package:mobile_frontend/features/onboarding/presentation/pages/disclaimer_page.dart';
 import 'package:mobile_frontend/features/onboarding/presentation/pages/profile_page.dart';
@@ -352,7 +352,7 @@ void main() {
     expect(find.text('Kirim Tautan'), findsOneWidget);
   });
 
-  testWidgets('opens check email page after valid reset request', (
+  testWidgets('does not continue when reset request cannot be sent', (
     tester,
   ) async {
     await tester.pumpWidget(const MaterialApp(home: ForgotPasswordPage()));
@@ -361,24 +361,36 @@ void main() {
     await tester.tap(find.text('Kirim Tautan'));
     await tester.pumpAndSettle();
 
-    expect(find.byType(CheckEmailPage), findsOneWidget);
-    expect(find.text('Cek emailmu'), findsOneWidget);
-    expect(find.textContaining('user@example.com'), findsOneWidget);
+    expect(find.byType(ForgotPasswordPage), findsOneWidget);
+    expect(find.text('Email belum terkirim'), findsOneWidget);
+  });
 
-    await tester.tap(find.text('Buka Aplikasi Email'));
-    await tester.pumpAndSettle();
-
-    expect(find.byType(NewPasswordPage), findsOneWidget);
-    expect(find.text('Buat kata sandi baru'), findsOneWidget);
-
-    await tester.scrollUntilVisible(
-      find.text('Simpan Kata Sandi'),
-      300,
-      scrollable: find.byType(Scrollable).last,
+  testWidgets('check email page does not bypass the recovery link', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      const MaterialApp(
+        home: CheckEmailPage(email: 'user@example.com', isPasswordReset: true),
+      ),
     );
-    await tester.tap(find.text('Simpan Kata Sandi'));
-    await tester.pumpAndSettle();
 
-    expect(find.byType(LoginPage), findsOneWidget);
+    await tester.tap(find.text('Saya sudah membuka email'));
+    await tester.pump();
+
+    expect(find.byType(CheckEmailPage), findsOneWidget);
+    expect(
+      find.textContaining('tekan tautan pengaturan ulang'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('new password page requires a recovery session', (tester) async {
+    await tester.pumpWidget(const MaterialApp(home: NewPasswordPage()));
+
+    expect(
+      find.text('Tautan reset tidak tersedia atau sudah kedaluwarsa.'),
+      findsOneWidget,
+    );
+    expect(find.text('Simpan Kata Sandi'), findsNothing);
   });
 }

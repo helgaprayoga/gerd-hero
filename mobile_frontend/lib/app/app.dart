@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../core/services/auth_service.dart';
 import '../core/theme/app_theme.dart';
 import '../features/auth/presentation/pages/login_page.dart';
 import '../features/auth/presentation/pages/new_password_page.dart';
@@ -34,12 +35,16 @@ class _GerdHeroAppState extends State<GerdHeroApp> {
             final event = data.event;
 
             if (event == AuthChangeEvent.passwordRecovery) {
+              AuthService.instance.markPasswordRecovery();
+              _isRoutingAfterAuth = false;
               _routeToPasswordReset();
             } else if (event == AuthChangeEvent.signedIn &&
                 session != null &&
-                !_isRoutingAfterAuth) {
+                !_isRoutingAfterAuth &&
+                !AuthService.instance.isPasswordRecovery) {
               _routeAfterAuth();
             } else if (event == AuthChangeEvent.signedOut) {
+              AuthService.instance.clearPasswordRecovery();
               _isRoutingAfterAuth = false;
               _routeAfterSignOut();
             }
@@ -78,7 +83,9 @@ class _GerdHeroAppState extends State<GerdHeroApp> {
     if (!mounted) return;
     final navigator = navigatorKey.currentState;
     if (navigator == null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) => _routeToPasswordReset());
+      WidgetsBinding.instance.addPostFrameCallback(
+        (_) => _routeToPasswordReset(),
+      );
       return;
     }
 
@@ -146,24 +153,23 @@ class _AuthBootstrapPageState extends State<_AuthBootstrapPage> {
   }
 
   Widget _landingPage() => LandingPage(
-        onStart: (context) {
-          Navigator.of(context).push(
-            MaterialPageRoute<void>(
-              builder: (_) => DisclaimerPage(
-                onContinue: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute<void>(
-                      builder: (_) => const LoginPage(),
-                    ),
-                  );
-                },
-              ),
-            ),
-          );
-        },
+    onStart: (context) {
+      Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          builder: (_) => DisclaimerPage(
+            onContinue: () {
+              Navigator.of(context).push(
+                MaterialPageRoute<void>(builder: (_) => const LoginPage()),
+              );
+            },
+          ),
+        ),
       );
+    },
+  );
 
   @override
   Widget build(BuildContext context) =>
-      _destination ?? const Scaffold(body: Center(child: CircularProgressIndicator()));
+      _destination ??
+      const Scaffold(body: Center(child: CircularProgressIndicator()));
 }

@@ -12,6 +12,7 @@ class ForgotPasswordFormCard extends StatelessWidget {
     required this.onSubmit,
     required this.onBackToLogin,
     super.key,
+    this.isLoading = false,
   });
 
   final GlobalKey<FormState> formKey;
@@ -19,6 +20,7 @@ class ForgotPasswordFormCard extends StatelessWidget {
   final ValueChanged<String> onEmailChanged;
   final VoidCallback onSubmit;
   final VoidCallback onBackToLogin;
+  final bool isLoading;
 
   @override
   Widget build(BuildContext context) => Container(
@@ -52,21 +54,27 @@ class ForgotPasswordFormCard extends StatelessWidget {
           SizedBox(
             height: 48,
             child: FilledButton(
-              onPressed: onSubmit,
+              onPressed: isLoading ? null : onSubmit,
               style: FilledButton.styleFrom(
                 backgroundColor: AppColors.primaryContainer,
                 foregroundColor: Colors.white,
                 elevation: 2,
                 shape: const StadiumBorder(),
               ),
-              child: const Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text('Kirim Tautan'),
-                  SizedBox(width: 8),
-                  Icon(Icons.arrow_forward, size: 18),
-                ],
-              ),
+              child: isLoading
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text('Kirim Tautan'),
+                        SizedBox(width: 8),
+                        Icon(Icons.arrow_forward, size: 18),
+                      ],
+                    ),
             ),
           ),
           const SizedBox(height: 20),

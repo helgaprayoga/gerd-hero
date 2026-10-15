@@ -50,9 +50,9 @@ class CheckEmailActions extends StatelessWidget {
               child: const Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text('Buka Aplikasi Email'),
+                  Text('Saya sudah membuka email'),
                   SizedBox(width: 8),
-                  Icon(Icons.open_in_new, size: 20),
+                  Icon(Icons.info_outline, size: 20),
                 ],
               ),
             ),
