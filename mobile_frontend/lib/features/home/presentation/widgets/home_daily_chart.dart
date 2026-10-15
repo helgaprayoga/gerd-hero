@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../models/home_dashboard_data.dart';
 
 class HomeDailyChart extends StatelessWidget {
-  const HomeDailyChart({super.key});
+  const HomeDailyChart({required this.latestGerdq, this.onAction, super.key});
+
+  final HomeGerdqData? latestGerdq;
+  final VoidCallback? onAction;
 
   @override
   Widget build(BuildContext context) => Container(
@@ -13,7 +17,7 @@ class HomeDailyChart extends StatelessWidget {
       color: Colors.white,
       borderRadius: BorderRadius.circular(20),
     ),
-    child: const Column(
+    child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
@@ -35,7 +39,9 @@ class HomeDailyChart extends StatelessWidget {
             child: Row(
               children: [
                 Text(
-                  '7 / 18',
+                  latestGerdq == null
+                      ? '-- / 18'
+                      : '${latestGerdq!.score} / 18',
                   style: TextStyle(
                     color: AppColors.primary,
                     fontSize: 24,
@@ -44,13 +50,32 @@ class HomeDailyChart extends StatelessWidget {
                 ),
                 SizedBox(width: 14),
                 Expanded(
-                  child: Text(
-                    'Kemungkinan tidak menderita GERD\nSkor terkontrol dengan baik.',
-                    style: TextStyle(
-                      color: AppColors.onSurfaceVariant,
-                      fontSize: 12,
-                      height: 1.5,
-                    ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        latestGerdq?.evaluation ?? 'Belum ada hasil GERD-Q',
+                        style: const TextStyle(
+                          color: AppColors.onSurfaceVariant,
+                          fontSize: 12,
+                          height: 1.5,
+                        ),
+                      ),
+                      if (latestGerdq == null && onAction != null) ...[
+                        const SizedBox(height: 8),
+                        _ActionButton(
+                          label: 'Isi GERD-Q',
+                          onPressed: onAction!,
+                        ),
+                      ],
+                      if (latestGerdq != null && onAction != null) ...[
+                        const SizedBox(height: 8),
+                        _ActionButton(
+                          label: 'Evaluasi ulang',
+                          onPressed: onAction!,
+                        ),
+                      ],
+                    ],
                   ),
                 ),
               ],
@@ -58,6 +83,32 @@ class HomeDailyChart extends StatelessWidget {
           ),
         ),
       ],
+    ),
+  );
+}
+
+class _ActionButton extends StatelessWidget {
+  const _ActionButton({required this.label, required this.onPressed});
+
+  final String label;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) => TextButton(
+    onPressed: onPressed,
+    style: TextButton.styleFrom(
+      padding: EdgeInsets.zero,
+      minimumSize: const Size(0, 28),
+      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+      alignment: Alignment.centerLeft,
+    ),
+    child: Text(
+      label,
+      style: const TextStyle(
+        color: AppColors.primary,
+        fontSize: 12,
+        fontWeight: FontWeight.w700,
+      ),
     ),
   );
 }

@@ -2,11 +2,15 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../auth/presentation/widgets/auth_privacy_note.dart';
+import '../../domain/gerdq.dart';
+import '../widgets/gerdq_answer_option.dart';
 import '../widgets/gerdq_header.dart';
 import '../widgets/gerdq_progress_card.dart';
-import '../widgets/gerdq_question_card.dart';
-import '../widgets/gerdq_heartburn_info_card.dart';
+import '../widgets/gerdq_question_info_card.dart';
 import 'gerdq_result_page.dart';
+import '../../../home/presentation/pages/home_page.dart';
+import '../../../../core/services/api_service.dart';
+import '../../../../core/services/onboarding_service.dart';
 
 class GerdQQuestionPage extends StatefulWidget {
   const GerdQQuestionPage({super.key});
@@ -16,16 +20,76 @@ class GerdQQuestionPage extends StatefulWidget {
 }
 
 class _GerdQQuestionPageState extends State<GerdQQuestionPage> {
-  String? _selectedAnswer = '2–3 hari';
+  late final List<GerdQFrequency?> _answers;
+  int _currentIndex = 0;
+  bool _isLoading = false;
 
-  static const _answers = ['0 hari', '1 hari', '2–3 hari', '4–7 hari'];
+  GerdQQuestion get _question => gerdQQuestions[_currentIndex];
+  GerdQFrequency? get _selectedAnswer => _answers[_currentIndex];
+
+  @override
+  void initState() {
+    super.initState();
+    _answers = List<GerdQFrequency?>.filled(gerdQQuestions.length, null);
+  }
+
+  Future<void> _skip() async {
+    if (_isLoading) return;
+    setState(() => _isLoading = true);
+    try {
+      await OnboardingService.instance.setGerdqStatus('skipped');
+      if (!mounted) return;
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute<void>(builder: (_) => const HomePage()),
+        (route) => false,
+      );
+    } on ApiException catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(error.message)));
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  void _goBack() {
+    if (_isLoading) return;
+    if (_currentIndex == 0) {
+      Navigator.of(context).pop();
+      return;
+    }
+    setState(() => _currentIndex--);
+  }
+
+  void _goNext() {
+    if (_selectedAnswer == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Pilih jawaban terlebih dahulu.')),
+      );
+      return;
+    }
+
+    if (_currentIndex < gerdQQuestions.length - 1) {
+      setState(() => _currentIndex++);
+      return;
+    }
+
+    final answers = _answers.cast<GerdQFrequency>();
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => GerdQResultPage(answers: answers),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) => Scaffold(
     backgroundColor: AppColors.surface,
     body: Column(
       children: [
-        GerdQHeader(onSkip: () => Navigator.of(context).pop()),
+        GerdQHeader(onBack: _goBack, onSkip: _skip),
         Expanded(
           child: SafeArea(
             top: false,
@@ -34,11 +98,14 @@ class _GerdQQuestionPageState extends State<GerdQQuestionPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const GerdQProgressCard(),
+                  GerdQProgressCard(
+                    currentQuestion: _currentIndex + 1,
+                    totalQuestions: gerdQQuestions.length,
+                  ),
                   const SizedBox(height: 24),
-                  const Text(
-                    'Seberapa sering kamu merasakan\nnyeri terbakar di dada (heartburn)?',
-                    style: TextStyle(
+                  Text(
+                    _question.text,
+                    style: const TextStyle(
                       color: AppColors.onSurface,
                       fontSize: 24,
                       height: 1.25,
@@ -47,7 +114,7 @@ class _GerdQQuestionPageState extends State<GerdQQuestionPage> {
                   ),
                   const SizedBox(height: 12),
                   const Text(
-                    'Dalam 7 hari terakhir',
+                    gerdQPeriodHint,
                     style: TextStyle(
                       color: AppColors.onSurfaceVariant,
                       fontSize: 14,
@@ -55,39 +122,43 @@ class _GerdQQuestionPageState extends State<GerdQQuestionPage> {
                     ),
                   ),
                   const SizedBox(height: 18),
-                  const GerdQHeartburnInfoCard(),
+                  GerdQQuestionInfoCard(info: _question.info),
                   const SizedBox(height: 20),
-                  GerdQQuestionCard(
-                    answers: _answers,
-                    selectedAnswer: _selectedAnswer,
-                    onAnswerSelected: (answer) {
-                      setState(() => _selectedAnswer = answer);
-                    },
+                  Column(
+                    children: [
+                      for (final answer in GerdQFrequency.values) ...[
+                        GerdQAnswerOption(
+                          label: answer.label,
+                          selected: answer == _selectedAnswer,
+                          onTap: () =>
+                              setState(() => _answers[_currentIndex] = answer),
+                        ),
+                        if (answer != GerdQFrequency.values.last)
+                          const SizedBox(height: 10),
+                      ],
+                    ],
                   ),
                   const SizedBox(height: 24),
                   SizedBox(
                     width: double.infinity,
                     height: 48,
                     child: FilledButton(
-                      onPressed: _selectedAnswer == null
-                          ? null
-                          : () => Navigator.of(context).push(
-                              MaterialPageRoute<void>(
-                                builder: (_) =>
-                                    const GerdQResultPage(score: 11),
-                              ),
-                            ),
+                      onPressed: _isLoading ? null : _goNext,
                       style: FilledButton.styleFrom(
                         backgroundColor: AppColors.primaryContainer,
                         foregroundColor: Colors.white,
                         shape: const StadiumBorder(),
                       ),
-                      child: const Row(
+                      child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Text('Lanjut'),
-                          SizedBox(width: 8),
-                          Icon(Icons.arrow_forward, size: 18),
+                          Text(
+                            _currentIndex == gerdQQuestions.length - 1
+                                ? 'Lihat hasil'
+                                : 'Lanjut',
+                          ),
+                          const SizedBox(width: 8),
+                          const Icon(Icons.arrow_forward, size: 18),
                         ],
                       ),
                     ),

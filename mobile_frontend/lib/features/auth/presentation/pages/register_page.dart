@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/services/auth_service.dart';
 import '../../../../core/widgets/app_feedback.dart';
 import '../widgets/auth_greeting.dart';
 import '../widgets/auth_header.dart';
@@ -55,7 +56,7 @@ class _RegisterPageState extends State<RegisterPage> {
     final email = _emailController.text.trim().toLowerCase();
     setState(() => _isSubmitting = true);
     try {
-      final response = await Supabase.instance.client.auth.signUp(
+      final response = await AuthService.instance.register(
         email: email,
         password: _passwordController.text,
       );
@@ -80,6 +81,16 @@ class _RegisterPageState extends State<RegisterPage> {
       }
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
+    }
+  }
+
+  Future<void> _signInWithGoogle() async {
+    try {
+      await AuthService.instance.signInWithGoogle();
+    } catch (error) {
+      if (mounted) {
+        _showMessage(authErrorMessage(error, isLogin: true));
+      }
     }
   }
 
@@ -141,8 +152,7 @@ class _RegisterPageState extends State<RegisterPage> {
                     ),
                     onSubmit: _submit,
                     isLoading: _isSubmitting,
-                    onGoogle: () =>
-                        _showMessage('Membuka autentikasi aman dengan Google.'),
+                    onGoogle: _signInWithGoogle,
                   ),
                   const SizedBox(height: 20),
                   const AuthPrivacyNote(),

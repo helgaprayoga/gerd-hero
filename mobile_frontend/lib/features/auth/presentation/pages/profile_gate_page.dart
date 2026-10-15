@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/services/api_service.dart';
+import '../../../../core/services/onboarding_service.dart';
 import '../../../home/presentation/models/profile_data.dart';
 import '../../../home/presentation/pages/home_page.dart';
+import '../../../onboarding/presentation/pages/gerdq_intro_page.dart';
 import '../../../onboarding/presentation/pages/profile_page.dart';
 
 /// Menentukan halaman setelah autentikasi berdasarkan profil yang tersimpan.
@@ -24,6 +26,34 @@ class _ProfileGatePageState extends State<ProfileGatePage> {
 
   Future<void> _resolveDestination() async {
     try {
+      final onboarding = await OnboardingService.instance.getStatus();
+      if (!mounted) return;
+
+      if (onboarding.nextStep == 'gerdq') {
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute<void>(builder: (_) => const GerdQIntroPage()),
+          (route) => false,
+        );
+        return;
+      }
+      if (onboarding.nextStep == 'home') {
+        final response = await ApiService.instance.get('/api/profile');
+        final rawData = response['data'];
+        final profile = rawData is Map
+            ? ProfileData.fromJson(Map<String, dynamic>.from(rawData))
+            : null;
+        if (!mounted) return;
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute<void>(
+            builder: (_) => profile == null
+                ? const HomePage()
+                : HomePage(profile: profile),
+          ),
+          (route) => false,
+        );
+        return;
+      }
+
       final response = await ApiService.instance.get('/api/profile');
       final rawData = response['data'];
       if (rawData is! Map) {
@@ -34,7 +64,7 @@ class _ProfileGatePageState extends State<ProfileGatePage> {
       if (!mounted) return;
 
       final page = profile.hasBasicProfile
-          ? HomePage(profile: profile)
+          ? const GerdQIntroPage()
           : const ProfilePage();
       Navigator.of(context).pushAndRemoveUntil(
         MaterialPageRoute<void>(builder: (_) => page),

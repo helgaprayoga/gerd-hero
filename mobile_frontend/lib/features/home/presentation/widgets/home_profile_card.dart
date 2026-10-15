@@ -26,7 +26,7 @@ class HomeProfileCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text(
-                'Lengkapi profilmu: kebiasaan, riwayat, & obat rutin',
+                'Lengkapi profilmu untuk analisis yang lebih akurat',
                 style: TextStyle(
                   color: AppColors.onSurface,
                   fontSize: 16,
@@ -36,7 +36,7 @@ class HomeProfileCard extends StatelessWidget {
               ),
               const SizedBox(height: 6),
               const Text(
-                'Bantu Gerdie memberikan analisis pemicu dan panduan jam makan yang lebih akurat.',
+                'Isi data dasar dan kebiasaan gaya hidupmu agar Gerdie dapat mengenali pola lambungmu.',
                 style: TextStyle(
                   color: AppColors.onSurfaceVariant,
                   fontSize: 12,

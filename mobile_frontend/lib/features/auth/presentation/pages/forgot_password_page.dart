@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/services/auth_service.dart';
 import '../utils/auth_validators.dart';
 import '../widgets/auth_greeting.dart';
 import '../widgets/auth_header.dart';
@@ -18,6 +20,7 @@ class ForgotPasswordPage extends StatefulWidget {
 class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
+  bool _isSubmitting = false;
 
   @override
   void dispose() {
@@ -25,18 +28,39 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
     super.dispose();
   }
 
-  void _submit() {
+  Future<void> _submit() async {
+    if (_isSubmitting) return;
     if (!(_formKey.currentState?.validate() ?? false) ||
         emailError(_emailController.text) != null) {
       setState(() {});
       return;
     }
+
+    setState(() => _isSubmitting = true);
+    final email = _emailController.text.trim().toLowerCase();
+    String? requestError;
+    try {
+      await AuthService.instance.requestPasswordReset(email);
+    } on AuthException catch (error) {
+      requestError = error.message;
+    } catch (_) {
+      requestError = 'Tidak dapat mengirim email reset.';
+    } finally {
+      if (mounted) setState(() => _isSubmitting = false);
+    }
+
+    if (!mounted) return;
     Navigator.of(context).push(
       MaterialPageRoute<void>(
-        builder: (_) =>
-            CheckEmailPage(email: _emailController.text, isPasswordReset: true),
+        builder: (_) => CheckEmailPage(email: email, isPasswordReset: true),
       ),
     );
+    final errorMessage = requestError;
+    if (errorMessage != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(errorMessage)),
+      );
+    }
   }
 
   @override
