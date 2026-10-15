@@ -1,0 +1,18 @@
+{
+  "analysis_source": "fallback",
+  "analisis_pemicu_gejala": [
+    {
+      "pemicu": "Tidak terdeteksi",
+      "nilai": "belum tersedia",
+      "bukti": "Layanan analisis AI sedang tidak tersedia",
+      "penjelasan_korelasi": "Analisis AI sementara tidak tersedia. Data Anda tetap tersimpan."
+    }
+  ],
+  "kebiasaan_mendukung_gejala": [],
+  "data_diri_mendukung": [],
+  "rekomendasi": [
+    "Hindari makanan pedas dan berlemak.",
+    "Jaga jeda makan-tidur minimal 2 jam.",
+    "Kelola stres dengan teknik relaksasi."
+  ]
+}

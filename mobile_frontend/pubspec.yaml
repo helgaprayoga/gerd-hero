@@ -9,6 +9,12 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  google_fonts: ^6.2.1
+  flutter_svg: ^2.0.17
+  supabase_flutter: ^2.18.3
+  flutter_dotenv: ^6.0.1
+  http: ^1.2.2
+  pdfx: ^2.8.0
 
 dev_dependencies:
   flutter_test:
@@ -17,3 +23,6 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  assets:
+    - assets/google_logo.svg
+    - .env

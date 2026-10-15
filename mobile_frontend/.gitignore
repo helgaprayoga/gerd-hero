@@ -1,4 +1,13 @@
-# Miscellaneous
+# ==========================================
+# Credentials & Environment Variables
+# ==========================================
+.env
+.env.*
+!.env.example
+
+# ==========================================
+# Miscellaneous & OS
+# ==========================================
 *.class
 *.log
 *.pyc
@@ -12,34 +21,61 @@
 .swiftpm/
 migrate_working_dir/
 
-# IntelliJ related
+# ==========================================
+# Python / Backend (Flask & Virtualenv)
+# ==========================================
+venv/
+.venv/
+env/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+instance/
+
+# ==========================================
+# IDEs & Editors
+# ==========================================
 *.iml
 *.ipr
 *.iws
 .idea/
+.vscode/
 
-# The .vscode folder contains launch configuration and tasks you configure in
-# VS Code which you may wish to be included in version control, so this line
-# is commented out by default.
-#.vscode/
-
-# Flutter/Dart/Pub related
+# ==========================================
+# Flutter / Dart / Pub
+# ==========================================
 **/doc/api/
 **/ios/Flutter/.last_build_id
 .dart_tool/
+.flutter-plugins
 .flutter-plugins-dependencies
 .pub-cache/
 .pub/
 /build/
 /coverage/
 
-# Symbolication related
-app.*.symbols
+# Flutter Desktop & Generated Plugin Files
+**/flutter/ephemeral/
+**/flutter/generated_plugins.cmake
+**/flutter/generated_plugin_registrant.cc
+**/flutter/generated_plugin_registrant.h
+**/flutter/generated_plugins.h
+**/flutter/generated_plugins.cc
 
-# Obfuscation related
+# Symbolication & Obfuscation
+app.*.symbols
 app.*.map.json
 
-# Android Studio will place build artifacts here
+# Platform Build Artifacts (Android / iOS / Windows / Linux)
 /android/app/debug
 /android/app/profile
 /android/app/release
+/android/.gradle
+**/ios/Pods/
+**/ios/.symlinks/
+/windows/flutter/ephemeral/
+/linux/flutter/ephemeral/
+# Widget Preview related
+.widget_preview/
