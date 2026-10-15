@@ -1,4 +1,9 @@
-"""Deterministic calculations for analytics features E1–E5."""
+"""Deterministic calculations for analytics features E1–E6.
+
+The values in this module are the source of truth for charts, rankings, and
+attention flags. AI receives these values only to explain them in friendly
+language; it never calculates or changes the statistics.
+"""
 
 from __future__ import annotations
 
@@ -8,6 +13,16 @@ from typing import Any, Iterable
 
 
 DEFAULT_SYMPTOM_THRESHOLD = 0.30
+
+_ATTENTION_SYMPTOMS = {
+    "nyeri dada": "Nyeri dada",
+    "chest pain": "Nyeri dada",
+    "kesulitan menelan": "Kesulitan menelan",
+    "sulit menelan": "Kesulitan menelan",
+    "difficulty swallowing": "Kesulitan menelan",
+    "keringat dingin": "Keringat dingin",
+    "cold sweat": "Keringat dingin",
+}
 
 
 def _number(value: Any, default: float | None = None) -> float | None:
@@ -26,20 +41,32 @@ def _trigger_names(triggers: Any) -> Iterable[str]:
 
 
 def _symptomatic(log: dict[str, Any], threshold: float) -> bool:
-    level = _number(log.get("gerd_level"))
+    level = _normalised_level(log.get("gerd_level"))
     return level is not None and level > threshold
+
+
+def _normalised_level(value: Any) -> float | None:
+    level = _number(value)
+    if level is None:
+        return None
+    # Migration 002 stores the Certainty Factor in the 0–1 range. This small
+    # compatibility guard also keeps analytics safe for legacy 0–100 rows.
+    if level > 1:
+        level /= 100
+    return round(max(0.0, min(level, 1.0)), 4)
 
 
 def get_gerd_trend(logs: list[dict[str, Any]]) -> list[dict[str, Any]]:
     """E1: Return date/level pairs sorted chronologically for a line chart."""
     trend = []
     for log in logs:
-        level = _number(log.get("gerd_level"))
+        level = _normalised_level(log.get("gerd_level"))
         if level is None:
             continue
         trend.append({
             "tanggal": log.get("log_date"),
-            "gerd_level": round(max(0.0, min(level, 1.0)), 4),
+            "gerd_level": level,
+            "gerd_level_percent": round(level * 100, 2),
         })
     return sorted(trend, key=lambda item: str(item["tanggal"]))
 
@@ -63,6 +90,7 @@ def get_top_triggers(
         {
             "pemicu": trigger,
             "frekuensi": count,
+            "total_hari_bergejala": total_days,
             "persen_hari_bergejala": round(count / total_days * 100, 2),
         }
         for trigger, count in counts.most_common()
@@ -82,7 +110,7 @@ def get_influencing_factors(logs: list[dict[str, Any]]) -> dict[str, list[dict[s
         (active_values if active else inactive_values).append(level)
 
     for log in logs:
-        level = _number(log.get("gerd_level"))
+        level = _normalised_level(log.get("gerd_level"))
         if level is None:
             continue
         triggers = set(_trigger_names(log.get("triggers")))
@@ -115,6 +143,7 @@ def get_influencing_factors(logs: list[dict[str, Any]]) -> dict[str, list[dict[s
             "rata_rata_saat_aktif": round(active_average, 4),
             "rata_rata_saat_tidak_aktif": round(inactive_average, 4),
             "selisih": difference,
+            "selisih_persen_poin": round(difference * 100, 2),
         }
         (menaikkan if difference > 0 else menurunkan).append(item)
 
@@ -123,11 +152,78 @@ def get_influencing_factors(logs: list[dict[str, Any]]) -> dict[str, list[dict[s
     return {"menaikkan": menaikkan, "menurunkan": menurunkan}
 
 
+def get_period_statistics(
+    logs: list[dict[str, Any]],
+    threshold: float = DEFAULT_SYMPTOM_THRESHOLD,
+) -> dict[str, Any]:
+    """Return deterministic period statistics used by the UI and period AI."""
+    levels = [
+        level for level in (_normalised_level(log.get("gerd_level")) for log in logs)
+        if level is not None
+    ]
+    symptomatic_days = sum(1 for log in logs if _symptomatic(log, threshold))
+    average = round(mean(levels), 4) if levels else None
+    return {
+        "log_count": len(logs),
+        "symptomatic_day_count": symptomatic_days,
+        "average_gerd_level": average,
+        "average_gerd_level_percent": round(average * 100, 2) if average is not None else None,
+        "minimum_gerd_level": min(levels) if levels else None,
+        "maximum_gerd_level": max(levels) if levels else None,
+    }
+
+
+def _symptom_label(value: Any) -> str | None:
+    text = str(value or "").strip().lower()
+    if not text:
+        return None
+    for keyword, label in _ATTENTION_SYMPTOMS.items():
+        if keyword in text:
+            return label
+    return None
+
+
+def get_complication_attention(logs: list[dict[str, Any]]) -> dict[str, Any]:
+    """Flag persistent attention symptoms without diagnosing complications."""
+    counts: Counter[str] = Counter()
+    for log in logs:
+        symptoms = log.get("symptoms")
+        if not isinstance(symptoms, list):
+            continue
+        # Count days, not duplicate symptom entries accidentally submitted in
+        # a single log row.
+        for symptom in set(symptoms):
+            label = _symptom_label(symptom)
+            if label:
+                counts[label] += 1
+
+    flags = [
+        {
+            "kode": label.lower().replace(" ", "_"),
+            "label": label,
+            "jumlah_hari": count,
+        }
+        for label, count in counts.most_common()
+    ]
+    if flags:
+        level = "perlu_diperhatikan"
+        message = (
+            "Ada gejala yang perlu dipantau lebih dekat selama periode ini. "
+            "Informasi ini bukan diagnosis; pertimbangkan konsultasi dengan "
+            "tenaga medis, terutama bila gejala berat atau berulang."
+        )
+    else:
+        level = "tidak_terdeteksi"
+        message = "Belum ada gejala perhatian khusus yang tercatat pada periode ini."
+
+    return {"level": level, "flags": flags, "message": message}
+
+
 def get_habit_recommendation_context(
     logs: list[dict[str, Any]], user: dict[str, Any]
 ) -> dict[str, Any]:
     """E5: Build compact deterministic context for an AI habit prompt."""
-    levels = [_number(log.get("gerd_level")) for log in logs]
+    levels = [_normalised_level(log.get("gerd_level")) for log in logs]
     levels = [level for level in levels if level is not None]
     return {
         "user": {

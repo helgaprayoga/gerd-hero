@@ -1,0 +1,22 @@
+{
+  "summary_points": [
+    "Data periode ini belum cukup untuk menyimpulkan pola indeks gejala secara kuat.",
+    "Belum ada pemicu dominan yang dapat dirangkum dari hari-hari bergejala.",
+    "Lanjutkan pencatatan rutin agar perubahan gejala dan kebiasaan lebih mudah dipantau."
+  ],
+  "attention_explanation": "Belum ada analisis AI tambahan. Jika ada gejala berat atau mengkhawatirkan, cari bantuan medis.",
+  "recommendations": [
+    {
+      "judul": "Lanjutkan pencatatan rutin",
+      "penjelasan": "Catat gejala, pemicu, waktu makan, dan tidur agar pola periode berikutnya lebih jelas."
+    },
+    {
+      "judul": "Jaga jeda makan dan tidur",
+      "penjelasan": "Usahakan memberi jeda sekitar 2–3 jam antara makan terakhir dan waktu tidur."
+    },
+    {
+      "judul": "Perhatikan gejala yang berulang",
+      "penjelasan": "Bicarakan gejala yang menetap atau mengkhawatirkan dengan tenaga medis."
+    }
+  ]
+}

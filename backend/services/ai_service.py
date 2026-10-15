@@ -16,11 +16,19 @@ from connection.api import generate_text
 
 
 _FALLBACK_PATH = Path(__file__).resolve().parent.parent / "templates" / "ai_fallback.json"
+_ANALYTICS_FALLBACK_PATH = (
+    Path(__file__).resolve().parent.parent / "templates" / "analytics_fallback.json"
+)
 _LOGGER = logging.getLogger(__name__)
 _ANALYTICS_FALLBACK_SUMMARY = (
     "Layanan analisis sedang tidak tersedia. Catatan harian Anda telah "
     "berhasil disimpan. Silakan cek kembali nanti untuk analisis pemicu."
 )
+
+
+def _load_analytics_fallback() -> dict[str, Any]:
+    with _ANALYTICS_FALLBACK_PATH.open("r", encoding="utf-8") as fallback_file:
+        return json.load(fallback_file)
 
 
 def _load_fallback() -> dict[str, Any]:
@@ -257,21 +265,79 @@ def generate_daily_analysis(
         return _fallback_daily_result(log_data)
 
 
-def generate_analytics_summary(period_data: dict[str, Any]) -> str:
-    """Generate E3 period summary, or return the safe fallback summary."""
-    fallback_summary = _ANALYTICS_FALLBACK_SUMMARY
+def _normalise_period_analysis(result: dict[str, Any]) -> dict[str, Any]:
+    fallback = _load_analytics_fallback()
+    raw_points = result.get("summary_points")
+    points = [str(item).strip()[:180] for item in raw_points or [] if str(item).strip()]
+    if len(points) < 3:
+        points = fallback["summary_points"]
+    points = points[:3]
+
+    raw_recommendations = result.get("recommendations")
+    recommendations: list[dict[str, str]] = []
+    if isinstance(raw_recommendations, list):
+        for item in raw_recommendations[:5]:
+            if isinstance(item, dict):
+                title = str(item.get("judul") or item.get("title") or "Rekomendasi")
+                explanation = str(item.get("penjelasan") or item.get("description") or "")
+                if explanation.strip():
+                    recommendations.append({"judul": title, "penjelasan": explanation})
+            elif str(item).strip():
+                recommendations.append({"judul": "Langkah yang bisa dicoba", "penjelasan": str(item)})
+    if not recommendations:
+        recommendations = fallback["recommendations"]
+
+    explanation = str(result.get("attention_explanation") or "").strip()
+    return {
+        "summary_points": points,
+        "attention_explanation": explanation or fallback["attention_explanation"],
+        "recommendations": recommendations,
+    }
+
+
+def generate_period_analysis(period_data: dict[str, Any]) -> dict[str, Any]:
+    """Explain deterministic period analytics in a stable JSON contract."""
+    fallback = _load_analytics_fallback()
+    if not period_data.get("log_count"):
+        return {**fallback, "analysis_source": "fallback"}
     prompt = (
-        "Buat ringkasan analitik GERD dalam bahasa Indonesia berdasarkan data berikut. "
-        "Jangan mendiagnosis, jangan menyatakan hubungan sebab-akibat pasti, dan "
-        "jawab hanya dengan teks ringkas maksimal 3 kalimat.\n\n"
+        "Anda adalah asisten analitik GERD yang membantu pengguna memahami "
+        "catatan hariannya. Analisis hanya berdasarkan DATA_PERIODE.\n\n"
+        "Aturan wajib:\n"
+        "1. Jangan mendiagnosis.\n"
+        "2. Jangan menyatakan hubungan sebab-akibat pasti. Gunakan frasa "
+        "'berpotensi berkaitan', 'tercatat bersama', atau 'tampak beriringan'.\n"
+        "3. Jangan menghitung ulang atau mengubah gerd_level.\n"
+        "4. Jangan membuat angka, persentase, pemicu, atau gejala yang tidak ada.\n"
+        "5. Jangan memberi instruksi untuk mengubah atau menghentikan obat.\n"
+        "6. Gunakan bahasa Indonesia yang empatik, singkat, dan tidak menghakimi.\n"
+        "7. Jika data kurang, nyatakan bahwa pola belum cukup untuk disimpulkan.\n"
+        "8. Ringkasan periode harus tepat 3 poin, maksimal 180 karakter per poin.\n\n"
+        "Isi summary_points dengan: (1) tren indeks gejala, (2) pemicu teratas "
+        "beserta angka yang tersedia, (3) faktor peningkat/pereda atau hal yang "
+        "perlu diperhatikan. Buat 3–5 rekomendasi praktis berdasarkan data.\n\n"
+        "Kembalikan JSON tanpa markdown dengan struktur:\n"
+        "{\n"
+        '  "summary_points": ["poin 1", "poin 2", "poin 3"],\n'
+        '  "attention_explanation": "penjelasan singkat",\n'
+        '  "recommendations": [{"judul": "", "penjelasan": ""}]\n'
+        "}\n\n"
         f"DATA_PERIODE:\n{json.dumps(period_data, ensure_ascii=False, default=str)}"
     )
-
     try:
-        result = generate_text(prompt).strip()
-        return result or fallback_summary
+        parsed = _parse_json_response(generate_text(prompt, json_mode=True))
+        result = _normalise_period_analysis(parsed)
+        result["analysis_source"] = "llm"
+        return result
     except Exception:
-        return fallback_summary
+        _LOGGER.exception("Analisis AI periode gagal; menggunakan fallback template")
+        return {**fallback, "analysis_source": "fallback"}
+
+
+def generate_analytics_summary(period_data: dict[str, Any]) -> str:
+    """Backward-compatible plain-text period summary."""
+    result = generate_period_analysis(period_data)
+    return " ".join(result.get("summary_points", [])) or _ANALYTICS_FALLBACK_SUMMARY
 
 
 def generate_habit_recommendations(context: dict[str, Any]) -> list[str]:
