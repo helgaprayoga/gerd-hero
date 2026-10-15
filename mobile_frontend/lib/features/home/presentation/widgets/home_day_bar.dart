@@ -6,13 +6,17 @@ class HomeDayBar extends StatelessWidget {
   const HomeDayBar({
     required this.day,
     required this.date,
-    required this.active,
+    required this.gerdLevel,
+    required this.hasLog,
+    required this.symptomatic,
     super.key,
   });
 
   final String day;
   final String date;
-  final bool active;
+  final double? gerdLevel;
+  final bool hasLog;
+  final bool symptomatic;
 
   @override
   Widget build(BuildContext context) => Container(
@@ -20,11 +24,11 @@ class HomeDayBar extends StatelessWidget {
     height: 150,
     padding: const EdgeInsets.all(6),
     decoration: BoxDecoration(
-      color: active ? AppColors.surfaceContainerLow : Colors.white,
+      color: symptomatic ? AppColors.surfaceContainerLow : Colors.white,
       borderRadius: BorderRadius.circular(12),
       border: Border.all(
-        color: active ? AppColors.primary : AppColors.secondaryContainer,
-        width: active ? 1.5 : 1,
+        color: symptomatic ? AppColors.primary : AppColors.secondaryContainer,
+        width: symptomatic ? 1.5 : 1,
       ),
     ),
     child: Column(
@@ -44,12 +48,14 @@ class HomeDayBar extends StatelessWidget {
         ),
         Container(
           width: 20,
-          height: active ? 58 : 20,
+          height: hasLog ? 20 + ((gerdLevel ?? 0).clamp(0.0, 1.0) * 58) : 20,
           decoration: BoxDecoration(
-            color: active ? AppColors.tertiary : AppColors.secondaryContainer,
+            color: symptomatic
+                ? AppColors.tertiary
+                : AppColors.secondaryContainer,
             borderRadius: BorderRadius.circular(999),
           ),
-          child: active
+          child: hasLog
               ? const Icon(Icons.priority_high, color: Colors.white, size: 14)
               : const Center(
                   child: Text(

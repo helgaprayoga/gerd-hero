@@ -2,29 +2,34 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/mascot.dart';
-import '../models/home_scenario.dart';
+import '../models/home_dashboard_data.dart';
 
 class HomeHeroCard extends StatelessWidget {
-  const HomeHeroCard({required this.scenario, this.onAction, super.key});
+  const HomeHeroCard({required this.status, this.onAction, super.key});
 
-  final HomeScenario scenario;
+  final HomeStatus status;
   final VoidCallback? onAction;
 
   bool get warning =>
-      scenario == HomeScenario.symptomatic ||
-      scenario == HomeScenario.evaluationDue;
+      status == HomeStatus.symptomaticToday ||
+      status == HomeStatus.evaluationDue;
 
   @override
   Widget build(BuildContext context) {
-    final isEmpty = scenario == HomeScenario.emptyData;
-    final loggedToday = scenario == HomeScenario.loggedToday;
-    final isDue = scenario == HomeScenario.evaluationDue;
-    final title = loggedToday
+    final isEmpty = status == HomeStatus.noData;
+    final loggedToday = status == HomeStatus.loggedToday;
+    final isDue = status == HomeStatus.evaluationDue;
+    final incomplete = status == HomeStatus.profileIncomplete;
+    final title = incomplete
+        ? 'Lengkapi profilmu\nagar aku lebih mengenalmu.'
+        : loggedToday
         ? 'Mantap, log hari ini\nsudah tercatat!'
         : isDue
         ? 'Sudah waktunya\nevaluasi lagi.'
         : warning
         ? 'Hari ini terasa kurang\nnyaman. Aku temani ya.'
+        : status == HomeStatus.noTodayLog
+        ? 'Belum ada log hari ini.\nYuk catat kondisimu.'
         : isEmpty
         ? 'Belum ada catatan.\nYuk isi log pertamamu.'
         : 'Lambungmu terlihat\ntenang hari ini.';
@@ -32,10 +37,14 @@ class HomeHeroCard extends StatelessWidget {
         ? 'Kebiasaan kecil yang konsisten membantu Gerdie memahami pola lambungmu.'
         : isDue
         ? 'Pantau perubahan gejalamu dengan evaluasi GERD-Q rutin.'
+        : status == HomeStatus.noTodayLog
+        ? 'Catat kondisi hari ini agar Gerdie bisa membantu mengenali polanya.'
         : isEmpty
         ? 'Catat makanan atau keluhan ringkas agar Gerdie bisa mengenali pola lambungmu.'
         : warning
         ? 'Tarik napas pelan. Catat keluhanmu agar kita bisa mengenali pemicunya.'
+        : incomplete
+        ? 'Lengkapi data dasar dan kebiasaan gaya hidup agar rekomendasi lebih akurat.'
         : 'Teks penenang anti kecemasan';
 
     return Container(

@@ -1,17 +1,39 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../models/home_dashboard_data.dart';
 import 'home_day_bar.dart';
 
 class HomeGerdSummary extends StatelessWidget {
   const HomeGerdSummary({
-    required this.isSymptomatic,
+    required this.logs,
+    required this.periodStart,
+    required this.periodEnd,
     this.onHistoryTap,
     super.key,
   });
 
-  final bool isSymptomatic;
+  final List<HomeDailyLog> logs;
+  final DateTime periodStart;
+  final DateTime periodEnd;
   final VoidCallback? onHistoryTap;
+
+  static const _days = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
+  static const _months = [
+    '',
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'Mei',
+    'Jun',
+    'Jul',
+    'Agu',
+    'Sep',
+    'Okt',
+    'Nov',
+    'Des',
+  ];
 
   @override
   Widget build(BuildContext context) => Container(
@@ -40,25 +62,18 @@ class HomeGerdSummary extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 2),
-        const Text(
-          '18 Mei – 24 Mei',
-          style: TextStyle(color: AppColors.onSurfaceVariant, fontSize: 12),
+        Text(
+          '${periodStart.day} ${_months[periodStart.month]} – '
+          '${periodEnd.day} ${_months[periodEnd.month]}',
+          style: const TextStyle(
+            color: AppColors.onSurfaceVariant,
+            fontSize: 12,
+          ),
         ),
         const SizedBox(height: 16),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            for (final entry in [
-              ('Sen', '18', false),
-              ('Sel', '19', false),
-              ('Rab', '20', false),
-              ('Kam', '21', isSymptomatic),
-              ('Jum', '22', false),
-              ('Sab', '23', false),
-              ('Min', '24', false),
-            ])
-              HomeDayBar(day: entry.$1, date: entry.$2, active: entry.$3),
-          ],
+          children: [for (var index = 0; index < 7; index++) _buildDay(index)],
         ),
         const SizedBox(height: 12),
         Center(
@@ -71,4 +86,27 @@ class HomeGerdSummary extends StatelessWidget {
       ],
     ),
   );
+
+  Widget _buildDay(int index) {
+    final date = periodStart.add(Duration(days: index));
+    HomeDailyLog? log;
+    for (final item in logs) {
+      if (_sameDate(item.date, date)) {
+        log = item;
+        break;
+      }
+    }
+    return HomeDayBar(
+      day: _days[index],
+      date: date.day.toString(),
+      gerdLevel: log?.gerdLevel,
+      hasLog: log != null,
+      symptomatic: log?.isSymptomatic ?? false,
+    );
+  }
+
+  bool _sameDate(DateTime first, DateTime second) =>
+      first.year == second.year &&
+      first.month == second.month &&
+      first.day == second.day;
 }

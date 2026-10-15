@@ -28,16 +28,16 @@ part 'daily_log_step_two_bottom_actions.dart';
 
 class DailyLogStepTwoView extends StatefulWidget {
   const DailyLogStepTwoView({
+    this.draft,
     this.dateLabel = 'hari ini',
     this.initialSameAsYesterday = true,
-    this.draft,
     this.onContinue,
     super.key,
   });
 
+  final DailyLogDraft? draft;
   final bool initialSameAsYesterday;
   final String dateLabel;
-  final DailyLogDraft? draft;
   final VoidCallback? onContinue;
 
   @override
@@ -153,6 +153,9 @@ class _DailyLogStepTwoViewState extends State<DailyLogStepTwoView> {
           (trigger) => MapEntry(trigger, _foods[trigger.label] == true),
         ),
       );
+    _draft.medications
+      ..clear()
+      ..addAll(_medicines);
   }
 
   @override

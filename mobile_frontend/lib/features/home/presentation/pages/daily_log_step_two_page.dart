@@ -9,17 +9,17 @@ import '../widgets/daily_log_step_two_view.dart';
 
 class DailyLogStepTwoPage extends StatefulWidget {
   const DailyLogStepTwoPage({
+    this.draft,
     this.dateLabel = 'hari ini',
     this.initialSameAsYesterday = true,
-    this.draft,
     this.repository,
     this.submitter,
     super.key,
   });
 
   final String dateLabel;
-  final bool initialSameAsYesterday;
   final DailyLogDraft? draft;
+  final bool initialSameAsYesterday;
   final DailyLogRepository? repository;
   final Future<DailyLogResponse> Function(DailyLogDraft)? submitter;
 
@@ -55,7 +55,8 @@ class _DailyLogStepTwoPageState extends State<DailyLogStepTwoPage> {
       if (!mounted) return;
       await navigator.push(
         MaterialPageRoute<void>(
-          builder: (_) => DailyLogSummaryPage(response: response),
+          builder: (_) =>
+              DailyLogSummaryPage(response: response, draft: _draft),
         ),
       );
     } on ApiException catch (error) {

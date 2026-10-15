@@ -15,6 +15,7 @@ import 'package:mobile_frontend/features/onboarding/presentation/pages/gerdq_res
 import 'package:mobile_frontend/features/home/presentation/models/home_scenario.dart';
 import 'package:mobile_frontend/features/home/data/models/daily_log_models.dart';
 import 'package:mobile_frontend/features/home/presentation/pages/home_page.dart';
+import 'package:mobile_frontend/features/home/presentation/widgets/home_loading_skeleton.dart';
 import 'package:mobile_frontend/features/home/presentation/pages/daily_log_step_one_page.dart';
 import 'package:mobile_frontend/features/home/presentation/pages/daily_log_step_two_page.dart';
 import 'package:mobile_frontend/features/home/presentation/pages/daily_log_summary_page.dart';
@@ -124,12 +125,22 @@ void main() {
     expect(find.byType(GerdQQuestionPage), findsOneWidget);
     expect(find.text('Soal 1 dari 6'), findsOneWidget);
     expect(
-      find.text(
-        'Seberapa sering kamu merasakan\nnyeri terbakar di dada (heartburn)?',
+      find.textContaining(
+        'Seberapa sering kamu merasakan nyeri terbakar di dada (heartburn)?',
       ),
       findsOneWidget,
     );
     expect(find.text('2–3 hari'), findsOneWidget);
+  });
+
+  testWidgets('returns to profile from GERD-Q preparation', (tester) async {
+    await tester.pumpWidget(const MaterialApp(home: GerdQIntroPage()));
+
+    await tester.tap(find.byTooltip('Kembali ke profil'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(ProfilePage), findsOneWidget);
+    expect(find.text('Data Profil'), findsOneWidget);
   });
 
   testWidgets('continues from GERD-Q question to evaluation result', (
@@ -137,13 +148,19 @@ void main() {
   ) async {
     await tester.pumpWidget(const MaterialApp(home: GerdQQuestionPage()));
 
-    await tester.ensureVisible(find.widgetWithText(FilledButton, 'Lanjut'));
-    await tester.tap(find.widgetWithText(FilledButton, 'Lanjut'));
+    for (var question = 0; question < 6; question++) {
+      await tester.tap(find.text('2–3 hari'));
+      await tester.pump();
+      final buttonLabel = question == 5 ? 'Lihat hasil' : 'Lanjut';
+      await tester.ensureVisible(find.widgetWithText(FilledButton, buttonLabel));
+      await tester.tap(find.widgetWithText(FilledButton, buttonLabel));
+      await tester.pump();
+    }
     await tester.pumpAndSettle();
 
     expect(find.byType(GerdQResultPage), findsOneWidget);
     expect(find.text('Hasil Evaluasi Anda'), findsOneWidget);
-    expect(find.text('11 / 18'), findsOneWidget);
+    expect(find.text('10 / 18'), findsOneWidget);
     expect(find.text('Kemungkinan menderita GERD'), findsNWidgets(2));
     expect(
       find.textContaining('Jangan khawatir, Gerdie siap membantumu'),
@@ -162,6 +179,12 @@ void main() {
     }
   });
 
+  testWidgets('shows home skeleton while profile is loading', (tester) async {
+    await tester.pumpWidget(const MaterialApp(home: HomePage()));
+
+    expect(find.byType(HomeLoadingSkeleton), findsOneWidget);
+  });
+
   testWidgets('skips profile directly to dashboard', (tester) async {
     await tester.pumpWidget(const MaterialApp(home: ProfilePage()));
 
@@ -177,6 +200,7 @@ void main() {
   ) async {
     await tester.pumpWidget(const MaterialApp(home: HomePage()));
 
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Isi Log Harian'));
     await tester.pumpAndSettle();
 
@@ -194,6 +218,7 @@ void main() {
   ) async {
     await tester.pumpWidget(const MaterialApp(home: HomePage()));
 
+    await tester.pumpAndSettle();
     await tester.ensureVisible(find.text('Lihat riwayat lengkap'));
     await tester.tap(find.text('Lihat riwayat lengkap'));
     await tester.pumpAndSettle();

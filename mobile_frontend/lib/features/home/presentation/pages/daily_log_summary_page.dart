@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../data/models/daily_log_models.dart';
+import '../../domain/entities/daily_log_draft.dart';
 import '../widgets/daily_summary_attention_callout.dart';
 import '../widgets/daily_summary_gerd_card.dart';
 import '../widgets/daily_summary_habits_card.dart';
@@ -9,12 +10,18 @@ import '../widgets/daily_summary_profile_card.dart';
 import '../widgets/daily_summary_trigger_card.dart';
 import 'home_page.dart';
 
-class DailyLogSummaryPage extends StatelessWidget {
-  const DailyLogSummaryPage({this.response, super.key});
+class DailyLogSummaryPage extends StatefulWidget {
+  const DailyLogSummaryPage({this.response, this.draft, super.key});
 
   final DailyLogResponse? response;
+  final DailyLogDraft? draft;
 
-  void _finish(BuildContext context) {
+  @override
+  State<DailyLogSummaryPage> createState() => _DailyLogSummaryPageState();
+}
+
+class _DailyLogSummaryPageState extends State<DailyLogSummaryPage> {
+  void _finish() {
     Navigator.of(context).pushAndRemoveUntil(
       MaterialPageRoute<void>(builder: (_) => const HomePage()),
       (route) => false,
@@ -54,18 +61,18 @@ class DailyLogSummaryPage extends StatelessWidget {
                 Padding(
                   padding: const EdgeInsets.only(left: 12),
                   child: Text(
-                    'Rabu, 14 Oktober 2026',
+                    _dateLabel(widget.draft?.logDate ?? _responseDate),
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: AppColors.onSurfaceVariant,
                     ),
                   ),
                 ),
                 const SizedBox(height: 20),
-                DailySummaryGerdCard(response: response),
+                DailySummaryGerdCard(response: widget.response),
                 const SizedBox(height: 16),
-                DailySummaryTriggerCard(response: response),
+                DailySummaryTriggerCard(response: widget.response),
                 const SizedBox(height: 16),
-                DailySummaryHabitsCard(response: response),
+                DailySummaryHabitsCard(response: widget.response),
                 const SizedBox(height: 16),
                 const DailySummaryProfileCard(),
                 const SizedBox(height: 16),
@@ -75,7 +82,7 @@ class DailyLogSummaryPage extends StatelessWidget {
                   width: double.infinity,
                   height: 52,
                   child: FilledButton(
-                    onPressed: () => _finish(context),
+                    onPressed: _finish,
                     style: FilledButton.styleFrom(
                       backgroundColor: AppColors.primary,
                       shape: const StadiumBorder(),
@@ -90,4 +97,41 @@ class DailyLogSummaryPage extends StatelessWidget {
       ),
     ),
   );
+
+  String _dateLabel(DateTime date) =>
+      '${_weekday(date.weekday)}, ${date.day} ${_month(date.month)} ${date.year}';
+
+  String _weekday(int value) => const [
+    '',
+    'Senin',
+    'Selasa',
+    'Rabu',
+    'Kamis',
+    'Jumat',
+    'Sabtu',
+    'Minggu',
+  ][value];
+
+  String _month(int value) => const [
+    '',
+    'Januari',
+    'Februari',
+    'Maret',
+    'April',
+    'Mei',
+    'Juni',
+    'Juli',
+    'Agustus',
+    'September',
+    'Oktober',
+    'November',
+    'Desember',
+  ][value];
+
+  DateTime get _responseDate {
+    final value = widget.response?.date;
+    return value == null || value.isEmpty
+        ? DateTime.now()
+        : DateTime.tryParse(value) ?? DateTime.now();
+  }
 }

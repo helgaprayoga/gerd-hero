@@ -22,7 +22,7 @@ def submit_gerdq():
         return json_error("answers harus berisi tepat 6 angka dengan nilai 0 sampai 3.")
 
     score, evaluation = hitung_skor_gerdq(answers)
-    db_result = "likely_gerd" if score > 7 else "no_gerd"
+    db_result = "likely_gerd" if score >= 8 else "no_gerd"
     payload = {
         "user_id": g.user_id,
         "score": score,
@@ -61,4 +61,10 @@ def get_latest_gerdq():
         return json_error(str(error), 502, "Database Error")
     if row is None:
         return json_error("Belum ada hasil GERD-Q.", 404, "Not Found")
-    return jsonify({"success": True, "data": row})
+    score = row.get("score", 0)
+    evaluation = (
+        "Kemungkinan menderita GERD"
+        if isinstance(score, (int, float)) and score >= 8
+        else "Kemungkinan tidak menderita GERD"
+    )
+    return jsonify({"success": True, "data": {**row, "evaluation": evaluation}})

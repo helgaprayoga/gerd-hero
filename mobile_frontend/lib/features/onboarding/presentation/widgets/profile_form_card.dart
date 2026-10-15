@@ -18,7 +18,7 @@ class ProfileFormCard extends StatelessWidget {
   final TextEditingController heightController;
   final TextEditingController weightController;
   final DateTime? birthDate;
-  final String gender;
+  final String? gender;
   final VoidCallback onBirthDateTap;
   final ValueChanged<String> onGenderChanged;
 

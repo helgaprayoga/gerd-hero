@@ -2,7 +2,8 @@ import 'dart:convert';
 
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
-import 'package:supabase_flutter/supabase_flutter.dart';
+
+import 'auth_service.dart';
 
 /// Singleton HTTP client untuk komunikasi dengan Flask backend.
 ///
@@ -13,10 +14,10 @@ class ApiService {
 
   static final ApiService instance = ApiService._();
 
-  String get _baseUrl => dotenv.env['BACKEND_URL'] ?? 'http://localhost:5000';
+  String get _baseUrl => dotenv.env['API_BASE_URL'] ?? 'http://localhost:5000';
 
   String? get _token =>
-      Supabase.instance.client.auth.currentSession?.accessToken;
+      AuthService.instance.currentSession?.accessToken;
 
   Map<String, String> get _headers => {
     'Content-Type': 'application/json',
@@ -24,34 +25,43 @@ class ApiService {
   };
 
   Future<Map<String, dynamic>> get(String path) async {
-    final response = await http.get(
-      Uri.parse('$_baseUrl$path'),
-      headers: _headers,
-    );
-    return _parse(response);
+    return _request(() => http.get(Uri.parse('$_baseUrl$path'), headers: _headers));
   }
 
   Future<Map<String, dynamic>> put(
     String path,
     Map<String, dynamic> body,
   ) async {
-    final response = await http.put(
+    return _request(() => http.put(
       Uri.parse('$_baseUrl$path'),
       headers: _headers,
       body: jsonEncode(body),
-    );
-    return _parse(response);
+    ));
   }
 
   Future<Map<String, dynamic>> post(
     String path,
     Map<String, dynamic> body,
   ) async {
-    final response = await http.post(
+    return _request(() => http.post(
       Uri.parse('$_baseUrl$path'),
       headers: _headers,
       body: jsonEncode(body),
-    );
+    ));
+  }
+
+  Future<Map<String, dynamic>> _request(
+    Future<http.Response> Function() send,
+  ) async {
+    var response = await send();
+    if (response.statusCode == 401 && _token != null) {
+      try {
+        await AuthService.instance.refreshSession();
+        response = await send();
+      } catch (_) {
+        await AuthService.instance.signOut();
+      }
+    }
     return _parse(response);
   }
 

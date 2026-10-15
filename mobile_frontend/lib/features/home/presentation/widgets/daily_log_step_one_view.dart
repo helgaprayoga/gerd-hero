@@ -260,12 +260,15 @@ class _DailyLogStepOneViewState extends State<DailyLogStepOneView> {
                     height: 48,
                     child: FilledButton(
                       onPressed: () {
+                        _draft.noSymptoms = _noSymptoms;
+                        _draft.symptomDescription = _noteController.text.trim();
                         if (widget.onNext != null) {
                           widget.onNext!();
                         } else {
                           Navigator.of(context).push(
                             MaterialPageRoute<void>(
-                              builder: (_) => const DailyLogStepTwoView(),
+                              builder: (_) =>
+                                  DailyLogStepTwoView(draft: _draft),
                             ),
                           );
                         }

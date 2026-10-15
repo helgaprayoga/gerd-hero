@@ -3,7 +3,14 @@ import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
 
 class GerdQProgressCard extends StatelessWidget {
-  const GerdQProgressCard({super.key});
+  const GerdQProgressCard({
+    required this.currentQuestion,
+    required this.totalQuestions,
+    super.key,
+  });
+
+  final int currentQuestion;
+  final int totalQuestions;
 
   @override
   Widget build(BuildContext context) => Container(
@@ -16,7 +23,7 @@ class GerdQProgressCard extends StatelessWidget {
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Row(
+          Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
@@ -29,7 +36,7 @@ class GerdQProgressCard extends StatelessWidget {
               ),
             ),
             Text(
-              'Soal 1 dari 6',
+              'Soal $currentQuestion dari $totalQuestions',
               style: TextStyle(
                 color: AppColors.onSurfaceVariant,
                 fontSize: 12,
@@ -41,8 +48,8 @@ class GerdQProgressCard extends StatelessWidget {
         const SizedBox(height: 10),
         ClipRRect(
           borderRadius: BorderRadius.circular(8),
-          child: const LinearProgressIndicator(
-            value: 1 / 6,
+          child: LinearProgressIndicator(
+            value: currentQuestion / totalQuestions,
             minHeight: 8,
             backgroundColor: AppColors.secondaryContainer,
             valueColor: AlwaysStoppedAnimation<Color>(

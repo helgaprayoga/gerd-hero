@@ -70,7 +70,7 @@ ALTER TABLE gerdhero.users
 
 ALTER TABLE gerdhero.users
     ADD CONSTRAINT users_gender_check
-    CHECK (gender IS NULL OR gender IN ('male', 'female', 'other'));
+    CHECK (gender IS NULL OR gender IN ('male', 'female'));
 
 -- ============================================================================
 -- NEW TABLE: analytics_cache
