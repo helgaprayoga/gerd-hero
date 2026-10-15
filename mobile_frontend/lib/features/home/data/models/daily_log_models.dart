@@ -48,6 +48,8 @@ class DailyLogResponse {
   Map<String, dynamic> get triggers => _map(data['triggers']);
   Map<String, dynamic> get indicators => _map(data['indicators']);
   Map<String, dynamic> get aiAnalysis => _map(data['ai_analysis']);
+  String get analysisSource =>
+      aiAnalysis['analysis_source']?.toString() ?? 'gemini';
   List<String> get recommendations => _strings(aiAnalysis['rekomendasi']);
 
   List<Map<String, dynamic>> get aiTriggerAnalysis {

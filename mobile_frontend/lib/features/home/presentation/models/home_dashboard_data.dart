@@ -90,6 +90,14 @@ class HomeDashboardData {
 
   DateTime? get lastLogDate => profile.lastLogDate;
 
+  bool get hasLogToday {
+    final today = _dateOnly(DateTime.now());
+    final logExists = weeklyLogs.any((log) => _dateOnly(log.date) == today);
+    final profileLogExists =
+        lastLogDate != null && _dateOnly(lastLogDate!) == today;
+    return logExists || profileLogExists;
+  }
+
   HomeStatus get status {
     if (!profile.hasBasicProfile) return HomeStatus.profileIncomplete;
 

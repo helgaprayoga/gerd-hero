@@ -1,26 +1,58 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/network/api_client.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../data/models/daily_log_models.dart';
 import '../../domain/entities/daily_log_draft.dart';
-import '../widgets/daily_summary_attention_callout.dart';
+// import '../widgets/daily_summary_attention_callout.dart';
 import '../widgets/daily_summary_gerd_card.dart';
 import '../widgets/daily_summary_habits_card.dart';
 import '../widgets/daily_summary_profile_card.dart';
 import '../widgets/daily_summary_trigger_card.dart';
+import '../models/profile_data.dart';
 import 'home_page.dart';
 
 class DailyLogSummaryPage extends StatefulWidget {
-  const DailyLogSummaryPage({this.response, this.draft, super.key});
+  const DailyLogSummaryPage({
+    this.response,
+    this.draft,
+    this.initialProfile,
+    this.client,
+    super.key,
+  });
 
   final DailyLogResponse? response;
   final DailyLogDraft? draft;
+  final ProfileData? initialProfile;
+  final ApiClient? client;
 
   @override
   State<DailyLogSummaryPage> createState() => _DailyLogSummaryPageState();
 }
 
 class _DailyLogSummaryPageState extends State<DailyLogSummaryPage> {
+  ProfileData? _profile;
+
+  @override
+  void initState() {
+    super.initState();
+    _profile = widget.initialProfile;
+    if (_profile == null) _loadProfile();
+  }
+
+  Future<void> _loadProfile() async {
+    try {
+      final response = await (widget.client ?? ApiClient()).get('/api/profile');
+      final data = response['data'];
+      if (!mounted || data is! Map) return;
+      setState(() {
+        _profile = ProfileData.fromJson(Map<String, dynamic>.from(data));
+      });
+    } catch (_) {
+      // The summary remains usable and displays unavailable profile values.
+    }
+  }
+
   void _finish() {
     Navigator.of(context).pushAndRemoveUntil(
       MaterialPageRoute<void>(builder: (_) => const HomePage()),
@@ -40,22 +72,11 @@ class _DailyLogSummaryPageState extends State<DailyLogSummaryPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  children: [
-                    IconButton(
-                      onPressed: () => Navigator.of(context).pop(),
-                      icon: const Icon(Icons.arrow_back),
-                      tooltip: 'Kembali',
-                    ),
-                    const SizedBox(width: 4),
-                    Expanded(
-                      child: Text(
-                        'Ringkasan Hari Ini',
-                        style: Theme.of(context).textTheme.headlineSmall
-                            ?.copyWith(fontWeight: FontWeight.w800),
-                      ),
-                    ),
-                  ],
+                Text(
+                  'Ringkasan Hari Ini',
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.w800,
+                  ),
                 ),
                 const SizedBox(height: 6),
                 Padding(
@@ -74,9 +95,9 @@ class _DailyLogSummaryPageState extends State<DailyLogSummaryPage> {
                 const SizedBox(height: 16),
                 DailySummaryHabitsCard(response: widget.response),
                 const SizedBox(height: 16),
-                const DailySummaryProfileCard(),
+                DailySummaryProfileCard(profile: _profile),
                 const SizedBox(height: 16),
-                const DailySummaryAttentionCallout(),
+                // const DailySummaryAttentionCallout(),
                 const SizedBox(height: 24),
                 SizedBox(
                   width: double.infinity,

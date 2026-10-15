@@ -152,7 +152,9 @@ void main() {
       await tester.tap(find.text('2–3 hari'));
       await tester.pump();
       final buttonLabel = question == 5 ? 'Lihat hasil' : 'Lanjut';
-      await tester.ensureVisible(find.widgetWithText(FilledButton, buttonLabel));
+      await tester.ensureVisible(
+        find.widgetWithText(FilledButton, buttonLabel),
+      );
       await tester.tap(find.widgetWithText(FilledButton, buttonLabel));
       await tester.pump();
     }
@@ -211,6 +213,26 @@ void main() {
       findsOneWidget,
     );
     expect(find.text('0 Dipilih'), findsOneWidget);
+  });
+
+  testWidgets('blocks a second daily log from the floating action button', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      const MaterialApp(home: HomePage(scenario: HomeScenario.loggedToday)),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Isi Log Harian'));
+    await tester.pump();
+
+    expect(find.byType(DailyLogStepOnePage), findsNothing);
+    expect(find.text('Log harian sudah diisi'), findsOneWidget);
+    expect(
+      find.text('Kamu sudah mengisi log harian hari ini.'),
+      findsOneWidget,
+    );
+    await tester.pump(const Duration(seconds: 3));
   });
 
   testWidgets('opens complete history from the home summary link', (

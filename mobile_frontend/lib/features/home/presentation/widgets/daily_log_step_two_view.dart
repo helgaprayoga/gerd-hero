@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../data/repositories/daily_log_repository.dart';
 import '../../domain/entities/daily_log_draft.dart';
 
-part 'daily_log_step_two_step_two_header.dart';
 part 'daily_log_step_two_progress_segment.dart';
 part 'daily_log_step_two_section_title.dart';
 part 'daily_log_step_two_food_card.dart';
@@ -31,12 +31,14 @@ class DailyLogStepTwoView extends StatefulWidget {
     this.draft,
     this.dateLabel = 'hari ini',
     this.initialSameAsYesterday = true,
+    this.repository,
     this.onContinue,
     super.key,
   });
 
   final DailyLogDraft? draft;
   final bool initialSameAsYesterday;
+  final DailyLogRepository? repository;
   final String dateLabel;
   final VoidCallback? onContinue;
 
@@ -46,7 +48,9 @@ class DailyLogStepTwoView extends StatefulWidget {
 
 class _DailyLogStepTwoViewState extends State<DailyLogStepTwoView> {
   late final DailyLogDraft _draft;
-  late bool _sameAsYesterday;
+  bool _sameAsYesterday = false;
+  int? _yesterdayMealCount;
+  List<String>? _yesterdayMealTimes;
   late int _mealCount;
   late int _stressLevel;
   late bool _tookMedicine;
@@ -81,6 +85,7 @@ class _DailyLogStepTwoViewState extends State<DailyLogStepTwoView> {
     }
     _sleepTime = _parseTime(_draft.sleepTime);
     _wakeTime = _parseTime(_draft.wakeTime);
+    _loadYesterdayLog();
   }
 
   @override
@@ -90,6 +95,7 @@ class _DailyLogStepTwoViewState extends State<DailyLogStepTwoView> {
   }
 
   Future<void> _pickMealTime(int index) async {
+    if (_sameAsYesterday) return;
     final parsed = _mealTimes[index] == '--:--'
         ? const TimeOfDay(hour: 12, minute: 0)
         : _parseTime(_mealTimes[index]);
@@ -102,13 +108,52 @@ class _DailyLogStepTwoViewState extends State<DailyLogStepTwoView> {
   void _setMealCount(int count) {
     setState(() {
       _mealCount = count;
+      _sameAsYesterday = _yesterdayMealCount == count;
       while (_mealTimes.length < count) {
         _mealTimes.add('--:--');
       }
       while (_mealTimes.length > count) {
         _mealTimes.removeLast();
       }
+      if (_sameAsYesterday && _yesterdayMealTimes != null) {
+        _mealTimes
+          ..clear()
+          ..addAll(_yesterdayMealTimes!.take(count));
+      }
     });
+  }
+
+  Future<void> _loadYesterdayLog() async {
+    final date = _draft.logDate.subtract(const Duration(days: 1));
+    final dateText =
+        '${date.year.toString().padLeft(4, '0')}-'
+        '${date.month.toString().padLeft(2, '0')}-'
+        '${date.day.toString().padLeft(2, '0')}';
+    try {
+      final log = await (widget.repository ?? DailyLogRepository()).fetchDate(
+        dateText,
+      );
+      final count = (log.data['meal_frequency'] as num?)?.toInt();
+      final rawTimes = log.data['meal_times'];
+      final times = rawTimes is List
+          ? rawTimes.map((item) => item.toString()).toList()
+          : <String>[];
+      if (!mounted || count == null || times.length != count) return;
+      setState(() {
+        _yesterdayMealCount = count;
+        _yesterdayMealTimes = times;
+        if (_mealCount == count) {
+          _sameAsYesterday = true;
+          _mealTimes
+            ..clear()
+            ..addAll(times);
+        } else {
+          _sameAsYesterday = false;
+        }
+      });
+    } catch (_) {
+      // Jika log kemarin belum ada, jam makan diisi manual.
+    }
   }
 
   void _addMedicine() {
@@ -137,6 +182,20 @@ class _DailyLogStepTwoViewState extends State<DailyLogStepTwoView> {
     }
   }
 
+  int get _sleepDurationMinutes {
+    var minutes =
+        (_wakeTime.hour * 60 + _wakeTime.minute) -
+        (_sleepTime.hour * 60 + _sleepTime.minute);
+    if (minutes <= 0) minutes += 24 * 60;
+    return minutes;
+  }
+
+  String get _sleepDurationLabel {
+    final hours = _sleepDurationMinutes ~/ 60;
+    final minutes = _sleepDurationMinutes % 60;
+    return minutes == 0 ? '$hours jam' : '$hours jam $minutes menit';
+  }
+
   void _syncDraft() {
     _draft.mealFrequency = _mealCount;
     _draft.mealTimes
@@ -161,7 +220,36 @@ class _DailyLogStepTwoViewState extends State<DailyLogStepTwoView> {
   @override
   Widget build(BuildContext context) => Scaffold(
     backgroundColor: AppColors.surface,
+    appBar: AppBar(
+      backgroundColor: AppColors.surface,
+      elevation: 0,
+      title: const Text(
+        'LANGKAH 2 DARI 3',
+        style: TextStyle(
+          color: AppColors.primary,
+          fontSize: 12,
+          fontWeight: FontWeight.w800,
+          letterSpacing: 0.3,
+        ),
+      ),
+      bottom: PreferredSize(
+        preferredSize: const Size.fromHeight(16),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, 8),
+          child: Row(
+            children: const [
+              Expanded(child: _ProgressSegment(active: false)),
+              SizedBox(width: 6),
+              Expanded(flex: 4, child: _ProgressSegment(active: true)),
+              SizedBox(width: 6),
+              Expanded(child: _ProgressSegment(active: false)),
+            ],
+          ),
+        ),
+      ),
+    ),
     body: SafeArea(
+      top: false,
       child: Column(
         children: [
           Expanded(
@@ -170,7 +258,15 @@ class _DailyLogStepTwoViewState extends State<DailyLogStepTwoView> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _StepTwoHeader(onBack: () => Navigator.of(context).pop()),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'Pemicu & Kebiasaan',
+                    style: TextStyle(
+                      color: AppColors.onSurface,
+                      fontSize: 22,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
                   const SizedBox(height: 24),
                   _SectionTitle(
                     icon: Icons.restaurant_outlined,
@@ -195,6 +291,9 @@ class _DailyLogStepTwoViewState extends State<DailyLogStepTwoView> {
                   const SizedBox(height: 16),
                   _MealTimeCard(
                     sameAsYesterday: _sameAsYesterday,
+                    showComparison:
+                        _yesterdayMealCount == null ||
+                        _yesterdayMealCount == _mealCount,
                     mealCount: _mealCount,
                     mealTimes: _mealTimes,
                     onSameChanged: (value) =>
@@ -212,6 +311,7 @@ class _DailyLogStepTwoViewState extends State<DailyLogStepTwoView> {
                     wakeTime: _wakeTime,
                     onPickSleep: () => _pickSleepTime(sleep: true),
                     onPickWake: () => _pickSleepTime(sleep: false),
+                    durationLabel: _sleepDurationLabel,
                   ),
                   const SizedBox(height: 16),
                   _MedicineCard(
@@ -223,6 +323,7 @@ class _DailyLogStepTwoViewState extends State<DailyLogStepTwoView> {
                     timing: _medicineTiming,
                     onTookMedicineChanged: (value) => setState(() {
                       _tookMedicine = value;
+                      if (!value) _showMedicineForm = false;
                       _draft.tookMedication = value;
                     }),
                     onTimingChanged: (value) =>

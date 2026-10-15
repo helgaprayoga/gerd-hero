@@ -37,7 +37,11 @@ class DailySummaryTriggerCard extends StatelessWidget {
                   color: AppColors.surfaceContainerLow,
                   borderRadius: BorderRadius.circular(20),
                 ),
-                child: const Text('Dianalisis AI'),
+                child: Text(
+                  result.analysisSource == 'fallback'
+                      ? 'Analisis fallback'
+                      : 'Dianalisis AI',
+                ),
               ),
             ],
           ),
