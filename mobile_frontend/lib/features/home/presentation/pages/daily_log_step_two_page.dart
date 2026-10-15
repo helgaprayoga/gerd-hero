@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/network/api_client.dart';
+import '../../../../core/utils/local_date.dart';
 import '../../data/models/daily_log_models.dart';
 import '../../data/repositories/daily_log_repository.dart';
 import '../../domain/entities/daily_log_draft.dart';
@@ -39,11 +40,17 @@ class _DailyLogStepTwoPageState extends State<DailyLogStepTwoPage> {
   @override
   void initState() {
     super.initState();
-    _draft = widget.draft ?? DailyLogDraft(logDate: DateTime.now());
+    _draft = widget.draft ?? DailyLogDraft(logDate: localDateOnly());
   }
 
   Future<void> _submit(BuildContext context) async {
     if (_isSubmitting) return;
+    if (localDateOnly(_draft.logDate).isAfter(localDateOnly())) {
+      setState(
+        () => _errorMessage = 'Tanggal log tidak boleh melebihi hari ini.',
+      );
+      return;
+    }
     final navigator = Navigator.of(context);
     setState(() {
       _isSubmitting = true;

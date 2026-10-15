@@ -11,6 +11,7 @@ from routes.helpers import first_row, json_error, request_body, response_error
 from services.ai_service import build_daily_summary_prompt, generate_daily_analysis
 from services.proses_gejala import gejala_dict, hitung_skor_gerd
 from services.proses_harian import proses_indikator_harian
+from services.time_service import application_today
 
 
 logs_bp = Blueprint("logs", __name__)
@@ -29,7 +30,7 @@ def _sleep_duration(sleep_time: str | None, wake_time: str | None) -> int | None
 
 def _validate_log(body: dict[str, Any]):
     log_date = date_type.fromisoformat(body["log_date"])
-    if log_date > date_type.today():
+    if log_date > application_today():
         raise ValueError("log_date tidak boleh di masa depan.")
 
     symptoms = body.get("symptoms", [])

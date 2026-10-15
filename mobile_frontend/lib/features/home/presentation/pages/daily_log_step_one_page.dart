@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/utils/local_date.dart';
 import '../../domain/entities/daily_log_draft.dart';
 import 'daily_log_step_two_page.dart';
 import '../widgets/daily_log_step_one_view.dart';
@@ -31,8 +32,7 @@ class _DailyLogStepOnePageState extends State<DailyLogStepOnePage> {
   void initState() {
     super.initState();
     _draft =
-        widget.draft ??
-        DailyLogDraft(logDate: widget.logDate ?? DateTime.now());
+        widget.draft ?? DailyLogDraft(logDate: localDateOnly(widget.logDate));
   }
 
   @override
