@@ -65,10 +65,10 @@ class HistoryDetailHabitsCard extends StatelessWidget {
 
   static String _triggerKey(String title) => switch (title) {
     'Makanan Pedas' => 'Pedas',
-    'Gorengan & Berlemak' => 'Makanan berlemak',
-    'Kafein (Kopi / Teh)' => 'Kafein',
-    'Makanan Asam & Jeruk' => 'Makanan asam',
-    _ => 'Minuman bersoda',
+    'Gorengan & Berlemak' => 'Berlemak/gorengan',
+    'Kafein (Kopi / Teh)' => 'Berkafein',
+    'Makanan Asam & Jeruk' => 'Asam',
+    _ => 'Bersoda',
   };
 }
 

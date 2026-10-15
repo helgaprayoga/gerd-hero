@@ -5,6 +5,7 @@ class DailyHistoryEntry {
   const DailyHistoryEntry({
     required this.day,
     required this.date,
+    this.dateIso,
     this.badge,
     this.index,
     this.symptoms = const [],
@@ -14,6 +15,7 @@ class DailyHistoryEntry {
 
   final String day;
   final String date;
+  final String? dateIso;
   final String? badge;
   final int? index;
   final List<String> symptoms;

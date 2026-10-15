@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../data/models/daily_log_models.dart';
 import '../widgets/daily_summary_attention_callout.dart';
 import '../widgets/daily_summary_gerd_card.dart';
 import '../widgets/daily_summary_habits_card.dart';
@@ -9,7 +10,9 @@ import '../widgets/daily_summary_trigger_card.dart';
 import 'home_page.dart';
 
 class DailyLogSummaryPage extends StatelessWidget {
-  const DailyLogSummaryPage({super.key});
+  const DailyLogSummaryPage({this.response, super.key});
+
+  final DailyLogResponse? response;
 
   void _finish(BuildContext context) {
     Navigator.of(context).pushAndRemoveUntil(
@@ -58,11 +61,11 @@ class DailyLogSummaryPage extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 20),
-                const DailySummaryGerdCard(),
+                DailySummaryGerdCard(response: response),
                 const SizedBox(height: 16),
-                const DailySummaryTriggerCard(),
+                DailySummaryTriggerCard(response: response),
                 const SizedBox(height: 16),
-                const DailySummaryHabitsCard(),
+                DailySummaryHabitsCard(response: response),
                 const SizedBox(height: 16),
                 const DailySummaryProfileCard(),
                 const SizedBox(height: 16),

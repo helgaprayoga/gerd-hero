@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_colors.dart';
+import '../../domain/entities/daily_log_draft.dart';
 
 part 'daily_log_step_two_step_two_header.dart';
 part 'daily_log_step_two_progress_segment.dart';
@@ -29,12 +30,14 @@ class DailyLogStepTwoView extends StatefulWidget {
   const DailyLogStepTwoView({
     this.dateLabel = 'hari ini',
     this.initialSameAsYesterday = true,
+    this.draft,
     this.onContinue,
     super.key,
   });
 
   final bool initialSameAsYesterday;
   final String dateLabel;
+  final DailyLogDraft? draft;
   final VoidCallback? onContinue;
 
   @override
@@ -42,29 +45,42 @@ class DailyLogStepTwoView extends StatefulWidget {
 }
 
 class _DailyLogStepTwoViewState extends State<DailyLogStepTwoView> {
+  late final DailyLogDraft _draft;
   late bool _sameAsYesterday;
-  int _mealCount = 3;
-  int _stressLevel = 3;
-  bool _tookMedicine = true;
+  late int _mealCount;
+  late int _stressLevel;
+  late bool _tookMedicine;
   final _medicineController = TextEditingController();
   bool _showMedicineForm = false;
-  final _medicines = <String>['Omeprazole 20mg|Sebelum makan'];
-  final _foods = <String, bool>{
-    'Makanan pedas': true,
-    'Makanan berlemak / gorengan': false,
-    'Makanan asam (sitrus/tomat/cuka)': true,
-    'Minuman berkafein (kopi/teh)': true,
-    'Makanan / minuman bersoda': false,
-  };
-  final _mealTimes = <String>['07:30', '12:30', '19:00'];
-  TimeOfDay _sleepTime = const TimeOfDay(hour: 23, minute: 0);
-  TimeOfDay _wakeTime = const TimeOfDay(hour: 6, minute: 30);
+  late final List<MedicationDraft> _medicines;
+  late final Map<String, bool> _foods;
+  late final List<String> _mealTimes;
+  late TimeOfDay _sleepTime;
+  late TimeOfDay _wakeTime;
   String _medicineTiming = 'Sebelum Makan';
 
   @override
   void initState() {
     super.initState();
+    _draft = widget.draft ?? DailyLogDraft(logDate: DateTime.now());
     _sameAsYesterday = widget.initialSameAsYesterday;
+    _mealCount = _draft.mealFrequency;
+    _stressLevel = _draft.stressLevel;
+    _tookMedicine = _draft.tookMedication;
+    _medicines = _draft.medications;
+    _foods = {
+      for (final trigger in DailyTrigger.values)
+        trigger.label: _draft.triggers[trigger] == true,
+    };
+    _mealTimes = List<String>.from(_draft.mealTimes);
+    while (_mealTimes.length < _mealCount) {
+      _mealTimes.add('--:--');
+    }
+    while (_mealTimes.length > _mealCount) {
+      _mealTimes.removeLast();
+    }
+    _sleepTime = _parseTime(_draft.sleepTime);
+    _wakeTime = _parseTime(_draft.wakeTime);
   }
 
   @override
@@ -99,7 +115,7 @@ class _DailyLogStepTwoViewState extends State<DailyLogStepTwoView> {
     final name = _medicineController.text.trim();
     if (name.isEmpty) return;
     setState(() {
-      _medicines.add('$name|$_medicineTiming');
+      _medicines.add(MedicationDraft(name: name, timing: _medicineTiming));
       _medicineController.clear();
       _showMedicineForm = false;
     });
@@ -119,6 +135,24 @@ class _DailyLogStepTwoViewState extends State<DailyLogStepTwoView> {
         }
       });
     }
+  }
+
+  void _syncDraft() {
+    _draft.mealFrequency = _mealCount;
+    _draft.mealTimes
+      ..clear()
+      ..addAll(_mealTimes);
+    _draft.stressLevel = _stressLevel;
+    _draft.sleepTime = _formatTime(_sleepTime);
+    _draft.wakeTime = _formatTime(_wakeTime);
+    _draft.tookMedication = _tookMedicine;
+    _draft.triggers
+      ..clear()
+      ..addEntries(
+        DailyTrigger.values.map(
+          (trigger) => MapEntry(trigger, _foods[trigger.label] == true),
+        ),
+      );
   }
 
   @override
@@ -143,8 +177,11 @@ class _DailyLogStepTwoViewState extends State<DailyLogStepTwoView> {
                   const SizedBox(height: 12),
                   _FoodCard(
                     foods: _foods,
-                    onChanged: (food, value) =>
-                        setState(() => _foods[food] = value),
+                    onChanged: (food, value) => setState(() {
+                      _foods[food] = value;
+                      final trigger = _triggerForLabel(food);
+                      if (trigger != null) _draft.triggers[trigger] = value;
+                    }),
                   ),
                   const SizedBox(height: 16),
                   _FrequencyCard(
@@ -181,8 +218,10 @@ class _DailyLogStepTwoViewState extends State<DailyLogStepTwoView> {
                     showForm: _showMedicineForm,
                     medicineController: _medicineController,
                     timing: _medicineTiming,
-                    onTookMedicineChanged: (value) =>
-                        setState(() => _tookMedicine = value),
+                    onTookMedicineChanged: (value) => setState(() {
+                      _tookMedicine = value;
+                      _draft.tookMedication = value;
+                    }),
                     onTimingChanged: (value) =>
                         setState(() => _medicineTiming = value),
                     onAddPressed: () =>
@@ -197,12 +236,22 @@ class _DailyLogStepTwoViewState extends State<DailyLogStepTwoView> {
           ),
           _BottomActions(
             onBack: () => Navigator.of(context).pop(),
-            onContinue: widget.onContinue ?? () {},
+            onContinue: () {
+              _syncDraft();
+              widget.onContinue?.call();
+            },
           ),
         ],
       ),
     ),
   );
+}
+
+DailyTrigger? _triggerForLabel(String label) {
+  for (final trigger in DailyTrigger.values) {
+    if (trigger.label == label) return trigger;
+  }
+  return null;
 }
 
 TimeOfDay _parseTime(String value) {

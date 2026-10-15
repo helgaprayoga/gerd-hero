@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../../core/network/api_client.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/app_feedback.dart';
+import '../../data/models/daily_log_models.dart';
+import '../../data/repositories/daily_log_repository.dart';
+import '../../domain/entities/daily_log_draft.dart';
 import '../models/daily_history_entry.dart';
 import '../widgets/history_detail_actions.dart';
 import '../widgets/history_detail_confirmation_sheets.dart';
@@ -11,9 +16,14 @@ import '../widgets/history_detail_wellness_card.dart';
 import 'daily_log_summary_page.dart';
 
 class DailyHistoryDetailPage extends StatefulWidget {
-  const DailyHistoryDetailPage({required this.entry, super.key});
+  const DailyHistoryDetailPage({
+    required this.entry,
+    this.repository,
+    super.key,
+  });
 
   final DailyHistoryEntry entry;
+  final DailyLogRepository? repository;
 
   @override
   State<DailyHistoryDetailPage> createState() => _DailyHistoryDetailPageState();
@@ -21,13 +31,14 @@ class DailyHistoryDetailPage extends StatefulWidget {
 
 class _DailyHistoryDetailPageState extends State<DailyHistoryDetailPage> {
   late final TextEditingController _noteController;
-  late final Set<String> _symptoms;
-  late final Set<String> _triggers;
+  late Set<String> _symptoms;
+  late Set<String> _triggers;
   int _mealCount = 3;
   final _mealTimes = <String>['07:30', '12:30', '19:00'];
   double _stress = 3;
   bool _tookMedicine = true;
   bool _hasChanges = false;
+  DailyLogResponse? _lastResponse;
   TimeOfDay _sleepTime = const TimeOfDay(hour: 23, minute: 0);
   TimeOfDay _wakeTime = const TimeOfDay(hour: 6, minute: 30);
 
@@ -38,9 +49,9 @@ class _DailyHistoryDetailPageState extends State<DailyHistoryDetailPage> {
     _noteController.addListener(_markChanged);
     _symptoms = widget.entry.symptoms
         .where((item) => item != 'Tanpa Gejala' && !item.startsWith('+'))
-        .map(_detailSymptomLabel)
         .toSet();
     _triggers = widget.entry.triggers.map(_cleanLabel).toSet();
+    _loadDetail();
   }
 
   @override
@@ -53,10 +64,52 @@ class _DailyHistoryDetailPageState extends State<DailyHistoryDetailPage> {
   String _cleanLabel(String value) =>
       value.replaceFirst(RegExp(r'^[^\u0000-\u007F]+\s*'), '');
 
-  String _detailSymptomLabel(String value) =>
-      _cleanLabel(value) == 'Gejala Sementara'
-      ? 'Regurgitasi Asam'
-      : _cleanLabel(value);
+  bool get _hasSession {
+    try {
+      return Supabase.instance.client.auth.currentSession != null;
+    } on AssertionError {
+      return false;
+    }
+  }
+
+  Future<void> _loadDetail() async {
+    final date = widget.entry.dateIso;
+    if (date == null || (!_hasSession && widget.repository == null)) return;
+    try {
+      final log = await (widget.repository ?? DailyLogRepository()).fetchDate(
+        date,
+      );
+      if (!mounted) return;
+      final data = log.data;
+      final meals = data['meal_times'];
+      setState(() {
+        _symptoms = log.symptoms
+            .where((item) => item != 'Tanpa Gejala')
+            .toSet();
+        _triggers = log.triggers.entries
+            .where((entry) => entry.value == 1 || entry.value == true)
+            .map((entry) => entry.key)
+            .toSet();
+        _noteController.removeListener(_markChanged);
+        _noteController.text = data['symptom_description']?.toString() ?? '';
+        _noteController.addListener(_markChanged);
+        _mealCount = (data['meal_frequency'] as num?)?.toInt() ?? 1;
+        _mealTimes
+          ..clear()
+          ..addAll(
+            meals is List
+                ? meals.map((item) => item.toString())
+                : const <String>[],
+          );
+        _stress = ((data['stress_level'] as num?) ?? 1).toDouble();
+        _tookMedicine = data['took_medication'] == true;
+        _sleepTime = _parseTime(data['sleep_time']?.toString() ?? '23:00');
+        _wakeTime = _parseTime(data['wake_time']?.toString() ?? '06:30');
+      });
+    } catch (_) {
+      // Initial entry data remains visible if the detail request fails.
+    }
+  }
 
   void _toggle(Set<String> values, String value) => setState(() {
     _hasChanges = true;
@@ -75,12 +128,29 @@ class _DailyHistoryDetailPageState extends State<DailyHistoryDetailPage> {
       date: '${widget.entry.day}, ${widget.entry.date} 2026',
     );
     if (saved == true && mounted) {
-      setState(() => _hasChanges = false);
-      showAppFeedback(
-        context,
-        title: 'Catatan tersimpan',
-        message: 'Perubahan catatan harian berhasil diperbarui.',
-      );
+      try {
+        if (widget.entry.dateIso != null) {
+          final draft = _toDraft();
+          _lastResponse = await (widget.repository ?? DailyLogRepository())
+              .createOrUpdate(draft);
+        }
+        if (!mounted) return;
+        setState(() => _hasChanges = false);
+        showAppFeedback(
+          context,
+          title: 'Catatan tersimpan',
+          message: 'Perubahan catatan harian berhasil diperbarui.',
+        );
+      } on ApiException catch (error) {
+        if (mounted) {
+          showAppFeedback(
+            context,
+            title: 'Gagal menyimpan',
+            message: error.message,
+            icon: Icons.error_outline,
+          );
+        }
+      }
     }
   }
 
@@ -101,8 +171,42 @@ class _DailyHistoryDetailPageState extends State<DailyHistoryDetailPage> {
 
   void _openSummary() {
     Navigator.of(context).push(
-      MaterialPageRoute<void>(builder: (_) => const DailyLogSummaryPage()),
+      MaterialPageRoute<void>(
+        builder: (_) => DailyLogSummaryPage(response: _lastResponse),
+      ),
     );
+  }
+
+  DailyLogDraft _toDraft() {
+    final draft = DailyLogDraft(logDate: DateTime.parse(widget.entry.dateIso!));
+    draft.symptoms
+      ..clear()
+      ..addAll(_symptoms.map(_symptomFromApi).whereType<DailySymptom>());
+    draft.noSymptoms = draft.symptoms.isEmpty;
+    draft.symptomDescription = _noteController.text.trim();
+    draft.triggers
+      ..clear()
+      ..addEntries(
+        DailyTrigger.values.map(
+          (trigger) => MapEntry(trigger, _triggers.contains(trigger.apiValue)),
+        ),
+      );
+    draft.mealFrequency = _mealCount;
+    draft.mealTimes
+      ..clear()
+      ..addAll(_mealTimes);
+    draft.stressLevel = _stress.round();
+    draft.sleepTime = _formatTime(_sleepTime);
+    draft.wakeTime = _formatTime(_wakeTime);
+    draft.tookMedication = _tookMedicine;
+    return draft;
+  }
+
+  DailySymptom? _symptomFromApi(String value) {
+    for (final symptom in DailySymptom.values) {
+      if (symptom.apiValue == value) return symptom;
+    }
+    return null;
   }
 
   void _markAndSetMealCount(int value) {
