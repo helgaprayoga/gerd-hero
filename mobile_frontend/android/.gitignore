@@ -5,6 +5,11 @@
 .env.*
 !.env.example
 
+# Android signing
+key.properties
+**/*.jks
+**/*.keystore
+
 # ==========================================
 # Miscellaneous & OS
 # ==========================================

@@ -39,7 +39,7 @@ class LandingTopBar extends StatelessWidget {
             const SizedBox(width: 4),
             Flexible(
               child: Text(
-                'Versi 2.4',
+                'Versi 1.0.0',
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 textAlign: TextAlign.end,

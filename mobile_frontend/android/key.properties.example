@@ -1,0 +1,6 @@
+# Salin file ini menjadi android/key.properties, lalu isi nilainya.
+# JANGAN commit android/key.properties (sudah diabaikan .gitignore).
+storePassword=ISI_PASSWORD_KE_1
+keyPassword=ISI_PASSWORD_KE_1
+keyAlias=upload
+storeFile=C:/Users/helga/upload-keystore.jks
